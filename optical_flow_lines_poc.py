@@ -88,22 +88,38 @@ def optical_flow(frame, feature_params, lk_params, color, old_gray, mask, p0):
         good_new = p1[st == 1]
         good_old = p0[st == 1]
 
+        vectors = []
+
         # draw the tracks
         for i, (new, old) in enumerate(zip(good_new, good_old)):
             a, b = new.ravel()
             c, d = old.ravel()
+
+            p1 = np.asarray([a, b], dtype=np.float)
+            p2 = np.asarray([c, d], dtype=np.float)
+
+            #unit_vector = (p2 - p1) / np.linalg.norm(p2-p1)
+            unit_vector = (p2 - p1)
+            vectors.append(unit_vector)
             mask = cv2.line(mask, (a, b), (c, d), color[i].tolist(), 2)
             frame = cv2.circle(frame, (a, b), 5, color[i].tolist(), -1)
+
+        vectors = np.array(vectors)
+        mean_vector = np.mean(vectors, axis=0)
+
     except:
         print("No points found")
         good_new = None
+        mean_vector = None
 
 
-    return mask, frame, frame_gray, good_new
+    return mask, frame, frame_gray, good_new, mean_vector
 
-def display(frame, mask):
-    img = cv2.add(frame,mask)
-    cv2.imshow('frame',img)
+
+def display(frame, mask, arrow):
+    img = cv2.add(frame, mask)
+    img = cv2.add(img, arrow)
+    cv2.imshow('frame', img)
 
 
 def exit_user_input():
@@ -121,6 +137,22 @@ def update_optical_flow_previous(frame_gray, good_new):
 
     return old_gray, p0
 
+
+def draw_arrow(img, vector):
+    if vector is None:
+        return None
+    else:
+        img = np.zeros_like(img)
+        try:
+            center = (int(img.shape[1]/2), int(img.shape[0]/2))
+            arrow_coords = (int(center[0] + vector[0]), int(center[1] + vector[1]))
+            img = cv2.circle(img, center, 50, (255, 0, 0), -1)
+            img = cv2.line(img, center, arrow_coords, (0, 255, 0), 2)
+
+        except:
+            print("No arrow")
+
+        return img
 
 def main():
     [cap, feature_params, lk_params, color, old_gray, mask] = setup()
@@ -143,13 +175,14 @@ def main():
         if cntr == 0:
             p0 = cv2.goodFeaturesToTrack(cv2.cvtColor(line_and_edges, cv2.COLOR_BGR2GRAY), mask=None, **feature_params)
 
-        mask, frame, frame_gray, good_new = optical_flow(lines, feature_params, lk_params, color, old_gray, mask, p0)
+        mask, frame, frame_gray, good_new, mean_vector = optical_flow(lines, feature_params, lk_params, color, old_gray,
+                                                                      mask, p0)
 
         if good_new is None:
-            good_new = cv2.goodFeaturesToTrack(cv2.cvtColor(line_and_edges, cv2.COLOR_BGR2GRAY), mask=None,
-                                             **feature_params)
-
-        display(mask, frame)
+            good_new = cv2.goodFeaturesToTrack(cv2.cvtColor(line_and_edges, cv2.COLOR_BGR2GRAY),
+                                               mask=None, **feature_params)
+        arrow = draw_arrow(frame, mean_vector)
+        display(mask, frame, arrow)
         if exit_user_input():
             break
 
