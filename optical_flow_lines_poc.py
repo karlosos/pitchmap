@@ -64,7 +64,7 @@ def line_detection(edges, img):
 
     for line in lines:
         for x1, y1, x2, y2 in line:
-            cv2.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 5)
+            cv2.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 1)
 
     # Draw the lines on the  image
     lines_edges = cv2.addWeighted(img, 0.8, line_image, 1, 0)
@@ -72,20 +72,32 @@ def line_detection(edges, img):
     return lines_edges, line_image
 
 
-def optical_flow(frame, feature_params, lk_params, color, old_gray, mask):
-    frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    p0 = cv2.goodFeaturesToTrack(frame_gray, mask=None, **feature_params)
+def optical_flow(frame, feature_params, lk_params, color, old_gray, mask, p0):
+    if len(frame.shape) == 2:
+        frame_gray = frame
+        mask = np.zeros_like(frame_gray)
+    else:
+        frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
     # calculate optical flow
     p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray, frame_gray, p0, None, **lk_params)
-    # Select good points
-    good_new = p1[st == 1]
-    good_old = p0[st == 1]
-    # draw the tracks
-    for i, (new, old) in enumerate(zip(good_new, good_old)):
-        a, b = new.ravel()
-        c, d = old.ravel()
-        mask = cv2.line(mask, (a, b), (c, d), color[i].tolist(), 2)
-        frame = cv2.circle(frame, (a, b), 5, color[i].tolist(), -1)
+
+
+    try:
+        # Select good points
+        good_new = p1[st == 1]
+        good_old = p0[st == 1]
+
+        # draw the tracks
+        for i, (new, old) in enumerate(zip(good_new, good_old)):
+            a, b = new.ravel()
+            c, d = old.ravel()
+            mask = cv2.line(mask, (a, b), (c, d), color[i].tolist(), 2)
+            frame = cv2.circle(frame, (a, b), 5, color[i].tolist(), -1)
+    except:
+        print("No points found")
+        good_new = None
+
 
     return mask, frame, frame_gray, good_new
 
@@ -113,14 +125,34 @@ def update_optical_flow_previous(frame_gray, good_new):
 def main():
     [cap, feature_params, lk_params, color, old_gray, mask] = setup()
 
+    img = load_frame(cap)
+    edges = edge_detection(img)
+    line_and_edges, lines = line_detection(edges, img)
+
+    p0 = cv2.goodFeaturesToTrack(cv2.cvtColor(line_and_edges, cv2.COLOR_BGR2GRAY), mask=None, **feature_params)
+
+    cntr = 0
     while(1):
+        cntr += 1
+        cntr = cntr % 10
+
         img = load_frame(cap)
         edges = edge_detection(img)
         line_and_edges, lines = line_detection(edges, img)
-        mask, frame, frame_gray, good_new = optical_flow(img, feature_params, lk_params, color, old_gray, mask)
+
+        if cntr == 0:
+            p0 = cv2.goodFeaturesToTrack(cv2.cvtColor(line_and_edges, cv2.COLOR_BGR2GRAY), mask=None, **feature_params)
+
+        mask, frame, frame_gray, good_new = optical_flow(lines, feature_params, lk_params, color, old_gray, mask, p0)
+
+        if good_new is None:
+            good_new = cv2.goodFeaturesToTrack(cv2.cvtColor(line_and_edges, cv2.COLOR_BGR2GRAY), mask=None,
+                                             **feature_params)
+
         display(mask, frame)
         if exit_user_input():
             break
+
         old_gray, p0 = update_optical_flow_previous(frame_gray, good_new)
 
     cv2.destroyAllWindows()
