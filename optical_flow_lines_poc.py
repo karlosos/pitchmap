@@ -7,7 +7,7 @@ import cv2
 
 
 def setup():
-    cap = cv2.VideoCapture("dynamic_sample.mp4")
+    cap = cv2.VideoCapture("Dynamic_Barca_Real.mp4")
     # params for ShiTomasi corner detection
     feature_params = dict(maxCorners=100,
                           qualityLevel=0.3,
@@ -47,6 +47,15 @@ def edge_detection(img):
 
     return edges
 
+
+def select_rgb_white(image):
+    # white color mask
+    lower = np.uint8([100, 100, 100])
+    upper = np.uint8([255, 255, 255])
+    white_mask = cv2.inRange(image, lower, upper)
+    masked = cv2.bitwise_and(image, image, mask=white_mask)
+
+    return masked
 
 def line_detection(edges, img):
     # houghlines to get the lines
@@ -154,6 +163,23 @@ def draw_arrow(img, vector):
 
         return img
 
+
+def test_line_detection():
+    [cap, feature_params, lk_params, color, old_gray, mask] = setup()
+
+    while (1):
+        img = load_frame(cap)
+        white_img = select_rgb_white(img)
+        edges = edge_detection(white_img)
+        line_and_edges, lines = line_detection(edges, img)
+
+        cv2.imshow('frame', line_and_edges)
+        if exit_user_input():
+            break
+
+    cv2.destroyAllWindows()
+    cap.release()
+
 def main():
     [cap, feature_params, lk_params, color, old_gray, mask] = setup()
 
@@ -161,7 +187,7 @@ def main():
     edges = edge_detection(img)
     line_and_edges, lines = line_detection(edges, img)
 
-    p0 = cv2.goodFeaturesToTrack(cv2.cvtColor(line_and_edges, cv2.COLOR_BGR2GRAY), mask=None, **feature_params)
+    p0 = cv2.goodFeaturesToTrack(cv2.cvtColor(lines, cv2.COLOR_BGR2GRAY), mask=None, **feature_params)
 
     cntr = 0
     while(1):
@@ -173,9 +199,9 @@ def main():
         line_and_edges, lines = line_detection(edges, img)
 
         if cntr == 0:
-            p0 = cv2.goodFeaturesToTrack(cv2.cvtColor(line_and_edges, cv2.COLOR_BGR2GRAY), mask=None, **feature_params)
+            p0 = cv2.goodFeaturesToTrack(cv2.cvtColor(lines, cv2.COLOR_BGR2GRAY), mask=None, **feature_params)
 
-        mask, frame, frame_gray, good_new, mean_vector = optical_flow(lines, feature_params, lk_params, color, old_gray,
+        mask, frame, frame_gray, good_new, mean_vector = optical_flow(edges, feature_params, lk_params, color, old_gray,
                                                                       mask, p0)
 
         if good_new is None:
@@ -193,4 +219,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    test_line_detection()
