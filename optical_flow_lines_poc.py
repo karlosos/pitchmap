@@ -164,13 +164,50 @@ def draw_arrow(img, vector):
         return img
 
 
+def mask_from_grass(frame):
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+    # define range of blue color in HSV
+    lower_green = np.array([35, 50, 50])
+    upper_green = np.array([75, 255, 255])
+
+    # Threshold the HSV image to get only blue colors
+    mask = cv2.inRange(hsv, lower_green, upper_green)
+
+    # Mask editing - morphological operations
+    kernel = np.ones((5, 5), np.uint8)
+    #res = cv2.morphologyEx(res, cv2.MORPH_CLOSE, kernel)
+    mask = cv2.medianBlur(mask, 5)
+    mask = cv2.dilate(mask, kernel, iterations=7)
+    mask = cv2.erode(mask, kernel, iterations=7)
+
+    # Bitwise-AND mask and original image
+    res = cv2.bitwise_and(frame, frame, mask=mask)
+
+    return res
+
+def test_grass_extraction():
+    [cap, feature_params, lk_params, color, old_gray, mask] = setup()
+    while (1):
+        frame = load_frame(cap)
+        res = mask_from_grass(frame)
+
+        cv2.imshow('frame', res)
+        if exit_user_input():
+            break
+
+    cv2.destroyAllWindows()
+    cap.release()
+
+
 def test_line_detection():
     [cap, feature_params, lk_params, color, old_gray, mask] = setup()
 
     while (1):
         img = load_frame(cap)
         white_img = select_rgb_white(img)
-        edges = edge_detection(white_img)
+        only_grass = mask_from_grass(img)
+        edges = edge_detection(only_grass)
         line_and_edges, lines = line_detection(edges, img)
 
         cv2.imshow('frame', line_and_edges)
@@ -184,7 +221,8 @@ def main():
     [cap, feature_params, lk_params, color, old_gray, mask] = setup()
 
     img = load_frame(cap)
-    edges = edge_detection(img)
+    only_grass = mask_from_grass(img)
+    edges = edge_detection(only_grass)
     line_and_edges, lines = line_detection(edges, img)
 
     p0 = cv2.goodFeaturesToTrack(cv2.cvtColor(lines, cv2.COLOR_BGR2GRAY), mask=None, **feature_params)
@@ -195,7 +233,8 @@ def main():
         cntr = cntr % 10
 
         img = load_frame(cap)
-        edges = edge_detection(img)
+        only_grass = mask_from_grass(img)
+        edges = edge_detection(only_grass)
         line_and_edges, lines = line_detection(edges, img)
 
         if cntr == 0:
@@ -219,4 +258,6 @@ def main():
 
 
 if __name__ == "__main__":
-    test_line_detection()
+    #test_grass_extraction()
+    #test_line_detection()
+    main()
