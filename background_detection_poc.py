@@ -1,8 +1,8 @@
 import numpy as np
 import cv2 as cv
 cap = cv.VideoCapture('dynamic_sample.mp4')
-fgbg = cv.createBackgroundSubtractorMOG2()
-#fgbg = cv.bgsegm.createBackgroundSubtractorMOG()
+#fgbg = cv.createBackgroundSubtractorMOG2()
+fgbg = cv.bgsegm.createBackgroundSubtractorMOG()
 while(1):
     ret, frame = cap.read()
     fgmask = fgbg.apply(frame)

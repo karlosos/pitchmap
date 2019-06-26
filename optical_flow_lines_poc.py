@@ -4,10 +4,13 @@ Tracking of points from cv2.goodFeaturesToTrack
 
 import numpy as np
 import cv2
-
+import cvlib as cv
+from cvlib.object_detection import draw_bbox
+from imutils.object_detection import non_max_suppression
 
 def setup():
     cap = cv2.VideoCapture("Dynamic_Barca_Real.mp4")
+    #cap = cv2.VideoCapture("dynamic_sample.mp4")
     # params for ShiTomasi corner detection
     feature_params = dict(maxCorners=100,
                           qualityLevel=0.3,
@@ -73,7 +76,7 @@ def line_detection(edges, img):
 
     for line in lines:
         for x1, y1, x2, y2 in line:
-            cv2.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 1)
+            cv2.line(line_image, (x1, y1), (x2, y2), (0, 0, 255), 3)
 
     # Draw the lines on the  image
     lines_edges = cv2.addWeighted(img, 0.8, line_image, 1, 0)
@@ -188,14 +191,22 @@ def mask_from_grass(frame):
 
 def test_grass_extraction():
     [cap, feature_params, lk_params, color, old_gray, mask] = setup()
+    frame_number = 0
     while (1):
         frame = load_frame(cap)
         res = mask_from_grass(frame)
 
         cv2.imshow('frame', res)
+
+        if frame_number == 98:
+            cv2.imwrite('original.png', frame)
+            cv2.imwrite('grass_extraction.png', res)
+
+
         if exit_user_input():
             break
 
+        frame_number += 1
     cv2.destroyAllWindows()
     cap.release()
 
@@ -203,14 +214,100 @@ def test_grass_extraction():
 def test_line_detection():
     [cap, feature_params, lk_params, color, old_gray, mask] = setup()
 
+    frame_number = 0
     while (1):
         img = load_frame(cap)
         white_img = select_rgb_white(img)
         only_grass = mask_from_grass(img)
         edges = edge_detection(only_grass)
-        line_and_edges, lines = line_detection(edges, img)
+        line_and_edges, lines = line_detection(edges, only_grass)
 
         cv2.imshow('frame', line_and_edges)
+
+        if frame_number == 98:
+            cv2.imwrite('lines.png', line_and_edges)
+
+        frame_number += 1
+
+        if exit_user_input():
+            break
+
+    print(frame_number)
+    cv2.destroyAllWindows()
+    cap.release()
+
+def test_player_detection_yolo():
+    [cap, feature_params, lk_params, color, old_gray, mask] = setup()
+
+    #fgbg = cv2.createBackgroundSubtractorMOG2()
+    fgbg = cv2.bgsegm.createBackgroundSubtractorMOG()
+    hog = cv2.HOGDescriptor()
+
+    frame_number = 0
+    while (1):
+        img = load_frame(cap)
+        white_img = select_rgb_white(img)
+        only_grass = mask_from_grass(img)
+        #h = hog.compute(img)
+        fgmask = fgbg.apply(img)
+        # apply object detection
+        bbox, label, conf = cv.detect_common_objects(only_grass)
+        out = draw_bbox(only_grass, bbox, label, conf)
+
+        #print(h)
+        cv2.imshow('frame', out)
+        if exit_user_input():
+            break
+
+        if frame_number == 98:
+            cv2.imwrite('detection.png', out)
+
+        frame_number += 1
+
+    cv2.destroyAllWindows()
+    cap.release()
+
+def inside(r, q):
+    rx, ry, rw, rh = r
+    qx, qy, qw, qh = q
+    return rx > qx and ry > qy and rx + rw < qx + qw and ry + rh < qy + qh
+
+def draw_detections(img, rects, thickness = 1):
+    for x, y, w, h in rects:
+        # the HOG detector returns slightly larger rectangles than the real objects.
+        # so we slightly shrink the rectangles to get a nicer output.
+        pad_w, pad_h = int(0.15*w), int(0.05*h)
+        cv2.rectangle(img, (x+pad_w, y+pad_h), (x+w-pad_w, y+h-pad_h), (0, 255, 0), thickness)
+
+
+def test_player_detection_hog():
+    [cap, feature_params, lk_params, color, old_gray, mask] = setup()
+
+    #fgbg = cv2.createBackgroundSubtractorMOG2()
+    fgbg = cv2.bgsegm.createBackgroundSubtractorMOG()
+
+    hog = cv2.HOGDescriptor()
+    hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
+
+    while (1):
+        img = load_frame(cap)
+        white_img = select_rgb_white(img)
+        only_grass = mask_from_grass(img)
+        #h = hog.compute(img)
+        fgmask = fgbg.apply(img)
+
+        found, w = hog.detectMultiScale(img, winStride=(8, 8), padding=(32, 32), scale=1.05)
+        found_filtered = []
+        for ri, r in enumerate(found):
+            for qi, q in enumerate(found):
+                if ri != qi and inside(r, q):
+                    break
+            else:
+                found_filtered.append(r)
+        draw_detections(img, found)
+
+        #print(h)
+        cv2.imshow('frame', img)
         if exit_user_input():
             break
 
@@ -260,4 +357,6 @@ def main():
 if __name__ == "__main__":
     #test_grass_extraction()
     #test_line_detection()
-    main()
+    #test_player_detection_hog()
+    test_player_detection_yolo()
+    #main()
