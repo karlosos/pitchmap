@@ -4,7 +4,7 @@ Tracking of points from cv2.goodFeaturesToTrack
 
 import numpy as np
 import cv2
-cap = cv2.VideoCapture("dynamic_sample.mp4")
+cap = cv2.VideoCapture("data/dynamic_sample.mp4")
 # params for ShiTomasi corner detection
 feature_params = dict( maxCorners = 100,
                        qualityLevel = 0.3,

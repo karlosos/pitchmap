@@ -9,7 +9,7 @@ from cvlib.object_detection import draw_bbox
 from imutils.object_detection import non_max_suppression
 
 def setup():
-    cap = cv2.VideoCapture("Dynamic_Barca_Real.mp4")
+    cap = cv2.VideoCapture("data/Dynamic_Barca_Real.mp4")
     #cap = cv2.VideoCapture("dynamic_sample.mp4")
     # params for ShiTomasi corner detection
     feature_params = dict(maxCorners=100,
@@ -59,6 +59,7 @@ def select_rgb_white(image):
     masked = cv2.bitwise_and(image, image, mask=white_mask)
 
     return masked
+
 
 def line_detection(edges, img):
     # houghlines to get the lines

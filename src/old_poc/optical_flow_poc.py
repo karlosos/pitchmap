@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-cap = cv2.VideoCapture("dynamic_sample.mp4")
+cap = cv2.VideoCapture("data/dynamic_sample.mp4")
 ret, frame1 = cap.read()
 prvs = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
 hsv = np.zeros_like(frame1)

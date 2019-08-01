@@ -15,7 +15,7 @@ from cvlib.object_detection import draw_bbox
 import cv2
 
 # open webcam
-webcam = cv2.VideoCapture("dynamic_sample.mp4")
+webcam = cv2.VideoCapture("data/dynamic_sample.mp4")
 
 if not webcam.isOpened():
     print("Could not open webcam")
