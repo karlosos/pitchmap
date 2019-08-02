@@ -25,9 +25,13 @@ def main():
     while True:
         img = fl.load_frame()
         grass_mask = mask.grass(img)
-        bounding_boxes_frame, bounding_boxes, labels = detect.players(grass_mask)
+        bounding_boxes_frame, bounding_boxes, labels = detect.players_detection(grass_mask)
 
-        display.show(bounding_boxes_frame)
+        edges = detect.edges_detection(grass_mask)
+        lines_frame = detect.lines_detection(edges, grass_mask)
+        out_frame = cv2.addWeighted(bounding_boxes_frame, 0.8, lines_frame, 1, 0)
+
+        display.show(out_frame)
         if exit_user_input():
             break
 
