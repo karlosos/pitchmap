@@ -5,8 +5,6 @@ class Calibrator:
 
         self.current_point = None
 
-        self.points = {}
-
     def toggle_enabled(self):
         if not self.enabled:
             self.current_point = None
@@ -30,3 +28,6 @@ class Calibrator:
             return index
         else:
             return False
+
+    def get_points_count(self):
+        return len(self.points)

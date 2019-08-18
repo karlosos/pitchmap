@@ -9,6 +9,7 @@ import calibrator
 
 import imutils
 import cv2
+import numpy as np
 
 
 class PitchMap:
@@ -49,6 +50,13 @@ class PitchMap:
         else:
             return False
 
+    @staticmethod
+    def input_transform(key):
+        if key == 116:  # t key
+            return True
+        else:
+            return False
+
     def loop(self):
         while True:
             if not self.calibrator.enabled:
@@ -79,6 +87,16 @@ class PitchMap:
                 else:
                     self.__display.close_model_window()
                 self.calibrator.toggle_enabled()
+            elif self.input_transform(key):
+                if self.calibrator.enabled and self.calibrator.get_points_count() >= 4:
+                    original_points, model_points = zip(*self.calibrator.points.values())
+                    original_points = np.float32(original_points)
+                    model_points = np.float32(model_points)
+                    rows, columns, channels = self.out_frame.shape
+
+                    M, _ = cv2.findHomography(original_points, model_points)
+                    output = cv2.warpPerspective(self.out_frame, M, (columns, rows))
+                    self.out_frame = output
 
             self.__frame_number += 1
 
