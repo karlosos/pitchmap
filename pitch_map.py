@@ -5,6 +5,7 @@ import frame_loader
 import frame_display
 import mask
 import detect
+import calibrator
 
 import imutils
 import cv2
@@ -19,7 +20,9 @@ class PitchMap:
         self.__video_name = 'Dynamic_Barca_Real.mp4'
         self.__window_name = f'PitchMap: {self.__video_name}'
         self.__fl = frame_loader.FrameLoader(self.__video_name)
-        self.__display = frame_display.Display(self.__window_name)
+        self.calibrator = calibrator.Calibrator()
+        self.__display = frame_display.Display(main_window_name=self.__window_name, model_window_name="2D Pitch Model",
+                                               pitchmap=self)
 
         self.__trackers = cv2.MultiTracker_create()
         self.__frame_number = 0
@@ -30,12 +33,7 @@ class PitchMap:
             "mosse": cv2.TrackerMOSSE_create
         }
         self.__tracking_method = tracking_method
-
-        cv2.namedWindow(self.__window_name)
-        cv2.setMouseCallback(self.__window_name, self.add_point)
-
-        self.__pause = False
-        self.__out_frame = None
+        self.out_frame = None
 
     @staticmethod
     def input_point(key):
@@ -53,7 +51,7 @@ class PitchMap:
 
     def loop(self):
         while True:
-            if not self.__pause:
+            if not self.calibrator.enabled:
                 frame = self.__fl.load_frame()
                 frame = imutils.resize(frame, width=600)
 
@@ -66,19 +64,25 @@ class PitchMap:
                 else:
                     bounding_boxes_frame, bounding_boxes, labels = detect.players_detection(grass_mask)
 
-                self.__out_frame = cv2.addWeighted(grass_mask, 0.8, lines_frame, 1, 0)
+                self.out_frame = cv2.addWeighted(grass_mask, 0.8, lines_frame, 1, 0)
+            else:
+                self.__display.show_model()
 
-            self.__display.show(self.__out_frame)
+            self.__display.show(self.out_frame)
 
             key = cv2.waitKey(1) & 0xff
             if self.input_exit(key):
                 break
             elif self.input_point(key):
-                self.__pause = not self.__pause
+                if not self.calibrator.enabled:
+                    self.__display.create_model_window()
+                else:
+                    self.__display.close_model_window()
+                self.calibrator.toggle_enabled()
 
             self.__frame_number += 1
 
-        cv2.destroyAllWindows()
+        self.__display.close_windows()
         self.__fl.release()
 
     def tracking(self, frame):
@@ -108,15 +112,6 @@ class PitchMap:
             if label == "person":
                 tracker = self.OPENCV_OBJECT_TRACKERS[self.__tracking_method]()
                 self.__trackers.add(tracker, frame, tuple(bounding_boxes[i]))
-
-    def add_point(self, event, x, y, flags, params):
-        """
-        Mouse callback. For adding points of interest for perspective transformation.
-        """
-
-        if self.__pause:
-            if event == cv2.EVENT_LBUTTONUP:
-                cv2.circle(self.__out_frame, (x, y), 5, (0, 255, 0), 2)
 
 
 if __name__ == '__main__':
