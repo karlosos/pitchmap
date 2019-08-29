@@ -54,8 +54,13 @@ class Display:
         if self.__pitchmap.calibrator.enabled:
             if event == cv2.EVENT_LBUTTONUP:
                 index = self.__pitchmap.calibrator.add_point_main_window((x, y))
+                print("original, model")
                 print(f"Index: {index}")
                 if index:
                     cv2.circle(self.__pitchmap.out_frame, (x, y), 3, (0, 255, 0), 5)
                     cv2.putText(self.__pitchmap.out_frame, str(index), (x+3, y+3),
                                 cv2.FONT_HERSHEY_PLAIN, 2, (0, 255, 0), 3)
+
+    def add_players_to_model(self, players):
+        for player in players:
+            cv2.circle(self.__pitch_model, (int(player[0]), int(player[1])), 3, (255, 0, 0), 5)

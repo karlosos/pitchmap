@@ -25,6 +25,7 @@ class PitchMap:
         self.__display = frame_display.Display(main_window_name=self.__window_name, model_window_name="2D Pitch Model",
                                                pitchmap=self)
 
+        self.players = []
         self.__trackers = cv2.MultiTracker_create()
         self.__frame_number = 0
 
@@ -71,6 +72,12 @@ class PitchMap:
                     self.tracking(grass_mask)
                 else:
                     bounding_boxes_frame, bounding_boxes, labels = detect.players_detection(grass_mask)
+                    self.players = []
+                    for box in bounding_boxes:
+                        x = int((box[0] + box[2]) / 2)
+                        y = box[3]
+                        cv2.circle(grass_mask, (x, y), 3, (0, 255, 0), 5)
+                        self.players.append((x, y))
 
                 self.out_frame = cv2.addWeighted(grass_mask, 0.8, lines_frame, 1, 0)
             else:
@@ -98,6 +105,24 @@ class PitchMap:
                     output = cv2.warpPerspective(self.out_frame, M, (columns, rows))
                     self.out_frame = output
 
+                    players = np.float32(self.players)
+                    players_2d_positions = []
+
+                    for player in players:
+                        player = np.array(player)
+                        player = np.append(player, 1.)
+
+                        print(f"Player: {player}")
+                        print(f"M: {M}")
+                        # https://www.learnopencv.com/homography-examples-using-opencv-python-c/
+                        # calculating new positions
+                        player_2d_position = M.dot(player)
+                        player_2d_position = player_2d_position/player_2d_position[2]
+                        players_2d_positions.append(player_2d_position)
+                        print(f"2D: {players_2d_positions}")
+
+                    self.__display.add_players_to_model(players_2d_positions)
+
             self.__frame_number += 1
 
         self.__display.close_windows()
@@ -123,7 +148,6 @@ class PitchMap:
         Add points for tracking from detector
         :param frame:
         """
-
         bounding_boxes_frame, bounding_boxes, labels = detect.players_detection(frame)
         self.__trackers = cv2.MultiTracker_create()
         for i, label in enumerate(labels):
