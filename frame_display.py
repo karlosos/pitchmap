@@ -61,6 +61,6 @@ class Display:
                     cv2.putText(self.__pitchmap.out_frame, str(index), (x+3, y+3),
                                 cv2.FONT_HERSHEY_PLAIN, 2, (0, 255, 0), 3)
 
-    def add_players_to_model(self, players):
-        for player in players:
-            cv2.circle(self.__pitch_model, (int(player[0]), int(player[1])), 3, (255, 0, 0), 5)
+    def add_players_to_model(self, players, player_colors):
+        for idx, player in enumerate(players):
+            cv2.circle(self.__pitch_model, (int(player[0]), int(player[1])), 3, player_colors[idx], 5)

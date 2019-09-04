@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 
 
-def grass(frame):
+def grass(frame, for_player=False):
     """
     Delete non-green elements from frame.
     :param frame:
@@ -19,6 +19,9 @@ def grass(frame):
 
     # Threshold the HSV image to get only blue colors
     mask = cv2.inRange(hsv, lower_green, upper_green)
+
+    if for_player:
+        return mask
 
     # Mask editing - morphological operations
     kernel = np.ones((5, 5), np.uint8)

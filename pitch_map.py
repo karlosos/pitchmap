@@ -18,7 +18,7 @@ class PitchMap:
         :param tracking_method: if left default (None) then there's no tracking and detection
         is performed in every frame
         """
-        self.__video_name = 'Dynamic_Barca_Real.mp4'
+        self.__video_name = 'dynamic_sample.mp4'
         self.__window_name = f'PitchMap: {self.__video_name}'
         self.__fl = frame_loader.FrameLoader(self.__video_name)
         self.calibrator = calibrator.Calibrator()
@@ -26,6 +26,7 @@ class PitchMap:
                                                pitchmap=self)
 
         self.players = []
+        self.players_colors = []
         self.__trackers = cv2.MultiTracker_create()
         self.__frame_number = 0
 
@@ -73,11 +74,12 @@ class PitchMap:
                 else:
                     bounding_boxes_frame, bounding_boxes, labels = detect.players_detection(grass_mask)
                     self.players = []
-                    for box in bounding_boxes:
-                        x = int((box[0] + box[2]) / 2)
-                        y = box[3]
-                        cv2.circle(grass_mask, (x, y), 3, (0, 255, 0), 5)
+                    self.players_colors = []
+                    for idx, box in enumerate(bounding_boxes):
+                        team_color, (x, y) = detect.team_detection_for_player(frame, box)
+                        cv2.circle(grass_mask, (x, y), 3, team_color, 5)
                         self.players.append((x, y))
+                        self.players_colors.append(team_color)
 
                 self.out_frame = cv2.addWeighted(grass_mask, 0.8, lines_frame, 1, 0)
             else:
@@ -111,17 +113,13 @@ class PitchMap:
                     for player in players:
                         player = np.array(player)
                         player = np.append(player, 1.)
-
-                        print(f"Player: {player}")
-                        print(f"M: {M}")
                         # https://www.learnopencv.com/homography-examples-using-opencv-python-c/
                         # calculating new positions
                         player_2d_position = M.dot(player)
                         player_2d_position = player_2d_position/player_2d_position[2]
                         players_2d_positions.append(player_2d_position)
-                        print(f"2D: {players_2d_positions}")
 
-                    self.__display.add_players_to_model(players_2d_positions)
+                    self.__display.add_players_to_model(players_2d_positions, self.players_colors)
 
             self.__frame_number += 1
 
