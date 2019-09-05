@@ -38,6 +38,8 @@ class PitchMap:
         self.__tracking_method = tracking_method
         self.out_frame = None
 
+        self.cluster_teams()
+
     @staticmethod
     def input_point(key):
         if key == 115:  # s key
@@ -153,6 +155,26 @@ class PitchMap:
                 tracker = self.OPENCV_OBJECT_TRACKERS[self.__tracking_method]()
                 self.__trackers.add(tracker, frame, tuple(bounding_boxes[i]))
 
+    def cluster_teams(self):
+        selected_frames = self.__fl.selected_frames
+        extracted_player_colors = []
+        for frame in selected_frames:
+            frame = imutils.resize(frame, width=600)
+            grass_mask = mask.grass(frame)
+            bounding_boxes_frame, bounding_boxes, labels = detect.players_detection(grass_mask)
+            bounding_boxes = self.serialize_bounding_boxes(bounding_boxes)
+            for idx, box in enumerate(bounding_boxes):
+                if labels[idx] == 'person':
+                    print(box)
+                    team_color, _ = detect.team_detection_for_player(frame, box)
+                    extracted_player_colors.append(team_color)
+
+        print(extracted_player_colors)
+
+    @staticmethod
+    def serialize_bounding_boxes(bounding_boxes):
+        bounding_boxes = np.where(np.asarray(bounding_boxes) < 0, 0, bounding_boxes)
+        return bounding_boxes
 
 if __name__ == '__main__':
     pm = PitchMap()
