@@ -7,13 +7,14 @@ import mask
 import detect
 import calibrator
 import plotting
-import colorsys
+
 
 import imutils
 import cv2
 import numpy as np
 from sklearn.cluster import AgglomerativeClustering
-
+import colorsys
+from sklearn import tree
 
 class PitchMap:
     def __init__(self, tracking_method=None):
@@ -33,7 +34,7 @@ class PitchMap:
         self.__trackers = cv2.MultiTracker_create()
         self.__frame_number = 0
 
-        self.__clust = None
+        self.__clf = None
 
         self.OPENCV_OBJECT_TRACKERS = {
             "csrt": cv2.TrackerCSRT_create,
@@ -84,8 +85,11 @@ class PitchMap:
                     self.players_colors = []
                     for idx, box in enumerate(bounding_boxes):
                         team_color, (x, y) = detect.color_detection_for_player(frame, box)
-                        team_id = detect.team_detection_for_player(np.asarray(team_color), self.__clust)
+                        team_id = detect.team_detection_for_player(np.asarray(team_color), self.__clf)[0]
+                        # TODO get team color based on team_id
                         cv2.circle(grass_mask, (x, y), 3, team_color, 5)
+                        cv2.putText(grass_mask, text=str(team_id), org=(x + 3, y + 3),
+                                    fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale=1, color=(0, 255, 0), lineType=1)
                         self.players.append((x, y))
                         self.players_colors.append(team_color)
 
@@ -162,10 +166,9 @@ class PitchMap:
                 tracker = self.OPENCV_OBJECT_TRACKERS[self.__tracking_method]()
                 self.__trackers.add(tracker, frame, tuple(bounding_boxes[i]))
 
-    def cluster_teams(self):
-        selected_frames = self.__fl.selected_frames
+    def extract_player_colors(self, frames):
         extracted_player_colors = []
-        for frame in selected_frames:
+        for frame in frames:
             frame = imutils.resize(frame, width=600)
             grass_mask = mask.grass(frame)
             _, bounding_boxes, labels = detect.players_detection(grass_mask)
@@ -174,12 +177,17 @@ class PitchMap:
                 if labels[idx] == 'person':
                     team_color, _ = detect.color_detection_for_player(frame, box)
                     extracted_player_colors.append(team_color)
+        return extracted_player_colors
 
-        # TODO refactor
-        hsv = np.asarray(list(map(lambda color: colorsys.rgb_to_hsv(color[0] / 255.0,
-                                                                    color[1] / 255.0, color[2] / 255.0), extracted_player_colors)))
-        self.__clust = AgglomerativeClustering(n_clusters=3).fit(extracted_player_colors)
-        plotting.plot_colors(extracted_player_colors, hsv, self.__clust.labels_)
+    def cluster_teams(self):
+        selected_frames = self.__fl.selected_frames
+        extracted_player_colors = self.extract_player_colors(selected_frames)
+
+        clust = AgglomerativeClustering(n_clusters=3).fit(extracted_player_colors)
+        plotting.plot_colors(extracted_player_colors, clust.labels_)
+
+        self.__clf = tree.DecisionTreeClassifier()
+        self.__clf = self.__clf.fit(extracted_player_colors, clust.labels_)
 
     @staticmethod
     def serialize_bounding_boxes(bounding_boxes):

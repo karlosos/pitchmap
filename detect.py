@@ -29,9 +29,9 @@ def color_detection_for_player(frame, box):
     return mean_color, (x, y)
 
 
-def team_detection_for_player(color, clust):
+def team_detection_for_player(color, clf):
     # TODO there's no fit in clustering
-    return clust.fit_predict(color.reshape(1, -1))
+    return clf.predict(color.reshape(1, -1))
 
 
 def edges_detection(img):

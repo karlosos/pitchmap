@@ -1,4 +1,6 @@
 ```plantuml
+!includeurl https://raw.githubusercontent.com/karlosos/RedDress-PlantUML/master/light_theme.puml
+
 title PitchMap class diagram
 
 class PitchMap {
