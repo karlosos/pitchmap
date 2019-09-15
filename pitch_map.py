@@ -7,6 +7,7 @@ import mask
 import detect
 import calibrator
 import team_detection
+import tracker
 
 import imutils
 import cv2
@@ -28,23 +29,18 @@ class PitchMap:
 
         self.players = []
         self.players_colors = []
-        self.__trackers = cv2.MultiTracker_create()
         self.__frame_number = 0
 
         self.__clf = None
-
-        self.OPENCV_OBJECT_TRACKERS = {
-            "csrt": cv2.TrackerCSRT_create,
-            "kcf": cv2.TrackerKCF_create,
-            "mosse": cv2.TrackerMOSSE_create
-        }
-        self.__tracking_method = tracking_method
         self.out_frame = None
 
         # Team detection initialization
         selected_frames_for_clustering = self.__fl.select_frames_for_clustering()
         self.__team_detector = team_detection.TeamDetection()
         self.__team_detector.cluster_teams(selected_frames_for_clustering)
+
+        # Players tracking initialization
+        self.__tracker = tracker.Tracker(tracking_method)
 
     @staticmethod
     def input_point(key):
@@ -77,22 +73,20 @@ class PitchMap:
                 edges = detect.edges_detection(grass_mask)
                 lines_frame = detect.lines_detection(edges, grass_mask)
 
-                if self.__tracking_method is not None:
-                    self.tracking(grass_mask)
-                else:
-                    bounding_boxes_frame, bounding_boxes, labels = detect.players_detection(grass_mask)
-                    self.players = []
-                    self.players_colors = []
-                    for idx, box in enumerate(bounding_boxes):
-                        team_color, (x, y) = self.__team_detector.color_detection_for_player(frame, box)
-                        team_id = self.__team_detector.team_detection_for_player(np.asarray(team_color))[0]
+                bounding_boxes_frame, bounding_boxes, labels = self.__tracker.update(grass_mask)
 
-                        # TODO get team color based on team_id
-                        cv2.circle(grass_mask, (x, y), 3, team_color, 5)
-                        cv2.putText(grass_mask, text=str(team_id), org=(x + 3, y + 3),
-                                    fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale=1, color=(0, 255, 0), lineType=1)
-                        self.players.append((x, y))
-                        self.players_colors.append(team_color)
+                self.players = []
+                self.players_colors = []
+                for idx, box in enumerate(bounding_boxes):
+                    team_color, (x, y) = self.__team_detector.color_detection_for_player(frame, box)
+                    team_id = self.__team_detector.team_detection_for_player(np.asarray(team_color))[0]
+
+                    # TODO get team color based on team_id
+                    cv2.circle(grass_mask, (x, y), 3, team_color, 5)
+                    cv2.putText(grass_mask, text=str(team_id), org=(x + 3, y + 3),
+                                fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale=1, color=(0, 255, 0), lineType=1)
+                    self.players.append((x, y))
+                    self.players_colors.append(team_color)
 
                 self.out_frame = cv2.addWeighted(grass_mask, 0.8, lines_frame, 1, 0)
             else:
@@ -110,62 +104,15 @@ class PitchMap:
                     self.__display.close_model_window()
                 self.calibrator.toggle_enabled()
             elif self.input_transform(key):
-                if self.calibrator.enabled and \
-                   self.calibrator.get_points_count() >= 4:
-                    original_points, model_points = zip(*self.calibrator.points.values())
-                    original_points = np.float32(original_points)
-                    model_points = np.float32(model_points)
-                    rows, columns, channels = self.out_frame.shape
-
-                    M, _ = cv2.findHomography(original_points, model_points)
-                    output = cv2.warpPerspective(self.out_frame, M, (columns, rows))
-                    self.out_frame = output
-
-                    players = np.float32(self.players)
-                    players_2d_positions = []
-
-                    for player in players:
-                        player = np.array(player)
-                        player = np.append(player, 1.)
-                        # https://www.learnopencv.com/homography-examples-using-opencv-python-c/
-                        # calculating new positions
-                        player_2d_position = M.dot(player)
-                        player_2d_position = player_2d_position / player_2d_position[2]
-                        players_2d_positions.append(player_2d_position)
-
-                    self.__display.add_players_to_model(players_2d_positions, self.players_colors)
+                players_2d_positions, transformed_frame = self.calibrator.calibrate(self.out_frame, self.players,
+                                                                                    self.players_colors)
+                self.out_frame = transformed_frame
+                self.__display.add_players_to_model(players_2d_positions, self.players_colors)
 
             self.__frame_number += 1
 
         self.__display.close_windows()
         self.__fl.release()
-
-    def tracking(self, frame):
-        """
-        Update tracking and draw white boxes around tracking objects
-
-        :param frame:
-        """
-        if self.__frame_number % 15 == 0:
-            self.add_tracking_points(frame.copy())
-
-        (success, boxes) = self.__trackers.update(frame)
-
-        for box in boxes:
-            (x, y, w, h) = [int(v) for v in box]
-            cv2.rectangle(frame, (x, y), (w, h), (255, 255, 255), 2)
-
-    def add_tracking_points(self, frame):
-        """
-        Add points for tracking from detector
-        :param frame:
-        """
-        bounding_boxes_frame, bounding_boxes, labels = detect.players_detection(frame)
-        self.__trackers = cv2.MultiTracker_create()
-        for i, label in enumerate(labels):
-            if label == "person":
-                tracker = self.OPENCV_OBJECT_TRACKERS[self.__tracking_method]()
-                self.__trackers.add(tracker, frame, tuple(bounding_boxes[i]))
 
 
 if __name__ == '__main__':
