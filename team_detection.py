@@ -10,15 +10,16 @@ import numpy as np
 
 
 class TeamDetection:
-    def __init__(self):
+    def __init__(self, plot=False):
         self.__clf = None
-        pass
+        self.__plot = plot
 
     def cluster_teams(self, selected_frames):
         extracted_player_colors = self.extract_player_colors(selected_frames)
 
         clust = AgglomerativeClustering(n_clusters=3).fit(extracted_player_colors)
-        plotting.plot_colors(extracted_player_colors, clust.labels_)
+        if self.__plot:
+            plotting.plot_colors(extracted_player_colors, clust.labels_)
 
         self.__clf = tree.DecisionTreeClassifier()
         self.__clf = self.__clf.fit(extracted_player_colors, clust.labels_)

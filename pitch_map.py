@@ -57,16 +57,7 @@ class PitchMap:
 
                 self.players = []
                 self.players_colors = []
-                for idx, box in enumerate(bounding_boxes):
-                    team_color, (x, y) = self.__team_detector.color_detection_for_player(frame, box)
-                    team_id = self.__team_detector.team_detection_for_player(np.asarray(team_color))[0]
-
-                    # TODO get team color based on team_id
-                    cv2.circle(grass_mask, (x, y), 3, team_color, 5)
-                    cv2.putText(grass_mask, text=str(team_id), org=(x + 3, y + 3),
-                                fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale=1, color=(0, 255, 0), lineType=1)
-                    self.players.append((x, y))
-                    self.players_colors.append(team_color)
+                self.draw_bounding_boxes(frame, grass_mask, bounding_boxes)
 
                 self.out_frame = cv2.addWeighted(grass_mask, 0.8, lines_frame, 1, 0)
             else:
@@ -83,6 +74,18 @@ class PitchMap:
 
         self.__display.close_windows()
         self.__fl.release()
+
+    def draw_bounding_boxes(self, frame, grass_mask, bounding_boxes):
+        for idx, box in enumerate(bounding_boxes):
+            team_color, (x, y) = self.__team_detector.color_detection_for_player(frame, box)
+            team_id = self.__team_detector.team_detection_for_player(np.asarray(team_color))[0]
+
+            # TODO get team color based on team_id
+            cv2.circle(grass_mask, (x, y), 3, team_color, 5)
+            cv2.putText(grass_mask, text=str(team_id), org=(x + 3, y + 3),
+                        fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale=1, color=(0, 255, 0), lineType=1)
+            self.players.append((x, y))
+            self.players_colors.append(team_color)
 
     def start_calibration(self):
         if not self.calibrator.enabled:
