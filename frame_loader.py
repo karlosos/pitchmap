@@ -29,3 +29,5 @@ class FrameLoader:
             self.selected_frames.append(frame.copy())
 
         self.__cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+
+        return self.selected_frames

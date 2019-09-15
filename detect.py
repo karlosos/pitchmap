@@ -17,23 +17,6 @@ def players_detection(frame):
     return out, bbox, label
 
 
-def color_detection_for_player(frame, box):
-    x = int((box[0] + box[2]) / 2)
-    y = box[3]
-    player_crop = frame[box[1]:box[3], box[0]:box[2], :]
-    grass_mask_player_crop = cv2.bitwise_not(mask.grass(player_crop, True))
-    player_crop = cv2.bitwise_and(player_crop, player_crop,
-                                  mask=grass_mask_player_crop)
-    mean_color = cv2.mean(player_crop, mask=grass_mask_player_crop)
-    # TODO mean color should be input to team classification
-    return mean_color, (x, y)
-
-
-def team_detection_for_player(color, clf):
-    # TODO there's no fit in clustering
-    return clf.predict(color.reshape(1, -1))
-
-
 def edges_detection(img):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
