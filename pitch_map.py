@@ -8,6 +8,7 @@ import detect
 import calibrator
 import team_detection
 import tracker
+import keyboard_actions
 
 import imutils
 import cv2
@@ -42,27 +43,6 @@ class PitchMap:
         # Players tracking initialization
         self.__tracker = tracker.Tracker(tracking_method)
 
-    @staticmethod
-    def input_point(key):
-        if key == 115:  # s key
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def input_exit(key):
-        if key == 27:
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def input_transform(key):
-        if key == 116:  # t key
-            return True
-        else:
-            return False
-
     def loop(self):
         while True:
             if not self.calibrator.enabled:
@@ -95,24 +75,27 @@ class PitchMap:
             self.__display.show(self.out_frame)
 
             key = cv2.waitKey(1) & 0xff
-            if self.input_exit(key):
+            is_exit = not keyboard_actions.key_pressed(key, self)
+            if is_exit:
                 break
-            elif self.input_point(key):
-                if not self.calibrator.enabled:
-                    self.__display.create_model_window()
-                else:
-                    self.__display.close_model_window()
-                self.calibrator.toggle_enabled()
-            elif self.input_transform(key):
-                players_2d_positions, transformed_frame = self.calibrator.calibrate(self.out_frame, self.players,
-                                                                                    self.players_colors)
-                self.out_frame = transformed_frame
-                self.__display.add_players_to_model(players_2d_positions, self.players_colors)
 
             self.__frame_number += 1
 
         self.__display.close_windows()
         self.__fl.release()
+
+    def start_calibration(self):
+        if not self.calibrator.enabled:
+            self.__display.create_model_window()
+        else:
+            self.__display.close_model_window()
+        self.calibrator.toggle_enabled()
+
+    def perform_transform(self):
+        players_2d_positions, transformed_frame = self.calibrator.calibrate(self.out_frame, self.players,
+                                                                                 self.players_colors)
+        self.out_frame = transformed_frame
+        self.__display.add_players_to_model(players_2d_positions, self.players_colors)
 
 
 if __name__ == '__main__':
