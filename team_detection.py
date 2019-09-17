@@ -1,5 +1,5 @@
 import plotting
-import detect
+import players_detector
 import mask
 
 from sklearn.cluster import AgglomerativeClustering
@@ -26,10 +26,11 @@ class TeamDetection:
 
     def extract_player_colors(self, frames):
         extracted_player_colors = []
+        player_detector = players_detector.PlayerDetector()
         for frame in frames:
             frame = imutils.resize(frame, width=600)
             grass_mask = mask.grass(frame)
-            _, bounding_boxes, labels = detect.players_detection(grass_mask)
+            _, bounding_boxes, labels = player_detector.detect(grass_mask)
             bounding_boxes = self.serialize_bounding_boxes(bounding_boxes)
             for idx, box in enumerate(bounding_boxes):
                 if labels[idx] == 'person':

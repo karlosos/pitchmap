@@ -22,8 +22,9 @@ class PitchMap:
         is performed in every frame
         """
         self.__video_name = 'Dynamic_Barca_Real.mp4'
-        self.__fl = frame_loader.FrameLoader(self.__video_name)
         self.__window_name = f'PitchMap: {self.__video_name}'
+
+        self.__fl = frame_loader.FrameLoader(self.__video_name)
         self.calibrator = calibrator.Calibrator()
         self.__display = frame_display.Display(main_window_name=self.__window_name, model_window_name="2D Pitch Model",
                                                pitchmap=self)
@@ -32,7 +33,6 @@ class PitchMap:
         self.players_colors = []
         self.__frame_number = 0
 
-        self.__clf = None
         self.out_frame = None
 
         # Team detection initialization

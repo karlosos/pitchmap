@@ -1,8 +1,6 @@
 ```plantuml
 !includeurl https://raw.githubusercontent.com/karlosos/RedDress-PlantUML/master/light_theme.puml
 
-title PitchMap class diagram
-
 class PitchMap {
     - video_name
     - window_name
@@ -11,16 +9,17 @@ class PitchMap {
     - display : Display
     + players[]
     + players_colors[]
-    - trackers
     - frame_number
     - tracking_method
     + out_frame
+	
+	- team_detector
+	- tracker
 
     + loop()
-    + tracking(frame)
-    + add_tracking_points(frame)
-    + cluster_teams()
-    + serialize_bounding_boxes(bouding_boxes)
+	+ draw_bounding_boxes(frame, grass_mask, bounding_boxes)
+	+ start_calibration()
+	+ perform_transform()
 }
 
 class Display {
@@ -30,7 +29,7 @@ class Display {
     - pitch_model
     
     + __init__(main_window_name, model_window_name, pitchmap)
-    + show()
+    + show(frame)
     + show_model()
     + create_model_window()
     + close_model_window()
@@ -65,6 +64,7 @@ class Calibrator {
     + add_point_main_window(pos)
     + add_point_model_window(pos)
     + get_points_count()
+	+ calibrate(frame, players, players_colors)
 }
 
 class Mask {
@@ -72,10 +72,48 @@ class Mask {
 }
 
 class Detect {
-    + players_detection(frame)
-    + team_detection_for_player(frame, box)
     + edges_detection(img)
     + lines_detection(frame_edges, img)
+}
+
+class PlayersDetector {
+    + detect(frame)
+}
+
+class KeyboardActions {
+	- input_point(key)
+	- input_exit(key)
+	- input_transform(key)
+	+ key_pressed(key, pitchmap)
+}
+
+class Plotting {
+	+ plot_colors(colors, labels)
+}
+
+class TeamDetection {
+	- clf
+	- plot: boolean
+	
+	+ __init__(plot=False)
+	+ cluster_teams(selected_frames)
+	+ extract_players_colors(frames)
+	+ color_detection_for_player(frame, box)
+	+ team_detection_for_player(color)
+	+ serialize_bounding_boxes(bounding_boxes)
+}
+
+class Tracker {
+	+ OPENCV_PBJECT_TRACKERS
+	- tracking_method
+	- trackers
+	
+	+ __init__(tracking_method)
+	+ update(frame)
+	+ trakcing(frame)
+	+ draw_bounding_boxes(frame, boxes)
+	+ add_tracking_points(frame)
+	+ is_tracking_enabled()
 }
 
 PitchMap --> FrameLoader
@@ -83,7 +121,14 @@ PitchMap --> Calibrator
 PitchMap --> Display
 PitchMap --> Mask
 PitchMap --> Detect
+PitchMap --> Tracker
+PitchMap --> TeamDetection
+PitchMap --> KeyboardActions
 Display --> PitchMap
 Display --> Calibrator
+TeamDetection --> Plotting
+TeamDetection --> PlayersDetector
+TeamDetection --> Mask
+Tracker --> PlayersDetector
 @enduml
 ```

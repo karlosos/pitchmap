@@ -1,4 +1,4 @@
-import detect
+import players_detector
 
 import cv2
 
@@ -12,14 +12,17 @@ class Tracker:
         }
         self.__tracking_method = tracking_method
         self.__trackers = cv2.MultiTracker_create()
+        self.__players_detector = players_detector.PlayerDetector()
+        self.__frame_number = 0
 
     def update(self, frame):
         if self.is_tracking_enabled():
             self.tracking(frame)
             # TODO return bounding_boxes_frame, bounding_boxes, labels
         else:
-            bounding_boxes_frame, bounding_boxes, labels = detect.players_detection(frame)
+            bounding_boxes_frame, bounding_boxes, labels = self.__players_detector.detect(frame)
             return bounding_boxes_frame, bounding_boxes, labels
+        self.__frame_number += 1
 
     def tracking(self, frame):
         """
@@ -34,7 +37,7 @@ class Tracker:
         self.draw_bounding_boxes(frame, boxes)
 
     @staticmethod
-    def draw_bounding_boxes(self, frame, boxes):
+    def draw_bounding_boxes(frame, boxes):
         for box in boxes:
             (x, y, w, h) = [int(v) for v in box]
             cv2.rectangle(frame, (x, y), (w, h), (255, 255, 255), 2)
@@ -44,7 +47,7 @@ class Tracker:
         Add points for tracking from detector
         :param frame:
         """
-        bounding_boxes_frame, bounding_boxes, labels = detect.players_detection(frame)
+        bounding_boxes_frame, bounding_boxes, labels = self.__players_detector.detect(frame)
         self.__trackers = cv2.MultiTracker_create()
         for i, label in enumerate(labels):
             if label == "person":
