@@ -76,9 +76,11 @@ class PitchMap:
         self.__fl.release()
 
     def draw_bounding_boxes(self, frame, grass_mask, bounding_boxes):
+        team_colors = [(35, 117, 250), (250, 46, 35), (255, 48, 241)]
         for idx, box in enumerate(bounding_boxes):
-            team_color, (x, y) = self.__team_detector.color_detection_for_player(frame, box)
-            team_id = self.__team_detector.team_detection_for_player(np.asarray(team_color))[0]
+            player_color, (x, y) = self.__team_detector.color_detection_for_player(frame, box)
+            team_id = self.__team_detector.team_detection_for_player(np.asarray(player_color))[0]
+            team_color = team_colors[team_id]
 
             # TODO get team color based on team_id
             cv2.circle(grass_mask, (x, y), 3, team_color, 5)
