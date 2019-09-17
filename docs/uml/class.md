@@ -27,9 +27,10 @@ class Display {
     - window_name
     - model_winow_name
     - pitch_model
+    - video_position_trackbar
     
-    + __init__(main_window_name, model_window_name, pitchmap)
-    + show(frame)
+    + __init__(main_window_name, model_window_name, pitchmap, frame_count)
+    + show(frame, frame_number)
     + show_model()
     + create_model_window()
     + close_model_window()
@@ -37,6 +38,13 @@ class Display {
     + add_point_model_window(event, x, y, flags, params)
     + add_point_main_window(event, x, y, flags, params)
     + add_players_to_model()
+}
+
+class VideoPositionTrackbar {
+    - __frame_count
+    - __frame_loader
+    + on_trackbar_change(frame_pos)
+    + show_trackbar(frame_pos, window_name)
 }
 
 note right of Display::add_point_model_window
@@ -53,6 +61,9 @@ class FrameLoader {
     + load_frame()
     + release()
     + select_frames_for_clustering()
+    + get_frames_count()
+    + set_current_frame_position(frame_idx)
+    + get_current_frame_position()
 }
 
 class Calibrator {
@@ -130,5 +141,7 @@ TeamDetection --> Plotting
 TeamDetection --> PlayersDetector
 TeamDetection --> Mask
 Tracker --> PlayersDetector
+VideoPositionTrackbar --> FrameLoader
+Display --> VideoPositionTrackbar
 @enduml
 ```

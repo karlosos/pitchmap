@@ -1,12 +1,14 @@
 """
 Display used for displaying images in system window
 """
+import video_position_trackbar
+
 import cv2
 import imutils
 
 
 class Display:
-    def __init__(self, main_window_name, model_window_name, pitchmap):
+    def __init__(self, main_window_name, model_window_name, pitchmap, frame_count):
         self.__pitchmap = pitchmap
 
         self.__window_name = main_window_name
@@ -15,11 +17,17 @@ class Display:
         self.__pitch_model = cv2.imread('data/pitch_model.jpg')
         self.__pitch_model = imutils.resize(self.__pitch_model, width=600)
 
+        self.__frame_count = frame_count
+
+        self.__video_position_trackbar = video_position_trackbar.VideoPositionTrackbar(self.__frame_count,
+                                                                                       self.__pitchmap.fl)
+
         cv2.namedWindow(self.__window_name)
         cv2.setMouseCallback(self.__window_name, self.add_point_main_window)
 
-    def show(self, frame):
+    def show(self, frame, frame_number):
         cv2.imshow(self.__window_name, frame)
+        self.__video_position_trackbar.show_trackbar(frame_number, self.__window_name)
 
     def show_model(self):
         cv2.imshow(self.__model_window_name, self.__pitch_model)
@@ -64,3 +72,4 @@ class Display:
     def add_players_to_model(self, players, player_colors):
         for idx, player in enumerate(players):
             cv2.circle(self.__pitch_model, (int(player[0]), int(player[1])), 3, player_colors[idx], 5)
+

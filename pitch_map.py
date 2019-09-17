@@ -24,19 +24,18 @@ class PitchMap:
         self.__video_name = 'Dynamic_Barca_Real.mp4'
         self.__window_name = f'PitchMap: {self.__video_name}'
 
-        self.__fl = frame_loader.FrameLoader(self.__video_name)
+        self.fl = frame_loader.FrameLoader(self.__video_name)
         self.calibrator = calibrator.Calibrator()
         self.__display = frame_display.Display(main_window_name=self.__window_name, model_window_name="2D Pitch Model",
-                                               pitchmap=self)
+                                               pitchmap=self, frame_count=self.fl.get_frames_count())
 
         self.players = []
         self.players_colors = []
-        self.__frame_number = 0
 
         self.out_frame = None
 
         # Team detection initialization
-        selected_frames_for_clustering = self.__fl.select_frames_for_clustering()
+        selected_frames_for_clustering = self.fl.select_frames_for_clustering()
         self.__team_detector = team_detection.TeamDetection()
         self.__team_detector.cluster_teams(selected_frames_for_clustering)
 
@@ -46,7 +45,7 @@ class PitchMap:
     def loop(self):
         while True:
             if not self.calibrator.enabled:
-                frame = self.__fl.load_frame()
+                frame = self.fl.load_frame()
                 frame = imutils.resize(frame, width=600)
 
                 grass_mask = mask.grass(frame)
@@ -63,17 +62,15 @@ class PitchMap:
             else:
                 self.__display.show_model()
 
-            self.__display.show(self.out_frame)
+            self.__display.show(self.out_frame, self.fl.get_current_frame_position())
 
             key = cv2.waitKey(1) & 0xff
             is_exit = not keyboard_actions.key_pressed(key, self)
             if is_exit:
                 break
 
-            self.__frame_number += 1
-
         self.__display.close_windows()
-        self.__fl.release()
+        self.fl.release()
 
     def draw_bounding_boxes(self, frame, grass_mask, bounding_boxes):
         team_colors = [(35, 117, 250), (250, 46, 35), (255, 48, 241)]
