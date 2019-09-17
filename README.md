@@ -18,3 +18,14 @@ Zakres pracy:
 * Opracowanie projektu i realizacja oprogramowania komputerowego;
 * Testowanie opracowanego oprogramowania;
 * Wnioski końcowe.
+
+## Notatki
+
+- mógłbym na początku wyświetlać przyporządkowanych graczy do drużyn i użytkownik by ręcznie przeciągał tych co zostali źle sklasyfikowani
+
+Color transform:
+```python
+hsv = np.asarray(list(map(lambda color: colorsys.rgb_to_hsv(color[0] / 255.0,
+                                                            color[1] / 255.0, color[2] / 255.0),
+                          extracted_player_colors)))
+```

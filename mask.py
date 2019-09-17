@@ -9,6 +9,7 @@ def grass(frame, for_player=False):
     """
     Delete non-green elements from frame.
     :param frame:
+    :param for_player: is it performed on player crop or entire pitch
     :return: frame with black areas where there's no grass
     """
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)

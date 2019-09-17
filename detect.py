@@ -3,30 +3,8 @@ Detects things from frame
 
 https://github.com/arunponnusamy/cvlib
 """
-import cvlib as cv
 import cv2
-from cvlib.object_detection import draw_bbox
 import numpy as np
-
-import mask
-
-
-def players_detection(frame):
-    bbox, label, conf = cv.detect_common_objects(frame)
-    out = draw_bbox(frame, bbox, label, conf)
-    return out, bbox, label
-
-
-def team_detection_for_player(frame, box):
-    x = int((box[0] + box[2]) / 2)
-    y = box[3]
-    player_crop = frame[box[1]:box[3], box[0]:box[2], :]
-    grass_mask_player_crop = cv2.bitwise_not(mask.grass(player_crop, True))
-    player_crop = cv2.bitwise_and(player_crop, player_crop,
-                                  mask=grass_mask_player_crop)
-    mean_color = cv2.mean(player_crop, mask=grass_mask_player_crop)
-    # TODO mean color should be input to team classification
-    return mean_color, (x, y)
 
 
 def edges_detection(img):
