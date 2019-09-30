@@ -12,6 +12,7 @@ class Calibrator:
     def toggle_enabled(self):
         if not self.enabled:
             self.current_point = None
+            self.points = {}
 
         self.enabled = not self.enabled
 
@@ -62,4 +63,19 @@ class Calibrator:
                 player_2d_position = player_2d_position / player_2d_position[2]
                 players_2d_positions.append(player_2d_position)
 
-        return players_2d_positions, transformed_frame
+        return players_2d_positions, transformed_frame, M
+
+    def transform_to_2d(self, players, players_colors, M):
+        players = np.float32(players)
+        players_2d_positions = []
+
+        for player in players:
+            player = np.array(player)
+            player = np.append(player, 1.)
+            # https://www.learnopencv.com/homography-examples-using-opencv-python-c/
+            # calculating new positions
+            player_2d_position = M.dot(player)
+            player_2d_position = player_2d_position / player_2d_position[2]
+            players_2d_positions.append(player_2d_position)
+
+        return players_2d_positions

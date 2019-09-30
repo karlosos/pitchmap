@@ -32,6 +32,10 @@ class Display:
     def show_model(self):
         cv2.imshow(self.__model_window_name, self.__pitch_model)
 
+    def clear_model(self):
+        self.__pitch_model = cv2.imread('data/pitch_model.jpg')
+        self.__pitch_model = imutils.resize(self.__pitch_model, width=600)
+
     def create_model_window(self):
         cv2.namedWindow(self.__model_window_name)
         cv2.setMouseCallback(self.__model_window_name, self.add_point_model_window)
@@ -70,6 +74,7 @@ class Display:
                                 cv2.FONT_HERSHEY_PLAIN, 2, (0, 255, 0), 3)
 
     def add_players_to_model(self, players, player_colors):
+        self.clear_model()
         for idx, player in enumerate(players):
             cv2.circle(self.__pitch_model, (int(player[0]), int(player[1])), 3, player_colors[idx], 5)
 
