@@ -42,14 +42,7 @@ class PitchMap:
         # Players tracking initialization
         self.__tracker = tracker.Tracker(tracking_method)
 
-        self.M_start = None
-        self.M_stop = None
-
-        self.frame_n = None
-        self.frame_m = None
-
-        self.displaying = False
-        self.H_dictionary = None
+        self.__interpolation_mode = False
 
     def loop(self):
         while True:
@@ -69,13 +62,12 @@ class PitchMap:
 
                 self.out_frame = cv2.addWeighted(grass_mask, 0.8, lines_frame, 1, 0)
 
-                if self.displaying:
+                if self.__interpolation_mode:
                     frame_idx = self.fl.get_current_frame_position()
-                    print(f"{frame_idx} < {self.frame_m}")
-                    if frame_idx < self.frame_m:
+                    if frame_idx < self.calibrator.stop_calibration_frame_index:
 
-                        players_2d_positions = self.calibrator.transform_to_2d(self.players, self.players_colors,
-                                                                               self.H_dictionary[int(frame_idx)])
+                        players_2d_positions = self.calibrator.transform_to_2d(self.players,
+                                                                        self.calibrator.H_dictionary[int(frame_idx)])
                         self.__display.show_model()
                         self.__display.add_players_to_model(players_2d_positions, self.players_colors)
 
@@ -116,75 +108,19 @@ class PitchMap:
         self.calibrator.toggle_enabled()
 
     def perform_transform(self):
-        players_2d_positions, transformed_frame, M = self.calibrator.calibrate(self.out_frame, self.players,
+        players_2d_positions, transformed_frame, H = self.calibrator.calibrate(self.out_frame, self.players,
                                                                                  self.players_colors)
         self.out_frame = transformed_frame
         self.__display.add_players_to_model(players_2d_positions, self.players_colors)
 
-        if self.M_start is None:
-            self.M_start = M
-            self.frame_n = self.fl.get_current_frame_position()
-            print("Saved M start")
-        elif self.M_stop is None:
-            m = self.fl.get_current_frame_position()
-            if m > self.frame_n:
-                self.frame_m = m
-                self.M_stop = M
-                H = self.calculate_transformation_matrices(self.frame_n, self.frame_m, self.M_start, self.M_stop)
-                print(f"n: {self.frame_n}")
-                print(f"m: {self.frame_m}")
-                print(f"H_i: {self.M_start}")
-                print(f"H_j: {self.M_stop}")
-
-                H_dictionary = {}
-                for k in range(int(self.frame_m - self.frame_n)):
-                    print(H[:, :, k])
-                    H_dictionary[int(self.frame_n + k)] = H[:, :, k]
-                self.H_dictionary = H_dictionary
-                print("Stored matrices in dictionary")
-                # change current position to n
-                self.fl.set_current_frame_position(self.frame_n)
-                # change mode to prediction and showing 2d model
-                self.displaying = True
-                self.calibrator.enabled = False
-            else:
-                print(f"Frame must be greater than starting. Start {self.M_start}, stop: {m}")
-
-    def testing_interpolation(self):
-        H_i = np.array([[ 1.57240776e+00,  3.90147611e+00, -2.88507021e+01], [ 3.43698327e-01,  6.70651630e+00, -5.16118081e+02], [ 1.35467928e-03,  1.31340979e-02,  1.00000000e+00]])
-
-        H_j = np.array([[ 1.11658938e+00,  2.80626456e+00, -7.49405476e+01],  [ 3.25307780e-02,  5.27465907e+00, -3.28946531e+02],  [ 5.75744925e-04,  9.32661876e-03,  1.00000000e+00]])
-
-        n = 5
-        m = 48
-
-        H = self.calculate_transformation_matrices(n, m, H_i, H_j)
-
-        H_dictionary = {}
-        for k in range(int(m - n)):
-            print(H[:, :, k])
-            H_dictionary[int(n + k)] = H[:, :, k]
-        self.H_dictionary = H_dictionary
-        print("Stored matrices in dictionary")
-        # change current position to n
-        self.fl.set_current_frame_position(n)
-        # change mode to prediction and showing 2d model
-        self.displaying = True
-        self.calibrator.enabled = False
-
-        self.frame_m = m
-        self.frame_n = n
-        self.M_start = H_i
-        self.M_stop = H_j
-
-    def calculate_transformation_matrices(self, n, m, H_n, H_m):
-        H = np.zeros([3, 3, int(m - n)])
-        for i in range(3):
-            for j in range(3):
-                for k in range(int(m - n)):
-                    H[i, j, k] = H_n[i, j] + k * (H_m[i, j] - H_n[i, j]) / (m - n)
-        return H
-
+        if self.calibrator.start_calibration_H is None:
+            self.calibrator.start_calibration(H, self.fl.get_current_frame_position())
+        elif self.calibrator.stop_calibration_H is None:
+            self.calibrator.end_calibration(H, self.fl.get_current_frame_position())
+        elif self.calibrator.stop_calibration_H is not None:
+            self.__interpolation_mode = True
+            self.calibrator.enabled = False
+            self.fl.set_current_frame_position(self.calibrator.start_calibration_frame_index)
 
 
 if __name__ == '__main__':
