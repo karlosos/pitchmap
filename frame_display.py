@@ -23,11 +23,12 @@ class Display:
                                                                                        self.__pitchmap.fl)
 
         cv2.namedWindow(self.__window_name)
+        self.__video_position_trackbar.show_trackbar(0, self.__window_name)
         cv2.setMouseCallback(self.__window_name, self.add_point_main_window)
 
     def show(self, frame, frame_number):
         cv2.imshow(self.__window_name, frame)
-        self.__video_position_trackbar.show_trackbar(frame_number, self.__window_name)
+        self.__video_position_trackbar.set_trackbar(frame_number, self.__window_name)
 
     def show_model(self):
         cv2.imshow(self.__model_window_name, self.__pitch_model)

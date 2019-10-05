@@ -122,6 +122,9 @@ class PitchMap:
             self.calibrator.enabled = False
             self.fl.set_current_frame_position(self.calibrator.start_calibration_frame_index)
 
+    def input_test(self):
+        self.fl.set_current_frame_position(99)
+
 
 if __name__ == '__main__':
     pm = PitchMap()
