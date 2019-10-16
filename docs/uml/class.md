@@ -20,6 +20,13 @@ class PitchMap {
 	+ draw_bounding_boxes(frame, grass_mask, bounding_boxes)
 	+ start_calibration()
 	+ perform_transform()
+    + testing_interpolation()
+    + calculate_transformation_matrices(n, m, H_n, H_m)
+    + input_test()
+}
+
+class MatrixInterp {
+    interpolate_transformation_matrices(n, m, H_n, H_m)
 }
 
 class Display {
@@ -32,6 +39,7 @@ class Display {
     + __init__(main_window_name, model_window_name, pitchmap, frame_count)
     + show(frame, frame_number)
     + show_model()
+    + clear_model()
     + create_model_window()
     + close_model_window()
     + close_windows()
@@ -45,6 +53,7 @@ class VideoPositionTrackbar {
     - __frame_loader
     + on_trackbar_change(frame_pos)
     + show_trackbar(frame_pos, window_name)
+    + set_trackbar(frame_pos, window_name)
 }
 
 note right of Display::add_point_model_window
@@ -76,6 +85,9 @@ class Calibrator {
     + add_point_model_window(pos)
     + get_points_count()
 	+ calibrate(frame, players, players_colors)
+    + transform_to_2d(players, H)
+    + start_calibration(H, frame_index)
+    + end_calibration(H_m, m)
 }
 
 class Mask {
@@ -95,6 +107,7 @@ class KeyboardActions {
 	- input_point(key)
 	- input_exit(key)
 	- input_transform(key)
+    - input_testing(key)
 	+ key_pressed(key, pitchmap)
 }
 
@@ -143,5 +156,6 @@ TeamDetection --> Mask
 Tracker --> PlayersDetector
 VideoPositionTrackbar --> FrameLoader
 Display --> VideoPositionTrackbar
+Calibrator --> MatrixInterp
 @enduml
 ```
