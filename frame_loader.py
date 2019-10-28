@@ -33,10 +33,10 @@ class FrameLoader:
         return self.selected_frames
 
     def get_frames_count(self):
-        return self.__frame_count
+        return int(self.__frame_count)
 
     def set_current_frame_position(self, frame_idx):
         self.__cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
 
     def get_current_frame_position(self):
-        return self.__cap.get(cv2.CAP_PROP_POS_FRAMES)
+        return int(self.__cap.get(cv2.CAP_PROP_POS_FRAMES))

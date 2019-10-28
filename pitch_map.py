@@ -9,6 +9,7 @@ import calibrator
 import team_detection
 import tracker
 import keyboard_actions
+import player
 
 import imutils
 import cv2
@@ -29,20 +30,22 @@ class PitchMap:
         self.__display = frame_display.Display(main_window_name=self.__window_name, model_window_name="2D Pitch Model",
                                                pitchmap=self, frame_count=self.fl.get_frames_count())
 
-        self.players = []
-        self.players_colors = []
+        #self.players_list = player.SimplePlayersList(frames_length=self.fl.get_frames_count())
+        self.players_list = player.PlayersListComplex(frames_length=self.fl.get_frames_count())
 
         self.out_frame = None
 
         # Team detection initialization
         selected_frames_for_clustering = self.fl.select_frames_for_clustering()
-        self.__team_detector = team_detection.TeamDetection()
+        self.__team_detector = team_detection.TeamDetection(plot=True)
         self.__team_detector.cluster_teams(selected_frames_for_clustering)
 
         # Players tracking initialization
         self.__tracker = tracker.Tracker(tracking_method)
 
         self.__interpolation_mode = False
+
+        self.team_colors = [(35, 117, 250), (250, 46, 35), (255, 48, 241)]
 
     def loop(self):
         while True:
@@ -56,8 +59,8 @@ class PitchMap:
 
                 bounding_boxes_frame, bounding_boxes, labels = self.__tracker.update(grass_mask)
 
-                self.players = []
-                self.players_colors = []
+                self.players_list.clear()
+
                 self.draw_bounding_boxes(frame, grass_mask, bounding_boxes)
 
                 self.out_frame = cv2.addWeighted(grass_mask, 0.8, lines_frame, 1, 0)
@@ -65,11 +68,13 @@ class PitchMap:
                 if self.__interpolation_mode:
                     frame_idx = self.fl.get_current_frame_position()
                     if frame_idx < self.calibrator.stop_calibration_frame_index:
-
-                        players_2d_positions = self.calibrator.transform_to_2d(self.players,
+                        players = self.players_list.get_players_positions_from_frame(frame_number=self.fl.get_current_frame_position())
+                        team_ids = self.players_list.get_players_team_ids_from_frame(frame_number=self.fl.get_current_frame_position())
+                        colors = list(map(lambda x: self.team_colors[x], team_ids))
+                        players_2d_positions = self.calibrator.transform_to_2d(players,
                                                                         self.calibrator.H_dictionary[int(frame_idx)])
                         self.__display.show_model()
-                        self.__display.add_players_to_model(players_2d_positions, self.players_colors)
+                        self.__display.add_players_to_model(players_2d_positions, colors)
 
             else:
                 self.__display.show_model()
@@ -85,18 +90,18 @@ class PitchMap:
         self.fl.release()
 
     def draw_bounding_boxes(self, frame, grass_mask, bounding_boxes):
-        team_colors = [(35, 117, 250), (250, 46, 35), (255, 48, 241)]
+        current_frame_number = self.fl.get_current_frame_position()
         for idx, box in enumerate(bounding_boxes):
             player_color, (x, y) = self.__team_detector.color_detection_for_player(frame, box)
             team_id = self.__team_detector.team_detection_for_player(np.asarray(player_color))[0]
-            team_color = team_colors[team_id]
+            player = self.players_list.assign_player(position=(x, y), color=team_id,
+                                                     frame_number=current_frame_number)
+            calculated_team = player.calculate_real_color()
+            team_color = self.team_colors[calculated_team]
 
-            # TODO get team color based on team_id
             cv2.circle(grass_mask, (x, y), 3, team_color, 5)
-            cv2.putText(grass_mask, text=str(team_id), org=(x + 3, y + 3),
+            cv2.putText(grass_mask, text=f"{player.id}:{calculated_team}:{team_id}", org=(x + 3, y + 3),
                         fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale=1, color=(0, 255, 0), lineType=1)
-            self.players.append((x, y))
-            self.players_colors.append(team_color)
 
     def start_calibration(self):
         if not self.calibrator.enabled:
@@ -108,10 +113,13 @@ class PitchMap:
         self.calibrator.toggle_enabled()
 
     def perform_transform(self):
-        players_2d_positions, transformed_frame, H = self.calibrator.calibrate(self.out_frame, self.players,
-                                                                                 self.players_colors)
+        players = self.players_list.get_players_positions_from_frame(frame_number=self.fl.get_current_frame_position())
+        team_ids = self.players_list.get_players_team_ids_from_frame(frame_number=self.fl.get_current_frame_position())
+        colors = list(map(lambda x: self.team_colors[x], team_ids))
+        players_2d_positions, transformed_frame, H = self.calibrator.calibrate(self.out_frame, players,
+                                                                                 colors)
         self.out_frame = transformed_frame
-        self.__display.add_players_to_model(players_2d_positions, self.players_colors)
+        self.__display.add_players_to_model(players_2d_positions, colors)
 
         if self.calibrator.start_calibration_H is None:
             self.calibrator.start_calibration(H, self.fl.get_current_frame_position())
