@@ -22,7 +22,7 @@ class PitchMap:
         :param tracking_method: if left default (None) then there's no tracking and detection
         is performed in every frame
         """
-        self.__video_name = 'dynamic_sample.mp4'
+        self.__video_name = 'Dynamic_Barca_Real.mp4'
         self.__window_name = f'PitchMap: {self.__video_name}'
 
         self.fl = frame_loader.FrameLoader(self.__video_name)
@@ -30,7 +30,7 @@ class PitchMap:
         self.__display = frame_display.Display(main_window_name=self.__window_name, model_window_name="2D Pitch Model",
                                                pitchmap=self, frame_count=self.fl.get_frames_count())
 
-        #self.players_list = player.SimplePlayersList(frames_length=self.fl.get_frames_count())
+        #self.players_list = player.PlayersListSimple(frames_length=self.fl.get_frames_count())
         self.players_list = player.PlayersListComplex(frames_length=self.fl.get_frames_count())
 
         self.out_frame = None

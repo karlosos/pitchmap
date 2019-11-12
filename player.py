@@ -62,7 +62,7 @@ class PlayersListSimple(PlayerList):
     def assign_player(self, position, color, frame_number):
         self.players.append(position)
         self.colors.append(color)
-        return 0
+        return PlayerSimple(position, color)
 
     def find_player_id(self, position, color, frame_number):
         pass
@@ -86,6 +86,8 @@ class PlayersListComplex(PlayerList):
     def get_players_positions_from_frame(self, frame_number):
         players = self.players[frame_number] if frame_number < self.__frames_length else []
         if players:
+            if type(players) is dict:
+                players = list(players.values())
             positions = [player.position for player in players]
         else:
             positions = []
@@ -96,6 +98,8 @@ class PlayersListComplex(PlayerList):
         print("get colors from frame")
         players = self.players[frame_number] if frame_number < self.__frames_length else []
         if players:
+            if type(players) is dict:
+                players = list(players.values())
             colors = list(map(lambda player: player.calculate_real_color(), players))
         else:
             colors = []
@@ -140,17 +144,28 @@ class PlayersListComplex(PlayerList):
             player_id = self.__id_counter
             self.__id_counter += 1
 
-        p = Player(self, player_id, position, color, frame_number)
+        p = PlayerComplex(self, player_id, position, color, frame_number)
         self.players[frame_number][player_id] = p
         return p
 
     def clone_player(self, player, position, color, frame_number):
-        p = Player(self, player.id, position, color, frame_number)
+        p = PlayerComplex(self, player.id, position, color, frame_number)
         self.players[frame_number][player.id] = p
         return p
 
 
-class Player:
+class PlayerSimple:
+    def __init__(self, position, color):
+        self.position = position
+        self.color = color
+        self.id = 0
+        self.__frame_number = 0
+
+    def calculate_real_color(self):
+        return self.color
+
+
+class PlayerComplex:
     def __init__(self, player_list, player_id, position, color, frame_number):
         self.__player_list = player_list
         self.id = player_id
