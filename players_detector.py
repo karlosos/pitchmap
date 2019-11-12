@@ -6,5 +6,6 @@ class PlayerDetector:
     @staticmethod
     def detect(frame):
         bbox, label, conf = cv.detect_common_objects(frame)
-        out = draw_bbox(frame, bbox, label, conf)
+        #out = draw_bbox(frame, bbox, label, conf)
+        out = frame
         return out, bbox, label

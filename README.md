@@ -29,3 +29,12 @@ hsv = np.asarray(list(map(lambda color: colorsys.rgb_to_hsv(color[0] / 255.0,
                                                             color[1] / 255.0, color[2] / 255.0),
                           extracted_player_colors)))
 ```
+
+bbox:
+
+```
+        x = box[0]
+        y = box[1]
+        w = box[2]
+        h = box[3]
+```

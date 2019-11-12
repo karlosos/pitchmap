@@ -22,7 +22,7 @@ class PitchMap:
         :param tracking_method: if left default (None) then there's no tracking and detection
         is performed in every frame
         """
-        self.__video_name = 'Dynamic_Barca_Real.mp4'
+        self.__video_name = 'dynamic_sample.mp4'
         self.__window_name = f'PitchMap: {self.__video_name}'
 
         self.fl = frame_loader.FrameLoader(self.__video_name)
@@ -37,7 +37,7 @@ class PitchMap:
 
         # Team detection initialization
         selected_frames_for_clustering = self.fl.select_frames_for_clustering()
-        self.__team_detector = team_detection.TeamDetection(plot=True)
+        self.__team_detector = team_detection.TeamDetection()
         self.__team_detector.cluster_teams(selected_frames_for_clustering)
 
         # Players tracking initialization
@@ -55,7 +55,7 @@ class PitchMap:
 
                 grass_mask = mask.grass(frame)
                 edges = detect.edges_detection(grass_mask)
-                lines_frame = detect.lines_detection(edges, grass_mask)
+                #lines_frame = detect.lines_detection(edges, grass_mask)
 
                 bounding_boxes_frame, bounding_boxes, labels = self.__tracker.update(grass_mask)
 
@@ -63,7 +63,8 @@ class PitchMap:
 
                 self.draw_bounding_boxes(frame, grass_mask, bounding_boxes)
 
-                self.out_frame = cv2.addWeighted(grass_mask, 0.8, lines_frame, 1, 0)
+                #self.out_frame = cv2.addWeighted(grass_mask, 0.8, lines_frame, 1, 0)
+                self.out_frame = grass_mask
 
                 if self.__interpolation_mode:
                     frame_idx = self.fl.get_current_frame_position()
@@ -92,7 +93,7 @@ class PitchMap:
     def draw_bounding_boxes(self, frame, grass_mask, bounding_boxes):
         current_frame_number = self.fl.get_current_frame_position()
         for idx, box in enumerate(bounding_boxes):
-            player_color, (x, y) = self.__team_detector.color_detection_for_player(frame, box)
+            player_color, (x, y) = self.__team_detector.color_detector.color_detection_for_player(frame, box)
             team_id = self.__team_detector.team_detection_for_player(np.asarray(player_color))[0]
             player = self.players_list.assign_player(position=(x, y), color=team_id,
                                                      frame_number=current_frame_number)
@@ -100,7 +101,7 @@ class PitchMap:
             team_color = self.team_colors[calculated_team]
 
             cv2.circle(grass_mask, (x, y), 3, team_color, 5)
-            cv2.putText(grass_mask, text=f"{player.id}:{calculated_team}:{team_id}", org=(x + 3, y + 3),
+            cv2.putText(grass_mask, text=f"{player.id}:{team_id}", org=(x, y + 10),
                         fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale=1, color=(0, 255, 0), lineType=1)
 
     def start_calibration(self):
