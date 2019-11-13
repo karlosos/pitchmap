@@ -27,7 +27,7 @@ class PitchMap:
 
         self.fl = frame_loader.FrameLoader(self.__video_name)
         self.calibrator = calibrator.Calibrator()
-        self.__display = frame_display.Display(main_window_name=self.__window_name, model_window_name="2D Pitch Model",
+        self.__display = frame_display.PyGameDisplay(main_window_name=self.__window_name, model_window_name="2D Pitch Model",
                                                pitchmap=self, frame_count=self.fl.get_frames_count())
 
         #self.players_list = player.PlayersListSimple(frames_length=self.fl.get_frames_count())
@@ -54,10 +54,11 @@ class PitchMap:
                 frame = imutils.resize(frame, width=600)
 
                 grass_mask = mask.grass(frame)
-                edges = detect.edges_detection(grass_mask)
+                #edges = detect.edges_detection(grass_mask)
                 #lines_frame = detect.lines_detection(edges, grass_mask)
 
-                bounding_boxes_frame, bounding_boxes, labels = self.__tracker.update(grass_mask)
+                #bounding_boxes_frame, bounding_boxes, labels = self.__tracker.update(grass_mask)
+                bounding_boxes = []
 
                 self.players_list.clear()
 
@@ -84,8 +85,11 @@ class PitchMap:
 
             key = cv2.waitKey(1) & 0xff
             is_exit = not keyboard_actions.key_pressed(key, self)
+            is_exit = not self.__display.keyboard_events()
             if is_exit:
                 break
+
+            self.__display.update()
 
         self.__display.close_windows()
         self.fl.release()
