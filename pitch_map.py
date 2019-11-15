@@ -16,6 +16,7 @@ import imutils
 import cv2
 import numpy as np
 import threading
+import time
 
 
 class PitchMap:
@@ -24,7 +25,7 @@ class PitchMap:
         :param tracking_method: if left default (None) then there's no tracking and detection
         is performed in every frame
         """
-        self.__video_name = 'Dynamic_Barca_Real.mp4'
+        self.__video_name = 'dynamic_sample.mp4'
         self.__window_name = f'PitchMap: {self.__video_name}'
 
         self.fl = frame_loader.FrameLoader(self.__video_name)
@@ -54,7 +55,7 @@ class PitchMap:
 
         self.__detection_thread = None
 
-    def detection(self):
+    def frame_loading(self, detecting=False):
         frame = self.fl.load_frame()
         frame = imutils.resize(frame, width=600)
 
@@ -62,8 +63,9 @@ class PitchMap:
         # edges = detect.edges_detection(grass_mask)
         # lines_frame = detect.lines_detection(edges, grass_mask)
 
-        bounding_boxes_frame, bounding_boxes, labels = self.__tracker.update(grass_mask)
-        # bounding_boxes = []
+        bounding_boxes = []
+        if detecting:
+            bounding_boxes_frame, bounding_boxes, labels = self.__tracker.update(grass_mask)
 
         self.players_list.clear()
 
@@ -73,8 +75,10 @@ class PitchMap:
         self.out_frame = grass_mask
 
     def loop(self):
-        self.detection()
+        self.frame_loading()
+        previous = time.clock()
         while True:
+            current = time.clock()
             # user input
             key = cv2.waitKey(1) & 0xff
             is_exit = not keyboard_actions.key_pressed(key, self)
@@ -84,8 +88,12 @@ class PitchMap:
             # update
             if not self.calibrator.enabled:
                 if self.__detection_thread is None or not self.__detection_thread.is_alive():
-                    self.__detection_thread = threading.Thread(target=self.detection)
-                    self.__detection_thread.start()
+                    if current - previous > 0.04:
+                        self.__detection_thread = threading.Thread(target=self.frame_loading,
+                                                                   args=(self.calibrator.enabled,))
+                        self.__detection_thread.start()
+                        previous = current
+
                 if self.__interpolation_mode:
                     frame_idx = self.fl.get_current_frame_position()
                     if frame_idx < self.calibrator.stop_calibration_frame_index:
@@ -128,7 +136,11 @@ class PitchMap:
             self.__display.show_model()
         else:
             self.__display.close_model_window()
-        return self.calibrator.toggle_enabled()
+        status = self.calibrator.toggle_enabled()
+        self.__detection_thread = threading.Thread(target=self.frame_loading,
+                                                   args=(self.calibrator.enabled,))
+        self.__detection_thread.start()
+        return status
 
     def perform_transform(self):
         players = self.players_list.get_players_positions_from_frame(frame_number=self.fl.get_current_frame_position())
