@@ -3,6 +3,8 @@ import imutils
 import pygame
 
 from .button import Button
+from .pitch_view import PitchView
+from .model_view import ModelView
 
 
 class PyGameDisplay:
@@ -26,6 +28,8 @@ class PyGameDisplay:
 
         self.__display_surface = pygame.display.set_mode((1380, 720))
 
+        self.__pitch_view = PitchView()
+        self.__model_view = ModelView()
         self.__buttonCalibration = Button(737, 57, 200, 50, 'Calibration')
         self.__buttonTransformation = Button(994, 57, 200, 50, 'Transformation')
 
@@ -35,20 +39,16 @@ class PyGameDisplay:
     def show(self, frame, frame_number):
         # background
         self.__display_surface.fill((255, 255, 255))
-        pygame.draw.rect(self.__display_surface, (0, 0, 0), (57, 57, 600, 600), 0)
 
         # show pitch
-        frame_size = frame.shape[1::-1]
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        pygame_frame = pygame.image.frombuffer(rgb_frame, frame_size, 'RGB')
-        self.__display_surface.blit(pygame_frame, (57, 178))
+        self.__pitch_view.draw(self.__display_surface, frame)
 
         # show buttons
         self.__buttonCalibration.draw(self.__display_surface)
         self.__buttonTransformation.draw(self.__display_surface)
 
         # show model
-        self.show_model()
+        self.__model_view.draw(self.__display_surface, self.__pitch_model)
 
     def input_events(self):
         running = True
@@ -69,6 +69,12 @@ class PyGameDisplay:
                     self.__calibration_state = self.__pitchmap.start_calibration()
                 elif self.__buttonTransformation.is_over(pos):
                     self.__pitchmap.perform_transform()
+                elif self.__pitch_view.is_over(pos):
+                    pos = self.__pitch_view.get_relative_pos(pos)
+                    self.add_point_main_window(pos[0], pos[1])
+                elif self.__model_view.is_over(pos):
+                    pos = self.__model_view.get_relative_pos(pos)
+                    self.add_point_model_window(pos[0], pos[1])
             elif event.type == pygame.MOUSEMOTION:
                 if self.__buttonCalibration.is_over(pos):
                     self.__buttonCalibration.is_hover = True
@@ -79,6 +85,13 @@ class PyGameDisplay:
                     self.__buttonTransformation.is_hover = True
                 else:
                     self.__buttonTransformation.is_hover = False
+
+                if self.__pitch_view.is_over(pos):
+                    print(f"over pitch: {self.__pitch_view.get_relative_pos(pos)}")
+                elif self.__model_view.is_over(pos):
+                    print(f"over model: {self.__model_view.get_relative_pos(pos)}")
+                else:
+                    print("")
 
         return running
 
@@ -95,10 +108,6 @@ class PyGameDisplay:
         pygame.display.update()
 
     def show_model(self):
-        frame_size = self.__pitch_model.shape[1::-1]
-        rgb_frame = cv2.cvtColor(self.__pitch_model, cv2.COLOR_BGR2RGB)
-        pygame_frame = pygame.image.frombuffer(rgb_frame, frame_size, 'RGB')
-        self.__display_surface.blit(pygame_frame, (740, 237))
         pass
 
     def clear_model(self):
