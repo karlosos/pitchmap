@@ -10,10 +10,12 @@ import team_detection
 import tracker
 import keyboard_actions
 import player
+from gui_pygame import display
 
 import imutils
 import cv2
 import numpy as np
+import threading
 
 
 class PitchMap:
@@ -27,7 +29,10 @@ class PitchMap:
 
         self.fl = frame_loader.FrameLoader(self.__video_name)
         self.calibrator = calibrator.Calibrator()
-        self.__display = frame_display.PyGameDisplay(main_window_name=self.__window_name, model_window_name="2D Pitch Model",
+        # self.__display = frame_display.Display(main_window_name=self.__window_name,
+        #                                              model_window_name="2D Pitch Model",
+        #                                              pitchmap=self, frame_count=self.fl.get_frames_count())
+        self.__display = display.PyGameDisplay(main_window_name=self.__window_name, model_window_name="2D Pitch Model",
                                                pitchmap=self, frame_count=self.fl.get_frames_count())
 
         #self.players_list = player.PlayersListSimple(frames_length=self.fl.get_frames_count())
@@ -47,26 +52,40 @@ class PitchMap:
 
         self.team_colors = [(35, 117, 250), (250, 46, 35), (255, 48, 241)]
 
+        self.__detection_thread = None
+
+    def detection(self):
+        frame = self.fl.load_frame()
+        frame = imutils.resize(frame, width=600)
+
+        grass_mask = mask.grass(frame)
+        # edges = detect.edges_detection(grass_mask)
+        # lines_frame = detect.lines_detection(edges, grass_mask)
+
+        bounding_boxes_frame, bounding_boxes, labels = self.__tracker.update(grass_mask)
+        # bounding_boxes = []
+
+        self.players_list.clear()
+
+        self.draw_bounding_boxes(frame, grass_mask, bounding_boxes)
+
+        # self.out_frame = cv2.addWeighted(grass_mask, 0.8, lines_frame, 1, 0)
+        self.out_frame = grass_mask
+
     def loop(self):
+        self.detection()
         while True:
+            # user input
+            key = cv2.waitKey(1) & 0xff
+            is_exit = not keyboard_actions.key_pressed(key, self)
+            is_exit = not self.__display.input_events()
+            if is_exit:
+                break
+            # update
             if not self.calibrator.enabled:
-                frame = self.fl.load_frame()
-                frame = imutils.resize(frame, width=600)
-
-                grass_mask = mask.grass(frame)
-                #edges = detect.edges_detection(grass_mask)
-                #lines_frame = detect.lines_detection(edges, grass_mask)
-
-                #bounding_boxes_frame, bounding_boxes, labels = self.__tracker.update(grass_mask)
-                bounding_boxes = []
-
-                self.players_list.clear()
-
-                self.draw_bounding_boxes(frame, grass_mask, bounding_boxes)
-
-                #self.out_frame = cv2.addWeighted(grass_mask, 0.8, lines_frame, 1, 0)
-                self.out_frame = grass_mask
-
+                if self.__detection_thread is None or not self.__detection_thread.is_alive():
+                    self.__detection_thread = threading.Thread(target=self.detection)
+                    self.__detection_thread.start()
                 if self.__interpolation_mode:
                     frame_idx = self.fl.get_current_frame_position()
                     if frame_idx < self.calibrator.stop_calibration_frame_index:
@@ -82,12 +101,6 @@ class PitchMap:
                 self.__display.show_model()
 
             self.__display.show(self.out_frame, self.fl.get_current_frame_position())
-
-            key = cv2.waitKey(1) & 0xff
-            is_exit = not keyboard_actions.key_pressed(key, self)
-            is_exit = not self.__display.keyboard_events()
-            if is_exit:
-                break
 
             self.__display.update()
 
@@ -115,7 +128,7 @@ class PitchMap:
             self.__display.show_model()
         else:
             self.__display.close_model_window()
-        self.calibrator.toggle_enabled()
+        return self.calibrator.toggle_enabled()
 
     def perform_transform(self):
         players = self.players_list.get_players_positions_from_frame(frame_number=self.fl.get_current_frame_position())

@@ -25,6 +25,7 @@ class Calibrator:
             self.points = {}
 
         self.enabled = not self.enabled
+        return self.enabled
 
     def add_point_main_window(self, pos):
         if self.current_point is None:
