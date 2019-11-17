@@ -5,6 +5,7 @@ import pygame
 from .button import Button
 from .pitch_view import PitchView
 from .model_view import ModelView
+from .slider import Slider
 
 
 class PyGameDisplay:
@@ -19,12 +20,9 @@ class PyGameDisplay:
 
         self.__frame_count = frame_count
 
-        # self.__video_position_trackbar = video_position_trackbar.VideoPositionTrackbar(self.__frame_count,
-        # self.__pitchmap.fl)
         pygame.init()
         pygame.display.init()
         pygame.display.set_caption(self.__window_name)
-        #self.__video_position_trackbar.show_trackbar(0, self.__window_name)
 
         self.__display_surface = pygame.display.set_mode((1380, 720))
 
@@ -32,6 +30,7 @@ class PyGameDisplay:
         self.__model_view = ModelView()
         self.__buttonCalibration = Button(737, 57, 200, 50, 'Calibration')
         self.__buttonTransformation = Button(994, 57, 200, 50, 'Transformation')
+        self.__slider = Slider(0, self.__frame_count, 0)
 
         self.__calibration_state = False
         self.__transformation_state = False
@@ -49,6 +48,9 @@ class PyGameDisplay:
 
         # show model
         self.__model_view.draw(self.__display_surface, self.__pitch_model)
+
+        self.__slider.draw(self.__display_surface)
+        self.__slider.set_value(frame_number)
 
     def input_events(self):
         running = True
@@ -75,6 +77,10 @@ class PyGameDisplay:
                 elif self.__model_view.is_over(pos):
                     pos = self.__model_view.get_relative_pos(pos)
                     self.add_point_model_window(pos[0], pos[1])
+                elif self.__slider.button_rect.collidepoint(pos):
+                    self.__slider.hit = True
+            elif event.type == pygame.MOUSEBUTTONUP:
+                self.__slider.hit = False
             elif event.type == pygame.MOUSEMOTION:
                 if self.__buttonCalibration.is_over(pos):
                     self.__buttonCalibration.is_hover = True
@@ -86,13 +92,9 @@ class PyGameDisplay:
                 else:
                     self.__buttonTransformation.is_hover = False
 
-                if self.__pitch_view.is_over(pos):
-                    print(f"over pitch: {self.__pitch_view.get_relative_pos(pos)}")
-                elif self.__model_view.is_over(pos):
-                    print(f"over model: {self.__model_view.get_relative_pos(pos)}")
-                else:
-                    print("")
-
+        if self.__slider.hit:
+            self.__slider.move()
+            self.__pitchmap.fl.set_current_frame_position(int(self.__slider.val))
         return running
 
     def update(self):
