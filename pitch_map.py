@@ -55,7 +55,7 @@ class PitchMap:
 
         self.__detection_thread = None
 
-    def frame_loading(self, detecting=False):
+    def frame_loading(self, detecting=False, interpolating=False):
         frame = self.fl.load_frame()
         frame = imutils.resize(frame, width=600)
 
@@ -64,7 +64,7 @@ class PitchMap:
         # lines_frame = detect.lines_detection(edges, grass_mask)
 
         bounding_boxes = []
-        if detecting:
+        if detecting or interpolating:
             bounding_boxes_frame, bounding_boxes, labels = self.__tracker.update(grass_mask)
 
         self.players_list.clear()
@@ -74,37 +74,40 @@ class PitchMap:
         # self.out_frame = cv2.addWeighted(grass_mask, 0.8, lines_frame, 1, 0)
         self.out_frame = grass_mask
 
+        if interpolating:
+            frame_idx = self.fl.get_current_frame_position()
+            if frame_idx < self.calibrator.stop_calibration_frame_index:
+                players = self.players_list.get_players_positions_from_frame(
+                    frame_number=self.fl.get_current_frame_position())
+                team_ids = self.players_list.get_players_team_ids_from_frame(
+                    frame_number=self.fl.get_current_frame_position())
+                colors = list(map(lambda x: self.team_colors[x], team_ids))
+                players_2d_positions = self.calibrator.transform_to_2d(players,
+                                                                       self.calibrator.H_dictionary[int(frame_idx)])
+                self.__display.show_model()
+                self.__display.add_players_to_model(players_2d_positions, colors)
+            else:
+                self.__interpolation_mode = False
+
     def loop(self):
         self.frame_loading()
-        previous = time.clock()
+        previous = time.perf_counter()
         while True:
-            current = time.clock()
+            current = time.perf_counter()
             # user input
-            key = cv2.waitKey(1) & 0xff
-            is_exit = not keyboard_actions.key_pressed(key, self)
             is_exit = not self.__display.input_events()
             if is_exit:
                 break
             # update
             if not self.calibrator.enabled:
+                detecting_enabled = self.calibrator.enabled or self.__interpolation_mode
+
                 if self.__detection_thread is None or not self.__detection_thread.is_alive():
                     if current - previous > 0.04:
                         self.__detection_thread = threading.Thread(target=self.frame_loading,
-                                                                   args=(self.calibrator.enabled,))
+                                                                   args=(self.calibrator.enabled, self.__interpolation_mode))
                         self.__detection_thread.start()
                         previous = current
-
-                if self.__interpolation_mode:
-                    frame_idx = self.fl.get_current_frame_position()
-                    if frame_idx < self.calibrator.stop_calibration_frame_index:
-                        players = self.players_list.get_players_positions_from_frame(frame_number=self.fl.get_current_frame_position())
-                        team_ids = self.players_list.get_players_team_ids_from_frame(frame_number=self.fl.get_current_frame_position())
-                        colors = list(map(lambda x: self.team_colors[x], team_ids))
-                        players_2d_positions = self.calibrator.transform_to_2d(players,
-                                                                        self.calibrator.H_dictionary[int(frame_idx)])
-                        self.__display.show_model()
-                        self.__display.add_players_to_model(players_2d_positions, colors)
-
             else:
                 self.__display.show_model()
 

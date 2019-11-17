@@ -1,6 +1,7 @@
 import cv2
 import imutils
 import pygame
+import copy
 
 from .button import Button
 from .pitch_view import PitchView
@@ -16,9 +17,11 @@ class PyGameDisplay:
         self.__model_window_name = model_window_name
 
         self.__pitch_model = cv2.imread('data/pitch_model.jpg')
-        self.__pitch_model = imutils.resize(self.__pitch_model, width=600)
+        self.__clear_pitch_model = imutils.resize(self.__pitch_model, width=600)
+        self.__pitch_model = copy.copy(self.__clear_pitch_model)
 
         self.__frame_count = frame_count
+        self.__current_frame = 0
 
         pygame.init()
         pygame.display.init()
@@ -36,6 +39,7 @@ class PyGameDisplay:
         self.__transformation_state = False
 
     def show(self, frame, frame_number):
+        self.__current_frame = frame_number
         # background
         self.__display_surface.fill((255, 255, 255))
 
@@ -113,8 +117,7 @@ class PyGameDisplay:
         pass
 
     def clear_model(self):
-        self.__pitch_model = cv2.imread('data/pitch_model.jpg')
-        self.__pitch_model = imutils.resize(self.__pitch_model, width=600)
+        self.__pitch_model = copy.copy(self.__clear_pitch_model)
 
     def create_model_window(self):
         pass

@@ -95,7 +95,7 @@ class PlayersListComplex(PlayerList):
         return positions
 
     def get_players_team_ids_from_frame(self, frame_number):
-        print("get colors from frame")
+        print(f"get colors from frame {frame_number}")
         players = self.players[frame_number] if frame_number < self.__frames_length else []
         if players:
             if type(players) is dict:

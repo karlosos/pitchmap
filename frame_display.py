@@ -2,6 +2,7 @@
 Display used for displaying images in system window
 """
 import video_position_trackbar
+import keyboard_actions
 
 import cv2
 import imutils
@@ -81,3 +82,8 @@ class Display:
         self.clear_model()
         for idx, player in enumerate(players):
             cv2.circle(self.__pitch_model, (int(player[0]), int(player[1])), 3, player_colors[idx], 5)
+
+    def input_actions(self):
+        key = cv2.waitKey(1) & 0xff
+        is_exit = not keyboard_actions.key_pressed(key, self)
+        return is_exit
