@@ -25,7 +25,7 @@ class PitchMap:
         :param tracking_method: if left default (None) then there's no tracking and detection
         is performed in every frame
         """
-        self.__video_name = 'dynamic_sample.mp4'
+        self.__video_name = 'Dynamic_Barca_Real.mp4'
         self.__window_name = f'PitchMap: {self.__video_name}'
 
         self.fl = frame_loader.FrameLoader(self.__video_name)
@@ -74,21 +74,6 @@ class PitchMap:
         # self.out_frame = cv2.addWeighted(grass_mask, 0.8, lines_frame, 1, 0)
         self.out_frame = grass_mask
 
-        if interpolating:
-            frame_idx = self.fl.get_current_frame_position()
-            if frame_idx < self.calibrator.stop_calibration_frame_index:
-                players = self.players_list.get_players_positions_from_frame(
-                    frame_number=self.fl.get_current_frame_position())
-                team_ids = self.players_list.get_players_team_ids_from_frame(
-                    frame_number=self.fl.get_current_frame_position())
-                colors = list(map(lambda x: self.team_colors[x], team_ids))
-                players_2d_positions = self.calibrator.transform_to_2d(players,
-                                                                       self.calibrator.H_dictionary[int(frame_idx)])
-                self.__display.show_model()
-                self.__display.add_players_to_model(players_2d_positions, colors)
-            else:
-                self.__interpolation_mode = False
-
     def loop(self):
         self.frame_loading()
         previous = time.perf_counter()
@@ -100,16 +85,17 @@ class PitchMap:
                 break
             # update
             if not self.calibrator.enabled:
-                detecting_enabled = self.calibrator.enabled or self.__interpolation_mode
-
                 if self.__detection_thread is None or not self.__detection_thread.is_alive():
                     if current - previous > 0.04:
                         self.__detection_thread = threading.Thread(target=self.frame_loading,
                                                                    args=(self.calibrator.enabled, self.__interpolation_mode))
                         self.__detection_thread.start()
                         previous = current
-            else:
-                self.__display.show_model()
+
+            if self.__interpolation_mode:
+                self.disable_interpolation()
+
+            self.__display.show_model()
 
             self.__display.show(self.out_frame, self.fl.get_current_frame_position())
 
@@ -117,6 +103,11 @@ class PitchMap:
 
         self.__display.close_windows()
         self.fl.release()
+
+    def disable_interpolation(self):
+        if self.fl.get_current_frame_position() > self.calibrator.stop_calibration_frame_index:
+            self.__interpolation_mode = False
+            self.calibrator.clear_interpolation()
 
     def draw_bounding_boxes(self, frame, grass_mask, bounding_boxes):
         current_frame_number = self.fl.get_current_frame_position()
@@ -146,22 +137,29 @@ class PitchMap:
         return status
 
     def perform_transform(self):
-        players = self.players_list.get_players_positions_from_frame(frame_number=self.fl.get_current_frame_position())
-        team_ids = self.players_list.get_players_team_ids_from_frame(frame_number=self.fl.get_current_frame_position())
-        colors = list(map(lambda x: self.team_colors[x], team_ids))
-        players_2d_positions, transformed_frame, H = self.calibrator.calibrate(self.out_frame, players,
-                                                                                 colors)
-        self.out_frame = transformed_frame
-        self.__display.add_players_to_model(players_2d_positions, colors)
+        if self.calibrator.can_perform_calibrate():
+            if self.calibrator.stop_calibration_H is None:
+                players = self.players_list.get_players_positions_from_frame(
+                    frame_number=self.fl.get_current_frame_position())
+                team_ids = self.players_list.get_players_team_ids_from_frame(
+                    frame_number=self.fl.get_current_frame_position())
+                colors = list(map(lambda x: self.team_colors[x], team_ids))
+                players_2d_positions, transformed_frame, H = self.calibrator.calibrate(self.out_frame, players,
+                                                                                       colors)
+                self.out_frame = transformed_frame
+                self.__display.add_players_to_model(players_2d_positions, colors)
 
-        if self.calibrator.start_calibration_H is None:
-            self.calibrator.start_calibration(H, self.fl.get_current_frame_position())
-        elif self.calibrator.stop_calibration_H is None:
-            self.calibrator.end_calibration(H, self.fl.get_current_frame_position())
-        elif self.calibrator.stop_calibration_H is not None:
-            self.__interpolation_mode = True
-            self.calibrator.enabled = False
-            self.fl.set_current_frame_position(self.calibrator.start_calibration_frame_index)
+                if self.calibrator.start_calibration_H is None:
+                    print("Start calibration")
+                    self.calibrator.start_calibration(H, self.fl.get_current_frame_position())
+                elif self.calibrator.stop_calibration_H is None:
+                    print("Stop calibration")
+                    self.calibrator.end_calibration(H, self.fl.get_current_frame_position())
+            else:
+                print("Interpolation mode start")
+                self.__interpolation_mode = True
+                self.calibrator.enabled = False
+                self.fl.set_current_frame_position(self.calibrator.start_calibration_frame_index)
 
     def input_test(self):
         self.fl.set_current_frame_position(99)

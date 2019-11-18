@@ -21,7 +21,7 @@ class PyGameDisplay:
         self.__pitch_model = copy.copy(self.__clear_pitch_model)
 
         self.__frame_count = frame_count
-        self.__current_frame = 0
+        self.__current_frame_id = 0
 
         pygame.init()
         pygame.display.init()
@@ -33,13 +33,13 @@ class PyGameDisplay:
         self.__model_view = ModelView()
         self.__buttonCalibration = Button(737, 57, 200, 50, 'Calibration')
         self.__buttonTransformation = Button(994, 57, 200, 50, 'Transformation')
-        self.__slider = Slider(0, self.__frame_count, 0)
+        self.__slider = Slider(1, self.__frame_count, 1)
 
         self.__calibration_state = False
         self.__transformation_state = False
 
     def show(self, frame, frame_number):
-        self.__current_frame = frame_number
+        self.__current_frame_id = frame_number
         # background
         self.__display_surface.fill((255, 255, 255))
 
@@ -114,7 +114,16 @@ class PyGameDisplay:
         pygame.display.update()
 
     def show_model(self):
-        pass
+        frame_idx = self.__current_frame_id
+        has_players_positions = self.__pitchmap.players_list.is_frame_populated(frame_idx)
+        has_homography = self.__pitchmap.calibrator.is_homography_exist(frame_idx)
+        if has_players_positions and has_homography:
+            players = self.__pitchmap.players_list.get_players_positions_from_frame(frame_number=frame_idx)
+            team_ids = self.__pitchmap.players_list.get_players_team_ids_from_frame(frame_number=frame_idx)
+            colors = list(map(lambda x: self.__pitchmap.team_colors[x], team_ids))
+            players_2d_positions = self.__pitchmap.calibrator.transform_to_2d(players,
+                                                                   self.__pitchmap.calibrator.H_dictionary[int(frame_idx)])
+            self.add_players_to_model(players_2d_positions, colors)
 
     def clear_model(self):
         self.__pitch_model = copy.copy(self.__clear_pitch_model)
