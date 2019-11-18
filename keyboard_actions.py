@@ -18,12 +18,12 @@ def input_transform(key):
     else:
         return False
 
+
 def input_test(key):
     if key == 117:  # u key
         return True
     else:
         return False
-
 
 
 def key_pressed(key, pitch_map):

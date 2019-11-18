@@ -33,11 +33,11 @@ class PitchMap:
 
         self.fl = frame_loader.FrameLoader(self.__video_name)
         self.calibrator = calibrator.Calibrator()
-        # self.__display = frame_display.Display(main_window_name=self.__window_name,
-        #                                              model_window_name="2D Pitch Model",
-        #                                              pitchmap=self, frame_count=self.fl.get_frames_count())
-        self.__display = display.PyGameDisplay(main_window_name=self.__window_name, model_window_name="2D Pitch Model",
-                                               pitchmap=self, frame_count=self.fl.get_frames_count())
+        self.__display = frame_display.Display(main_window_name=self.__window_name,
+                                                     model_window_name="2D Pitch Model",
+                                                     pitchmap=self, frame_count=self.fl.get_frames_count())
+        # self.__display = display.PyGameDisplay(main_window_name=self.__window_name, model_window_name="2D Pitch Model",
+        #                                        pitchmap=self, frame_count=self.fl.get_frames_count())
 
         #self.players_list = player.PlayersListSimple(frames_length=self.fl.get_frames_count())
         self.players_list = player.PlayersListComplex(frames_length=self.fl.get_frames_count())

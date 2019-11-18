@@ -19,10 +19,10 @@ class Display:
         self.__pitch_model = imutils.resize(self.__pitch_model, width=600)
 
         self.__frame_count = frame_count
+        self.__current_frame_id = 1
 
         self.__video_position_trackbar = video_position_trackbar.VideoPositionTrackbar(self.__frame_count,
                                                                                        self.__pitchmap.fl)
-
         cv2.namedWindow(self.__window_name)
         self.__video_position_trackbar.show_trackbar(0, self.__window_name)
         cv2.setMouseCallback(self.__window_name, self.add_point_main_window)
@@ -33,8 +33,20 @@ class Display:
     def show(self, frame, frame_number):
         cv2.imshow(self.__window_name, frame)
         self.__video_position_trackbar.set_trackbar(frame_number, self.__window_name)
+        self.__current_frame_id = frame_number
 
     def show_model(self):
+        frame_idx = self.__current_frame_id
+        has_players_positions = self.__pitchmap.players_list.is_frame_populated(frame_idx)
+        has_homography = self.__pitchmap.calibrator.is_homography_exist(frame_idx)
+        if has_players_positions and has_homography:
+            players = self.__pitchmap.players_list.get_players_positions_from_frame(frame_number=frame_idx)
+            team_ids = self.__pitchmap.players_list.get_players_team_ids_from_frame(frame_number=frame_idx)
+            colors = list(map(lambda x: self.__pitchmap.team_colors[x], team_ids))
+            players_2d_positions = self.__pitchmap.calibrator.transform_to_2d(players,
+                                                                   self.__pitchmap.calibrator.H_dictionary[int(frame_idx)])
+            self.add_players_to_model(players_2d_positions, colors)
+
         cv2.imshow(self.__model_window_name, self.__pitch_model)
 
     def clear_model(self):
@@ -83,7 +95,7 @@ class Display:
         for idx, player in enumerate(players):
             cv2.circle(self.__pitch_model, (int(player[0]), int(player[1])), 3, player_colors[idx], 5)
 
-    def input_actions(self):
+    def input_events(self):
         key = cv2.waitKey(1) & 0xff
-        is_exit = not keyboard_actions.key_pressed(key, self)
-        return is_exit
+        running = keyboard_actions.key_pressed(key, self.__pitchmap)
+        return running
