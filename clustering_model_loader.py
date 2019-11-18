@@ -1,5 +1,5 @@
 import os
-import pickle
+import pickler
 
 
 class ClusteringModelLoader:
@@ -17,25 +17,10 @@ class ClusteringModelLoader:
 
         if file_exists:
             print("loading")
-            clf = self.unpickle(team_detection_file_name)
+            clf = pickler.unpickle_data(team_detection_file_name)
             self.__team_detector.set_clf(clf)
         else:
             print("saving")
             selected_frames_for_clustering = self.fl.select_frames_for_clustering()
             self.__team_detector.cluster_teams(selected_frames_for_clustering)
-            self.pickle(self.__team_detector.get_clf(), team_detection_file_name)
-
-    @staticmethod
-    def unpickle(file_name):
-        f = open(file_name, 'rb')
-        data = pickle.load(f)
-        f.close()
-        return data
-
-    @staticmethod
-    def pickle(data, file_name):
-        print(file_name)
-        os.makedirs(os.path.dirname(file_name), exist_ok=True)
-        f = open(file_name, 'wb')
-        pickle.dump(data, f)
-        f.close()
+            pickler.pickle_data(self.__team_detector.get_clf(), team_detection_file_name)

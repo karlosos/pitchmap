@@ -12,12 +12,15 @@ import keyboard_actions
 import player
 from gui_pygame import display
 import clustering_model_loader
+import pickler
 
 import imutils
 import cv2
 import numpy as np
 import threading
 import time
+import os
+
 
 class PitchMap:
     def __init__(self, tracking_method=None):
@@ -55,6 +58,8 @@ class PitchMap:
         self.team_colors = [(35, 117, 250), (250, 46, 35), (255, 48, 241)]
 
         self.__detection_thread = None
+        self.__save_data_path = f"data/cache/{self.__video_name}_{self.players_list.__class__.__name__}.pik"
+        self.bootstrap()
 
     def frame_loading(self, detecting=False, interpolating=False):
         frame = self.fl.load_frame()
@@ -104,6 +109,21 @@ class PitchMap:
 
         self.__display.close_windows()
         self.fl.release()
+        self.teardown()
+
+    def teardown(self):
+        pickler.pickle_data([self.players_list.players, self.calibrator.H_dictionary], self.__save_data_path)
+        print(f"Saved data to: {self.__save_data_path}")
+
+    def bootstrap(self):
+        file_exists = os.path.isfile(self.__save_data_path)
+        if file_exists:
+            players, h = pickler.unpickle_data(self.__save_data_path)
+            self.players_list.players = players
+            self.calibrator.H_dictionary = h
+            print(f"Loaded data from: {self.__save_data_path}")
+        else:
+            print("No data to load")
 
     def disable_interpolation(self):
         if self.fl.get_current_frame_position() > self.calibrator.stop_calibration_frame_index:
