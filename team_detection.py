@@ -49,6 +49,11 @@ class TeamDetection:
                                   bounding_boxes)
         return bounding_boxes
 
+    def set_clf(self, clf):
+        self.__clf = clf
+
+    def get_clf(self):
+        return self.__clf
 
 class ColorDetectorEntirePlayer:
     @staticmethod

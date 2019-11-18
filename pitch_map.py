@@ -11,13 +11,13 @@ import tracker
 import keyboard_actions
 import player
 from gui_pygame import display
+import clustering_model_loader
 
 import imutils
 import cv2
 import numpy as np
 import threading
 import time
-
 
 class PitchMap:
     def __init__(self, tracking_method=None):
@@ -42,9 +42,10 @@ class PitchMap:
         self.out_frame = None
 
         # Team detection initialization
-        selected_frames_for_clustering = self.fl.select_frames_for_clustering()
         self.__team_detector = team_detection.TeamDetection()
-        self.__team_detector.cluster_teams(selected_frames_for_clustering)
+        clf_model_loader = clustering_model_loader.ClusteringModelLoader(self.__team_detector,
+                                                                         self.fl, self.__video_name)
+        clf_model_loader.generate_clustering_model()
 
         # Players tracking initialization
         self.__tracker = tracker.Tracker(tracking_method)
