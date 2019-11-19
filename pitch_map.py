@@ -33,11 +33,11 @@ class PitchMap:
 
         self.fl = frame_loader.FrameLoader(self.__video_name)
         self.calibrator = calibrator.Calibrator()
-        self.__display = frame_display.Display(main_window_name=self.__window_name,
-                                                     model_window_name="2D Pitch Model",
-                                                     pitchmap=self, frame_count=self.fl.get_frames_count())
-        # self.__display = display.PyGameDisplay(main_window_name=self.__window_name, model_window_name="2D Pitch Model",
-        #                                        pitchmap=self, frame_count=self.fl.get_frames_count())
+        # self.__display = frame_display.Display(main_window_name=self.__window_name,
+        #                                              model_window_name="2D Pitch Model",
+        #                                              pitchmap=self, frame_count=self.fl.get_frames_count())
+        self.__display = display.PyGameDisplay(main_window_name=self.__window_name, model_window_name="2D Pitch Model",
+                                               pitchmap=self, frame_count=self.fl.get_frames_count())
 
         #self.players_list = player.PlayersListSimple(frames_length=self.fl.get_frames_count())
         self.players_list = player.PlayersListComplex(frames_length=self.fl.get_frames_count())
@@ -70,8 +70,13 @@ class PitchMap:
         # lines_frame = detect.lines_detection(edges, grass_mask)
 
         bounding_boxes = []
+        detecting = True
         if detecting or interpolating:
             bounding_boxes_frame, bounding_boxes, labels = self.__tracker.update(grass_mask)
+            player_indices = [i for i, x in enumerate(labels) if x != 'person']
+            for index in sorted(player_indices, reverse=True):
+                print(index)
+                del bounding_boxes[index]
 
         self.players_list.clear()
 
@@ -139,7 +144,6 @@ class PitchMap:
                                                      frame_number=current_frame_number)
             calculated_team = player.calculate_real_color()
             team_color = self.team_colors[calculated_team]
-
             cv2.circle(grass_mask, (x, y), 3, team_color, 5)
             cv2.putText(grass_mask, text=f"{player.id}:{team_id}", org=(x, y + 10),
                         fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale=1, color=(0, 255, 0), lineType=1)
