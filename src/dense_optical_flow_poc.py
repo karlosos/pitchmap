@@ -38,14 +38,27 @@ def plot(movement_vectors):
     ax2.set_ylabel("wychylenie kamery \n względem początku")
     x_cumsum = np.cumsum(np.array(movement_vectors)[:, 0])
     ax2.plot(x_cumsum)
-    plt.show() 
+    plt.show()
+
+
+def get_bounding_frames(cap, frame_indexes):
+    total_frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+    frames = []
+    print(f"frame indexes: {frame_indexes}, total frames: {total_frames}")
+    for index in frame_indexes:
+        if 0 <= index <= total_frames:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, index)
+            ret, frame = cap.read()
+            frames.append(frame)
+    return frames
 
 
 def main():
     cap = cv2.VideoCapture("../data/Barca_Real_continous.mp4")
+    width = 300
 
     ret, frame1 = cap.read()
-    frame1 = imutils.resize(frame1, width=480)
+    frame1 = imutils.resize(frame1, width=width)
     _, mask = grass_negative(frame1)
     previous_frame_gray = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
     visualisation_frame_hsv = np.zeros_like(frame1)
@@ -56,7 +69,7 @@ def main():
     while True:
         try:
             ret, frame2 = cap.read()
-            frame2 = imutils.resize(frame2, width=480)
+            frame2 = imutils.resize(frame2, width=width)
         except AttributeError:
             break
         _, mask = grass_negative(frame2)
@@ -79,12 +92,22 @@ def main():
         if k == 27:
             break
         elif k == ord('s'):
-            cv2.imwrite('opticalfb.png',frame2)
+            cv2.imwrite('opticalfb.png', frame2)
             cv2.imwrite('opticalhsv.png', visualisation_frame_rgb)
 
-    cap.release()
     cv2.destroyAllWindows()
     plot(movement_vectors)
+
+    x_cumsum = np.cumsum(np.array(movement_vectors)[:, 0])
+    max_x = np.argmax(x_cumsum)
+    min_x = np.argmin(x_cumsum)
+    print(f"Max: {max_x}, Min: {min_x}")
+    bounding_frames = get_bounding_frames(cap, (min_x, max_x))
+    for idx, frame in enumerate(bounding_frames):
+        cv2.imshow(f"frame{idx}", frame)
+        cv2.imwrite(f"frame{idx}.png", frame)
+
+    cap.release()
 
 
 if __name__ == '__main__':
