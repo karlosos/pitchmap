@@ -78,7 +78,7 @@ class PlayersListComplex(PlayerList):
     def __init__(self, frames_length):
         self.__id_counter = 0
         self.__frames_length = frames_length
-        self.players = [{} for _ in range(frames_length)]
+        self.players = [{} for _ in range(frames_length + 1)]
 
     def clear(self):
         pass
@@ -95,7 +95,7 @@ class PlayersListComplex(PlayerList):
         return positions
 
     def get_players_team_ids_from_frame(self, frame_number):
-        print("get colors from frame")
+        #print(f"get colors from frame {frame_number}")
         players = self.players[frame_number] if frame_number < self.__frames_length else []
         if players:
             if type(players) is dict:
@@ -103,7 +103,7 @@ class PlayersListComplex(PlayerList):
             colors = list(map(lambda player: player.calculate_real_color(), players))
         else:
             colors = []
-        print(f"colors: {colors}")
+        #print(f"colors: {colors}")
         return colors
 
     def assign_player(self, position, color, frame_number):
@@ -152,6 +152,12 @@ class PlayersListComplex(PlayerList):
         p = PlayerComplex(self, player.id, position, color, frame_number)
         self.players[frame_number][player.id] = p
         return p
+
+    def is_frame_populated(self, frame_number):
+        if self.players[frame_number]:
+            return True
+        else:
+            return False
 
 
 class PlayerSimple:

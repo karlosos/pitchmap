@@ -14,7 +14,7 @@ class TeamDetection:
     def __init__(self, plot=False):
         self.__clf = None
         self.__plot = plot
-        self.color_detector = ColorDetectorTwoHalves()
+        self.color_detector = ColorDetectorUpperHalf()
 
     def cluster_teams(self, selected_frames):
         extracted_player_colors = self.extract_player_colors(selected_frames)
@@ -49,6 +49,11 @@ class TeamDetection:
                                   bounding_boxes)
         return bounding_boxes
 
+    def set_clf(self, clf):
+        self.__clf = clf
+
+    def get_clf(self):
+        return self.__clf
 
 class ColorDetectorEntirePlayer:
     @staticmethod

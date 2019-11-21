@@ -16,8 +16,7 @@ class Calibrator:
         self.start_calibration_frame_index = None
         self.stop_calibration_frame_index = None
 
-        self.displaying = False
-        self.H_dictionary = None
+        self.H_dictionary = {}
 
     def toggle_enabled(self):
         if not self.enabled:
@@ -25,6 +24,7 @@ class Calibrator:
             self.points = {}
 
         self.enabled = not self.enabled
+        return self.enabled
 
     def add_point_main_window(self, pos):
         if self.current_point is None:
@@ -46,6 +46,11 @@ class Calibrator:
 
     def get_points_count(self):
         return len(self.points)
+
+    def can_perform_calibrate(self):
+        if self.enabled and self.get_points_count() >= 4:
+            return True
+        return False
 
     def calibrate(self, frame, players, players_colors):
         players_2d_positions = None
@@ -94,7 +99,6 @@ class Calibrator:
     def start_calibration(self, H, frame_index):
         self.start_calibration_H = H
         self.start_calibration_frame_index = frame_index
-        print("Saved M start")
 
     def end_calibration(self, H_m, m):
         if m > self.start_calibration_frame_index:
@@ -107,7 +111,23 @@ class Calibrator:
             for k in range(int(self.stop_calibration_frame_index - self.start_calibration_frame_index)):
                 print(H[:, :, k])
                 H_dictionary[int(self.start_calibration_frame_index + k)] = H[:, :, k]
-            self.H_dictionary = H_dictionary
+            self.H_dictionary.update(H_dictionary)
             return True
         else:
             return False
+
+    def is_homography_exist(self, frame):
+        h = self.H_dictionary.get(frame, None)
+        if h is None:
+            return False
+        if type(h) is np.ndarray:
+            return True
+        else:
+            return False
+
+    def clear_interpolation(self):
+        self.start_calibration_H = None
+        self.stop_calibration_H = None
+
+        self.start_calibration_frame_index = None
+        self.stop_calibration_frame_index = None
