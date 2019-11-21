@@ -32,12 +32,17 @@ def grass_negative(frame, for_player=False):
 def plot(movement_vectors):
     plt.style.use('ggplot')
     ax = plt.subplot(2, 1, 1)
-    ax.plot(np.array(movement_vectors)[:, 0])
+    ax.plot(np.array(movement_vectors)[:, 0], label="horizontal [x]")
+    ax.plot(np.array(movement_vectors)[:, 1], label="vertical [y]")
     ax.set_ylabel("kierunek \n ruchu kamery")
+    ax.legend()
     ax2 = plt.subplot(2, 1, 2)
     ax2.set_ylabel("wychylenie kamery \n względem początku")
     x_cumsum = np.cumsum(np.array(movement_vectors)[:, 0])
-    ax2.plot(x_cumsum)
+    y_cumsum = np.cumsum(np.array(movement_vectors)[:, 1])
+    ax2.plot(x_cumsum, label="horizontal [x]")
+    ax2.plot(y_cumsum, label="vertical [y]")
+    ax2.legend()
     plt.show()
 
 
@@ -55,7 +60,7 @@ def get_bounding_frames(cap, frame_indexes):
 
 def main():
     cap = cv2.VideoCapture("../data/Barca_Real_continous.mp4")
-    width = 300
+    width = 100
 
     ret, frame1 = cap.read()
     frame1 = imutils.resize(frame1, width=width)
@@ -99,12 +104,15 @@ def main():
     plot(movement_vectors)
 
     x_cumsum = np.cumsum(np.array(movement_vectors)[:, 0])
+    y_cumsum = np.cumsum(np.array(movement_vectors)[:, 1])
     max_x = np.argmax(x_cumsum)
     min_x = np.argmin(x_cumsum)
+    max_y = np.argmax(y_cumsum)
+    min_y = np.argmin(y_cumsum)
     print(f"Max: {max_x}, Min: {min_x}")
-    bounding_frames = get_bounding_frames(cap, (min_x, max_x))
+    bounding_frames = get_bounding_frames(cap, (min_x, max_x, max_y, min_y))
     for idx, frame in enumerate(bounding_frames):
-        cv2.imshow(f"frame{idx}", frame)
+        #cv2.imshow(f"frame{idx}", frame)
         cv2.imwrite(f"frame{idx}.png", frame)
 
     cap.release()
