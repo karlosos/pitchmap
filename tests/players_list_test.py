@@ -1,6 +1,6 @@
 import unittest
 
-from player import PlayersListComplex
+from player_structure import PlayersListComplex
 
 
 class PlayersListTest(unittest.TestCase):

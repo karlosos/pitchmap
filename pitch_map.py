@@ -4,16 +4,15 @@ Main file of PitchMap. All process trough loading images from video to displayin
 import frame_loader
 import frame_display
 import mask
-import detect
 import calibrator
 import team_detection
 import tracker
-import keyboard_actions
-import player
+import player_structure
 from gui_pygame import display
 import clustering_model_loader
-import pickler
+import calibrator_interactor
 
+import pickler
 import imutils
 import cv2
 import numpy as np
@@ -28,20 +27,21 @@ class PitchMap:
         :param tracking_method: if left default (None) then there's no tracking and detection
         is performed in every frame
         """
-        self.__video_name = 'Dynamic_Barca_Real.mp4'
+        Disp = display.PyGameDisplay
+        # Disp = frame_display.Display
+        PlayList = player_structure.PlayersListComplex
+        # PlayList = player.PlayersListSimple
+        CalInter = calibrator_interactor.CalibrationInteractorAutomatic
+        # CalInter = calibrator_interactor.CalibrationInteractorSimple
+
+        self.__video_name = 'Barca_Real_continous.mp4'
         self.__window_name = f'PitchMap: {self.__video_name}'
 
         self.fl = frame_loader.FrameLoader(self.__video_name)
         self.calibrator = calibrator.Calibrator()
-        # self.__display = frame_display.Display(main_window_name=self.__window_name,
-        #                                              model_window_name="2D Pitch Model",
-        #                                              pitchmap=self, frame_count=self.fl.get_frames_count())
-        self.__display = display.PyGameDisplay(main_window_name=self.__window_name, model_window_name="2D Pitch Model",
+        self.__display = Disp(main_window_name=self.__window_name, model_window_name="2D Pitch Model",
                                                pitchmap=self, frame_count=self.fl.get_frames_count())
-
-        #self.players_list = player.PlayersListSimple(frames_length=self.fl.get_frames_count())
-        self.players_list = player.PlayersListComplex(frames_length=self.fl.get_frames_count())
-
+        self.players_list = PlayList(frames_length=self.fl.get_frames_count())
         self.out_frame = None
 
         # Team detection initialization
@@ -58,20 +58,27 @@ class PitchMap:
         self.team_colors = [(35, 117, 250), (250, 46, 35), (255, 48, 241)]
 
         self.__detection_thread = None
-        self.__save_data_path = f"data/cache/{self.__video_name}_{self.players_list.__class__.__name__}.pik"
+        self.__calibration_interactor = CalInter(pitch_map=self, calibrator=self.calibrator, frame_loader=self.fl)
+        self.transforming_flag = False
+        self.detecting_flag = False
+
+        self.__save_data_path = f'data/cache/{self.__video_name}_{self.players_list.__class__.__name__}_{self.__calibration_interactor.__class__.__name__}.pik'
         self.bootstrap()
 
-    def frame_loading(self, detecting=False, interpolating=False):
+    def frame_loading(self):
         frame = self.fl.load_frame()
-        frame = imutils.resize(frame, width=600)
+        try:
+            frame = imutils.resize(frame, width=600)
+        except AttributeError:
+            return
 
         grass_mask = mask.grass(frame)
         # edges = detect.edges_detection(grass_mask)
         # lines_frame = detect.lines_detection(edges, grass_mask)
 
         bounding_boxes = []
-        detecting = True
-        if detecting or interpolating:
+
+        if self.detecting_flag:
             bounding_boxes_frame, bounding_boxes, labels = self.__tracker.update(grass_mask)
             player_indices = [i for i, x in enumerate(labels) if x != 'person']
             for index in sorted(player_indices, reverse=True):
@@ -81,35 +88,34 @@ class PitchMap:
         self.players_list.clear()
 
         self.draw_bounding_boxes(frame, grass_mask, bounding_boxes)
-
         # self.out_frame = cv2.addWeighted(grass_mask, 0.8, lines_frame, 1, 0)
-        self.out_frame = grass_mask
+        if self.transforming_flag:
+            self.out_frame = self.transform_frame(grass_mask, self.fl.get_current_frame_position())
+        else:
+            self.out_frame = grass_mask
 
     def loop(self):
         self.frame_loading()
         previous = time.perf_counter()
         while True:
+            frame_number = self.fl.get_current_frame_position()
             current = time.perf_counter()
             # user input
             is_exit = not self.__display.input_events()
             if is_exit:
                 break
+
             # update
             if not self.calibrator.enabled:
                 if self.__detection_thread is None or not self.__detection_thread.is_alive():
                     if current - previous > 0.04:
-                        self.__detection_thread = threading.Thread(target=self.frame_loading,
-                                                                   args=(self.calibrator.enabled, self.__interpolation_mode))
+                        self.__detection_thread = threading.Thread(target=self.frame_loading)
                         self.__detection_thread.start()
                         previous = current
 
-            if self.__interpolation_mode:
-                self.disable_interpolation()
-
-            self.__display.show_model()
-
-            self.__display.show(self.out_frame, self.fl.get_current_frame_position())
-
+            players_2d_positions, colors = self.get_players_positions_on_model(frame_number)
+            self.__display.show_model(players_2d_positions, colors)
+            self.__display.show(self.out_frame, frame_number)
             self.__display.update()
 
         self.__display.close_windows()
@@ -117,7 +123,7 @@ class PitchMap:
         self.teardown()
 
     def teardown(self):
-        pickler.pickle_data([self.players_list.players, self.calibrator.H_dictionary], self.__save_data_path)
+        pickler.pickle_data([self.players_list.players, self.__calibration_interactor.homographies], self.__save_data_path)
         print(f"Saved data to: {self.__save_data_path}")
 
     def bootstrap(self):
@@ -125,7 +131,7 @@ class PitchMap:
         if file_exists:
             players, h = pickler.unpickle_data(self.__save_data_path)
             self.players_list.players = players
-            self.calibrator.H_dictionary = h
+            self.__calibration_interactor.homographies = h
             print(f"Loaded data from: {self.__save_data_path}")
         else:
             print("No data to load")
@@ -148,46 +154,58 @@ class PitchMap:
             cv2.putText(grass_mask, text=f"{player.id}:{team_id}", org=(x, y + 10),
                         fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale=1, color=(0, 255, 0), lineType=1)
 
+    def transform_frame(self, frame, frame_idx):
+        rows, columns, channels = frame.shape
+        h = self.__calibration_interactor.get_homography(frame_idx)
+        transformed_frame = cv2.warpPerspective(frame, h, (columns, rows))
+        return transformed_frame
+
     def start_calibration(self):
-        if not self.calibrator.enabled:
-            self.__display.create_model_window()
-            self.__display.clear_model()
-            self.__display.show_model()
-        else:
-            self.__display.close_model_window()
-        status = self.calibrator.toggle_enabled()
-        self.__detection_thread = threading.Thread(target=self.frame_loading,
-                                                   args=(self.calibrator.enabled,))
-        self.__detection_thread.start()
-        return status
+        self.__calibration_interactor.start_calibration()
 
     def perform_transform(self):
-        if self.calibrator.can_perform_calibrate():
-            if self.calibrator.stop_calibration_H is None:
-                players = self.players_list.get_players_positions_from_frame(
-                    frame_number=self.fl.get_current_frame_position())
-                team_ids = self.players_list.get_players_team_ids_from_frame(
-                    frame_number=self.fl.get_current_frame_position())
-                colors = list(map(lambda x: self.team_colors[x], team_ids))
-                players_2d_positions, transformed_frame, H = self.calibrator.calibrate(self.out_frame, players,
-                                                                                       colors)
-                self.out_frame = transformed_frame
-                self.__display.add_players_to_model(players_2d_positions, colors)
+        self.__calibration_interactor.perform_transform(players_list=self.players_list, team_colors=self.team_colors)
 
-                if self.calibrator.start_calibration_H is None:
-                    print("Start calibration")
-                    self.calibrator.start_calibration(H, self.fl.get_current_frame_position())
-                elif self.calibrator.stop_calibration_H is None:
-                    print("Stop calibration")
-                    self.calibrator.end_calibration(H, self.fl.get_current_frame_position())
-            else:
-                print("Interpolation mode start")
-                self.__interpolation_mode = True
-                self.calibrator.enabled = False
-                self.fl.set_current_frame_position(self.calibrator.start_calibration_frame_index)
+    def accept_transform(self):
+        self.__calibration_interactor.accept_transform()
 
     def input_test(self):
         self.fl.set_current_frame_position(99)
+
+    def add_players_to_model(self, players_2d_positions, colors):
+        self.__display.add_players_to_model(players_2d_positions, colors)
+
+    def set_transforming_flag(self, state=False):
+        self.transforming_flag = state
+
+    def create_model_window(self):
+        self.__display.create_model_window()
+        self.__display.clear_model()
+        self.__display.show_model()
+
+    def load_frame(self):
+        self.__detection_thread = threading.Thread(target=self.frame_loading)
+        self.__detection_thread.start()
+
+    def toggle_detecting(self):
+        self.detecting_flag = not self.detecting_flag
+
+    def toggle_transforming(self):
+        self.transforming_flag = not self.transforming_flag
+
+    def get_players_positions_on_model(self, frame_idx):
+        players_2d_positions = []
+        colors = []
+        has_players_positions = self.players_list.is_frame_populated(frame_idx)
+        has_homography = self.__calibration_interactor.is_homography_exist(frame_idx)
+        if has_players_positions and has_homography:
+            players = self.players_list.get_players_positions_from_frame(frame_number=frame_idx)
+            team_ids = self.players_list.get_players_team_ids_from_frame(frame_number=frame_idx)
+            colors = list(map(lambda x: self.team_colors[x], team_ids))
+            players_2d_positions = self.calibrator.transform_to_2d(players,
+                                                                   self.__calibration_interactor.get_homography(frame_idx))
+
+        return players_2d_positions, colors
 
 
 if __name__ == '__main__':

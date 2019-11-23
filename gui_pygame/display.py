@@ -68,6 +68,12 @@ class PyGameDisplay:
                     self.__calibration_state = self.__pitchmap.start_calibration()
                 elif event.key == pygame.K_t:
                     self.__pitchmap.perform_transform()
+                elif event.key == pygame.K_a:
+                    self.__pitchmap.accept_transform()
+                elif event.key == pygame.K_d:
+                    self.__pitchmap.toggle_detecting()
+                elif event.key == pygame.K_p:
+                    self.__pitchmap.toggle_transforming()
 
             pos = pygame.mouse.get_pos()
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -113,16 +119,10 @@ class PyGameDisplay:
 
         pygame.display.update()
 
-    def show_model(self):
-        frame_idx = self.__current_frame_id
-        has_players_positions = self.__pitchmap.players_list.is_frame_populated(frame_idx)
-        has_homography = self.__pitchmap.calibrator.is_homography_exist(frame_idx)
-        if has_players_positions and has_homography:
-            players = self.__pitchmap.players_list.get_players_positions_from_frame(frame_number=frame_idx)
-            team_ids = self.__pitchmap.players_list.get_players_team_ids_from_frame(frame_number=frame_idx)
-            colors = list(map(lambda x: self.__pitchmap.team_colors[x], team_ids))
-            players_2d_positions = self.__pitchmap.calibrator.transform_to_2d(players,
-                                                                   self.__pitchmap.calibrator.H_dictionary[int(frame_idx)])
+    def show_model(self, players_2d_positions=None, colors=None):
+        if players_2d_positions is None:
+            players_2d_positions = []
+        if len(players_2d_positions):
             self.add_players_to_model(players_2d_positions, colors)
 
     def clear_model(self):
@@ -154,8 +154,8 @@ class PyGameDisplay:
         """
         if self.__pitchmap.calibrator.enabled:
             index = self.__pitchmap.calibrator.add_point_main_window((x, y))
-            print("original, model")
-            print(f"Index: {index}")
+            #print("original, model")
+            #print(f"Index: {index}")
             if index:
                 cv2.circle(self.__pitchmap.out_frame, (x, y), 3, (0, 255, 0), 5)
                 cv2.putText(self.__pitchmap.out_frame, str(index), (x+3, y+3),

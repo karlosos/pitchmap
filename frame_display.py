@@ -35,18 +35,8 @@ class Display:
         self.__video_position_trackbar.set_trackbar(frame_number, self.__window_name)
         self.__current_frame_id = frame_number
 
-    def show_model(self):
-        frame_idx = self.__current_frame_id
-        has_players_positions = self.__pitchmap.players_list.is_frame_populated(frame_idx)
-        has_homography = self.__pitchmap.calibrator.is_homography_exist(frame_idx)
-        if has_players_positions and has_homography:
-            players = self.__pitchmap.players_list.get_players_positions_from_frame(frame_number=frame_idx)
-            team_ids = self.__pitchmap.players_list.get_players_team_ids_from_frame(frame_number=frame_idx)
-            colors = list(map(lambda x: self.__pitchmap.team_colors[x], team_ids))
-            players_2d_positions = self.__pitchmap.calibrator.transform_to_2d(players,
-                                                                   self.__pitchmap.calibrator.H_dictionary[int(frame_idx)])
-            self.add_players_to_model(players_2d_positions, colors)
-
+    def show_model(self, players_2d_positions, colors):
+        self.add_players_to_model(players_2d_positions, colors)
         cv2.imshow(self.__model_window_name, self.__pitch_model)
 
     def clear_model(self):

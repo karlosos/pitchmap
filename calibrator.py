@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import matrix_interp
+import math
 
 
 class Calibrator:
@@ -26,6 +27,9 @@ class Calibrator:
         self.enabled = not self.enabled
         return self.enabled
 
+    def clear_points(self):
+        self.points = {}
+
     def add_point_main_window(self, pos):
         if self.current_point is None:
             self.current_point = pos
@@ -38,7 +42,7 @@ class Calibrator:
         if self.current_point is not None:
             index = len(self.points) + 1
             self.points[index] = (self.current_point, pos)
-            print(self.points)
+            #print(self.points)
             self.current_point = None
             return index
         else:
@@ -116,14 +120,9 @@ class Calibrator:
         else:
             return False
 
-    def is_homography_exist(self, frame):
-        h = self.H_dictionary.get(frame, None)
-        if h is None:
-            return False
-        if type(h) is np.ndarray:
-            return True
-        else:
-            return False
+    def interpolate(self, steps, start_H, stop_H):
+        H = matrix_interp.interpolate_transformation_matrices(0, math.ceil(steps)+1, start_H, stop_H)
+        return H
 
     def clear_interpolation(self):
         self.start_calibration_H = None

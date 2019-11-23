@@ -55,6 +55,7 @@ class TeamDetection:
     def get_clf(self):
         return self.__clf
 
+
 class ColorDetectorEntirePlayer:
     @staticmethod
     def color_detection_for_player(frame, box):

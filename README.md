@@ -38,3 +38,15 @@ bbox:
         w = box[2]
         h = box[3]
 ```
+
+Versions:
+- 0.9
+    - kalibracja ręczna: Na początku sekwencji wciśnij przycisk "kalibracja" i wybierz 
+    punkty charakterystyczne. Następnie kliknij transformuj aby zobaczyć transformację.
+    Następnie ponownie przycisk "kalibracja" aby wystartować wideo. 
+    Następnie powtórz czynność dla końcowego punktu z tą różnicą, że po transformacji kliknij
+    jeszcze raz transformuj aby włączyć interpolację liniową
+    - interpolacja liniowa pomiędzy ręcznie wybranymi sekwencjami
+    - nie można przerywać i resetować transformacji
+    - zapisuje pozycje piłkarzy i homografię w plikach
+    - zapisuje model detekcji drużyny w pliku

@@ -1,5 +1,5 @@
 """
-player.py is module with data structures for storing player positions and their colors (acutally team ids).
+player_structure.py is module with data structures for storing player positions and their colors (acutally team ids).
 After scanning every frame for footballers they're stored in these structures.
 Positions in these structures are related to position on video not absolute position on pitch.
 Player = footballer

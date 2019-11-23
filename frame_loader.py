@@ -32,6 +32,18 @@ class FrameLoader:
 
         return self.selected_frames
 
+    def get_frames(self, frame_indexes):
+        total_frames = self.__frame_count
+        frames = []
+        print(f"frame indexes: {frame_indexes}, total frames: {total_frames}")
+        for index in frame_indexes:
+            if 0 <= index <= total_frames:
+                self.set_current_frame_position(index)
+                frame = self.load_frame()
+                frames.append(frame)
+        self.set_current_frame_position(0)
+        return frames
+
     def get_frames_count(self):
         return int(self.__frame_count)
 

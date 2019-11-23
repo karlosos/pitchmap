@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from player import PlayerComplex
+from player_structure import PlayerComplex
 
 
 
