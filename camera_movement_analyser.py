@@ -81,9 +81,10 @@ class CameraMovementAnalyser:
         argmax_y = np.argmax(y_cumsum)
         argmin_y = np.argmin(y_cumsum)
         print(f"Max: {argmax_x}, Min: {argmin_x}")
-        bounding_frames = self.__fl.get_frames((argmin_x, argmax_x))
-        for idx, frame in enumerate(bounding_frames):
-            cv2.imwrite(f"frame{idx}.png", frame)
+
+        # bounding_frames = self.__fl.get_frames((argmin_x, argmax_x))
+        # for idx, frame in enumerate(bounding_frames):
+        #     cv2.imwrite(f"frame{idx}.png", frame)
 
         self.__fl.set_current_frame_position(0)
         return argmin_x, argmax_x, max_x, min_x

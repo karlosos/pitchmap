@@ -43,6 +43,8 @@ class CalibrationInteractorAutomatic(CalibrationInteractor):
         self.__frame_loader = frame_loader
 
         self.__camera_movement_analyser = camera_movement_analyser.CameraMovementAnalyser(self.__frame_loader)
+        self.__characteristic_frames_numbers = None
+        self.__characteristic_frames_iterator = None
         arg_min_x, arg_max_x, min_x, max_x = self.__camera_movement_analyser.calculate_characteristic_points()
         self.__characteristic_frames_numbers = (arg_min_x, arg_max_x)
         self.__characteristic_frames_iterator = iter(self.__characteristic_frames_numbers)
