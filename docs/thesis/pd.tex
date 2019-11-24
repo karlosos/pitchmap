@@ -1,0 +1,46 @@
+% !TEX encoding = UTF-8 Unicode
+
+\documentclass[12pt, oneside]{report}
+
+\usepackage[a4paper, left=3.5cm, right=2cm, bottom=2.5cm, top=3cm]{geometry}
+
+% polskie znaki
+\usepackage[OT4,plmath]{polski}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+\usepackage{graphicx}
+\usepackage{epsfig}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{url}
+\graphicspath{{rys/}}
+
+\usepackage{indentfirst} 
+
+\newcommand{\rdm}[1]{\textcolor{Red}{#1}}
+
+\fontsize{10}{12pt}
+
+\begin{document}
+
+%%%%%%%%% FIRST PAGE
+
+\include{opis}
+
+\include{strona_tytulowa}
+
+\tableofcontents
+
+\include{tresc_pracy}
+
+%%%%%%%%%%%%
+\bibliographystyle{alpha}
+\bibliography{pd}
+
+\begin{appendix}
+\appendix
+\include{dodatek_A}
+\end{appendix}
+
+\end{document}
+ 
