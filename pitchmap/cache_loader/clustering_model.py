@@ -1,5 +1,5 @@
 import os
-import pickler
+from pitchmap.cache_loader import pickler
 
 
 class ClusteringModelLoader:

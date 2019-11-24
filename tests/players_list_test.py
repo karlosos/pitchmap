@@ -1,6 +1,6 @@
 import unittest
 
-from player_structure import PlayersListComplex
+from pitchmap.players.structure import PlayersListComplex
 
 
 class PlayersListTest(unittest.TestCase):

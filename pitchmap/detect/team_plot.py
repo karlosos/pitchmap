@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plot_colors(colors, labels):
+def plot(colors, labels):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     colors = np.asarray(colors)

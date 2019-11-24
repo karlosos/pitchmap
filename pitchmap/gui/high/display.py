@@ -1,8 +1,7 @@
 """
 Display used for displaying images in system window
 """
-import video_position_trackbar
-import keyboard_actions
+from pitchmap.gui.high import video_position_trackbar, keyboard_actions
 
 import cv2
 import imutils
@@ -35,7 +34,9 @@ class Display:
         self.__video_position_trackbar.set_trackbar(frame_number, self.__window_name)
         self.__current_frame_id = frame_number
 
-    def show_model(self, players_2d_positions, colors):
+    def show_model(self, players_2d_positions=None, colors=None):
+        if players_2d_positions is None:
+            players_2d_positions = []
         self.add_players_to_model(players_2d_positions, colors)
         cv2.imshow(self.__model_window_name, self.__pitch_model)
 

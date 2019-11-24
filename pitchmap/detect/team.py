@@ -1,13 +1,11 @@
-import plotting
-import players_detector
-import mask
+from pitchmap.frame import mask
+from pitchmap.detect import players, team_plot
 
 from sklearn.cluster import AgglomerativeClustering
 from sklearn import tree
 import imutils
 import cv2
 import numpy as np
-from matplotlib import pyplot as plt
 
 
 class TeamDetection:
@@ -21,14 +19,14 @@ class TeamDetection:
 
         clust = AgglomerativeClustering(n_clusters=3).fit(extracted_player_colors)
         if self.__plot:
-            plotting.plot_colors(extracted_player_colors, clust.labels_)
+            team_plot.plot(extracted_player_colors, clust.labels_)
 
         self.__clf = tree.DecisionTreeClassifier()
         self.__clf = self.__clf.fit(extracted_player_colors, clust.labels_)
 
     def extract_player_colors(self, frames):
         extracted_player_colors = []
-        player_detector = players_detector.PlayerDetector()
+        player_detector = players.PlayerDetector()
         for frame in frames:
             frame = imutils.resize(frame, width=600)
             grass_mask = mask.grass(frame)

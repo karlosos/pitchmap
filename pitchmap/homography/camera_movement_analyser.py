@@ -1,8 +1,7 @@
 import cv2
 import numpy as np
 import imutils
-import mask
-import frame_loader
+from pitchmap.frame import mask
 import matplotlib.pyplot as plt
 
 
@@ -43,12 +42,13 @@ class CameraMovementAnalyser:
             previous_frame_gray = next_frame_gray
 
             # Video visualisation
+            window_name = 'Dense OpticalFlow visualisation'
             magnitude, angle = cv2.cartToPolar(flow[..., 0], flow[..., 1])
             visualisation_frame_hsv[..., 0] = angle * 180 / np.pi / 2
             visualisation_frame_hsv[..., 2] = cv2.normalize(magnitude, None, 0, 255, cv2.NORM_MINMAX)
             visualisation_frame_rgb = cv2.cvtColor(visualisation_frame_hsv, cv2.COLOR_HSV2BGR)
             visualisation_frame_rgb = cv2.bitwise_and(visualisation_frame_rgb, visualisation_frame_rgb, mask=mask_frame)
-            cv2.imshow('Dense OpticalFlow visualisation', visualisation_frame_rgb)
+            cv2.imshow(window_name, visualisation_frame_rgb)
 
             # Inputs
             k = cv2.waitKey(30) & 0xff
@@ -58,7 +58,7 @@ class CameraMovementAnalyser:
                 cv2.imwrite('opticalfb.png', frame2)
                 cv2.imwrite('opticalhsv.png', visualisation_frame_rgb)
 
-        cv2.destroyAllWindows()
+        cv2.destroyWindow(window_name)
         self.plot(movement_vectors)
 
         x_cumsum = np.cumsum(np.array(movement_vectors)[:, 0])

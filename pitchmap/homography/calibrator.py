@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-import matrix_interp
+from pitchmap.homography import matrix_interp
 import math
 
 
@@ -109,8 +109,8 @@ class Calibrator:
             self.stop_calibration_frame_index = m
             self.stop_calibration_H = H_m
             H = matrix_interp.interpolate_transformation_matrices(self.start_calibration_frame_index,
-                                                                self.stop_calibration_frame_index,
-                                                                self.start_calibration_H, self.stop_calibration_H)
+                                                                  self.stop_calibration_frame_index,
+                                                                  self.start_calibration_H, self.stop_calibration_H)
             H_dictionary = {}
             for k in range(int(self.stop_calibration_frame_index - self.start_calibration_frame_index)):
                 print(H[:, :, k])
@@ -121,7 +121,7 @@ class Calibrator:
             return False
 
     def interpolate(self, steps, start_H, stop_H):
-        H = matrix_interp.interpolate_transformation_matrices(0, math.ceil(steps)+1, start_H, stop_H)
+        H = matrix_interp.interpolate_transformation_matrices(0, math.ceil(steps) + 1, start_H, stop_H)
         return H
 
     def clear_interpolation(self):

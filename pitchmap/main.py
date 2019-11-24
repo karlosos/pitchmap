@@ -1,18 +1,14 @@
 """
 Main file of PitchMap. All process trough loading images from video to displaying 2D map.
 """
-import frame_loader
-import frame_display
-import mask
-import calibrator
-import team_detection
-import tracker
-import player_structure
-from gui_pygame import display
-import clustering_model_loader
-import calibrator_interactor
+from pitchmap.detect import team
+from pitchmap.cache_loader import clustering_model, pickler
+from pitchmap.frame import loader, mask
+from pitchmap.players import structure
+from pitchmap.gui.high import tracker
+from pitchmap.homography import calibrator, calibrator_interactor
+from pitchmap import gui
 
-import pickler
 import imutils
 import cv2
 import numpy as np
@@ -27,27 +23,27 @@ class PitchMap:
         :param tracking_method: if left default (None) then there's no tracking and detection
         is performed in every frame
         """
-        Disp = display.PyGameDisplay
-        # Disp = frame_display.Display
-        PlayList = player_structure.PlayersListComplex
-        # PlayList = player.PlayersListSimple
-        CalInter = calibrator_interactor.CalibrationInteractorAutomatic
-        # CalInter = calibrator_interactor.CalibrationInteractorSimple
+        # display = gui.high.Display
+        display = gui.pygame.Display
+        player_list = structure.PlayersListComplex
+        # player_list = player.PlayersListSimple
+        calib_interactor = calibrator_interactor.CalibrationInteractorAutomatic
+        # calib_interactor = calibrator_interactor.CalibrationInteractorSimple
 
         self.__video_name = 'Barca_Real_continous.mp4'
         self.__window_name = f'PitchMap: {self.__video_name}'
 
-        self.fl = frame_loader.FrameLoader(self.__video_name)
+        self.fl = loader.FrameLoader(self.__video_name)
         self.calibrator = calibrator.Calibrator()
-        self.__display = Disp(main_window_name=self.__window_name, model_window_name="2D Pitch Model",
-                                               pitchmap=self, frame_count=self.fl.get_frames_count())
-        self.players_list = PlayList(frames_length=self.fl.get_frames_count())
+        self.__display = display(main_window_name=self.__window_name, model_window_name="2D Pitch Model",
+                                 pitchmap=self, frame_count=self.fl.get_frames_count())
+        self.players_list = player_list(frames_length=self.fl.get_frames_count())
         self.out_frame = None
 
         # Team detection initialization
-        self.__team_detector = team_detection.TeamDetection()
-        clf_model_loader = clustering_model_loader.ClusteringModelLoader(self.__team_detector,
-                                                                         self.fl, self.__video_name)
+        self.__team_detector = team.TeamDetection()
+        clf_model_loader = clustering_model.ClusteringModelLoader(self.__team_detector,
+                                                                  self.fl, self.__video_name)
         clf_model_loader.generate_clustering_model()
 
         # Players tracking initialization
@@ -58,11 +54,14 @@ class PitchMap:
         self.team_colors = [(35, 117, 250), (250, 46, 35), (255, 48, 241)]
 
         self.__detection_thread = None
-        self.__calibration_interactor = CalInter(pitch_map=self, calibrator=self.calibrator, frame_loader=self.fl)
+        self.__calibration_interactor = calib_interactor(pitch_map=self, calibrator=self.calibrator,
+                                                         frame_loader=self.fl)
         self.transforming_flag = False
         self.detecting_flag = False
 
-        self.__save_data_path = f'data/cache/{self.__video_name}_{self.players_list.__class__.__name__}_{self.__calibration_interactor.__class__.__name__}.pik'
+        player_list_class_name = self.players_list.__class__.__name__
+        calib_inter_class_name = self.__calibration_interactor.__class__.__name__
+        self.__save_data_path = f'data/cache/{self.__video_name}_{player_list_class_name}_{calib_inter_class_name}.pik'
         self.bootstrap()
 
     def frame_loading(self):
@@ -123,7 +122,8 @@ class PitchMap:
         self.teardown()
 
     def teardown(self):
-        pickler.pickle_data([self.players_list.players, self.__calibration_interactor.homographies], self.__save_data_path)
+        pickler.pickle_data([self.players_list.players, self.__calibration_interactor.homographies],
+                            self.__save_data_path)
         print(f"Saved data to: {self.__save_data_path}")
 
     def bootstrap(self):
@@ -202,8 +202,8 @@ class PitchMap:
             players = self.players_list.get_players_positions_from_frame(frame_number=frame_idx)
             team_ids = self.players_list.get_players_team_ids_from_frame(frame_number=frame_idx)
             colors = list(map(lambda x: self.team_colors[x], team_ids))
-            players_2d_positions = self.calibrator.transform_to_2d(players,
-                                                                   self.__calibration_interactor.get_homography(frame_idx))
+            current_frame_homography = self.__calibration_interactor.get_homography(frame_idx)
+            players_2d_positions = self.calibrator.transform_to_2d(players, current_frame_homography)
 
         return players_2d_positions, colors
 

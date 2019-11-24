@@ -6,7 +6,7 @@ while(1):
     ret, frame = cap.read()
 
     # load gray image and add gaussian blur
-    #img = cv2.imread('src.png')
+    #img = cv2.imread('poc.png')
     img = frame
     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 

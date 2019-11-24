@@ -1,4 +1,4 @@
-import players_detector
+from pitchmap.detect import players
 
 import cv2
 
@@ -12,7 +12,7 @@ class Tracker:
         }
         self.__tracking_method = tracking_method
         self.__trackers = cv2.MultiTracker_create()
-        self.__players_detector = players_detector.PlayerDetector()
+        self.__players_detector = players.PlayerDetector()
         self.__frame_number = 0
 
     def update(self, frame):
