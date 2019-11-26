@@ -34,3 +34,25 @@ class Button:
                 return True
 
         return False
+
+    def update(self, enabled=None):
+        if enabled is not None:
+            if enabled:
+                self.state_color = self.COLOR_ENABLED
+            else:
+                self.state_color = self.get_hover_color()
+        else:
+            self.state_color = self.get_hover_color()
+        self.color = self.state_color
+
+    def get_hover_color(self):
+        if self.is_hover:
+            return self.COLOR_HOVER
+        else:
+            return self.COLOR_STANDARD
+
+    def update_hover(self, pos):
+        if self.is_over(pos):
+            self.is_hover = True
+        else:
+            self.is_hover = False

@@ -31,12 +31,19 @@ class PyGameDisplay:
 
         self.__pitch_view = PitchView()
         self.__model_view = ModelView()
-        self.__buttonCalibration = Button(737, 57, 200, 50, 'Calibration')
-        self.__buttonTransformation = Button(994, 57, 200, 50, 'Transformation')
+        self.__buttonCalibration = Button(730, 57, 150, 50, 'Calibration')
+        self.__buttonTransformation = Button(900, 57, 150, 50, 'Transformation')
+        self.__buttonAccept = Button(1070, 57, 150, 50, 'Accept')
+        self.__buttonProjectionToggle = Button(730, 137, 150, 50, 'Toggle Projection')
+        self.__buttonDetectionToggle = Button(900, 137, 150, 50, 'Toggle Detection')
+        self.__buttons = [self.__buttonCalibration, self.__buttonTransformation, self.__buttonAccept,
+                          self.__buttonProjectionToggle, self.__buttonDetectionToggle]
         self.__slider = Slider(1, self.__frame_count, 1)
 
         self.__calibration_state = False
         self.__transformation_state = False
+        self.__detection_state = False
+        self.__projection_state = False
 
     def show(self, frame, frame_number):
         self.__current_frame_id = frame_number
@@ -47,8 +54,8 @@ class PyGameDisplay:
         self.__pitch_view.draw(self.__display_surface, frame)
 
         # show buttons
-        self.__buttonCalibration.draw(self.__display_surface)
-        self.__buttonTransformation.draw(self.__display_surface)
+        for button in self.__buttons:
+            button.draw(self.__display_surface)
 
         # show model
         self.__model_view.draw(self.__display_surface, self.__pitch_model)
@@ -71,9 +78,9 @@ class PyGameDisplay:
                 elif event.key == pygame.K_a:
                     self.__pitchmap.accept_transform()
                 elif event.key == pygame.K_d:
-                    self.__pitchmap.toggle_detecting()
+                    self.__detection_state = self.__pitchmap.toggle_detecting()
                 elif event.key == pygame.K_p:
-                    self.__pitchmap.toggle_transforming()
+                    self.__projection_state = self.__pitchmap.toggle_transforming()
 
             pos = pygame.mouse.get_pos()
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -81,6 +88,12 @@ class PyGameDisplay:
                     self.__calibration_state = self.__pitchmap.start_calibration()
                 elif self.__buttonTransformation.is_over(pos):
                     self.__pitchmap.perform_transform()
+                elif self.__buttonAccept.is_over(pos):
+                    self.__pitchmap.accept_transform()
+                elif self.__buttonDetectionToggle.is_over(pos):
+                    self.__detection_state = self.__pitchmap.toggle_detecting()
+                elif self.__buttonProjectionToggle.is_over(pos):
+                    self.__projection_state = self.__pitchmap.toggle_transforming()
                 elif self.__pitch_view.is_over(pos):
                     pos = self.__pitch_view.get_relative_pos(pos)
                     self.add_point_main_window(pos[0], pos[1])
@@ -92,15 +105,8 @@ class PyGameDisplay:
             elif event.type == pygame.MOUSEBUTTONUP:
                 self.__slider.hit = False
             elif event.type == pygame.MOUSEMOTION:
-                if self.__buttonCalibration.is_over(pos):
-                    self.__buttonCalibration.is_hover = True
-                else:
-                    self.__buttonCalibration.is_hover = False
-
-                if self.__buttonTransformation.is_over(pos):
-                    self.__buttonTransformation.is_hover = True
-                else:
-                    self.__buttonTransformation.is_hover = False
+                for button in self.__buttons:
+                    button.update_hover(pos)
 
         if self.__slider.hit:
             self.__slider.move()
@@ -108,14 +114,11 @@ class PyGameDisplay:
         return running
 
     def update(self):
-        if self.__calibration_state:
-            self.__buttonCalibration.state_color = self.__buttonCalibration.COLOR_ENABLED
-        elif self.__buttonCalibration.is_hover:
-            self.__buttonCalibration.state_color = self.__buttonCalibration.COLOR_HOVER
-        else:
-            self.__buttonCalibration.state_color = self.__buttonCalibration.COLOR_STANDARD
-
-        self.__buttonCalibration.color = self.__buttonCalibration.state_color
+        self.__buttonCalibration.update(self.__calibration_state)
+        self.__buttonTransformation.update()
+        self.__buttonAccept.update()
+        self.__buttonDetectionToggle.update(self.__detection_state)
+        self.__buttonProjectionToggle.update(self.__projection_state)
 
         pygame.display.update()
 

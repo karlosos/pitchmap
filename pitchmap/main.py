@@ -161,7 +161,7 @@ class PitchMap:
         return transformed_frame
 
     def start_calibration(self):
-        self.__calibration_interactor.start_calibration()
+        return self.__calibration_interactor.start_calibration()
 
     def perform_transform(self):
         self.__calibration_interactor.perform_transform(players_list=self.players_list, team_colors=self.team_colors)
@@ -189,9 +189,11 @@ class PitchMap:
 
     def toggle_detecting(self):
         self.detecting_flag = not self.detecting_flag
+        return self.detecting_flag
 
     def toggle_transforming(self):
         self.transforming_flag = not self.transforming_flag
+        return self.transforming_flag
 
     def get_players_positions_on_model(self, frame_idx):
         players_2d_positions = []
