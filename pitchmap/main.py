@@ -27,10 +27,10 @@ class PitchMap:
         display = gui.pygame.Display
         player_list = structure.PlayersListComplex
         # player_list = player.PlayersListSimple
-        calib_interactor = calibrator_interactor.CalibrationInteractorAutomatic
+        calib_interactor = calibrator_interactor.CalibrationInteractorMiddlePoint
         # calib_interactor = calibrator_interactor.CalibrationInteractorSimple
 
-        self.__video_name = 'Barca_Real_continous.mp4'
+        self.__video_name = 'baltyk_starogard_1.mp4'
         self.__window_name = f'PitchMap: {self.__video_name}'
 
         self.fl = loader.FrameLoader(self.__video_name)
