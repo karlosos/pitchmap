@@ -30,10 +30,10 @@ class PitchMap:
         calib_interactor = calibrator_interactor.CalibrationInteractorMiddlePoint
         # calib_interactor = calibrator_interactor.CalibrationInteractorSimple
 
-        self.__video_name = 'baltyk_starogard_1.mp4'
-        self.__window_name = f'PitchMap: {self.__video_name}'
+        self.video_name = 'baltyk_starogard_1.mp4'
+        self.__window_name = f'PitchMap: {self.video_name}'
 
-        self.fl = loader.FrameLoader(self.__video_name)
+        self.fl = loader.FrameLoader(self.video_name)
         self.calibrator = calibrator.Calibrator()
         self.__display = display(main_window_name=self.__window_name, model_window_name="2D Pitch Model",
                                  pitchmap=self, frame_count=self.fl.get_frames_count())
@@ -43,7 +43,7 @@ class PitchMap:
         # Team detection initialization
         self.__team_detector = team.TeamDetection()
         clf_model_loader = clustering_model.ClusteringModelLoader(self.__team_detector,
-                                                                  self.fl, self.__video_name)
+                                                                  self.fl, self.video_name)
         clf_model_loader.generate_clustering_model()
 
         # Players tracking initialization
@@ -61,7 +61,7 @@ class PitchMap:
 
         player_list_class_name = self.players_list.__class__.__name__
         calib_inter_class_name = self.__calibration_interactor.__class__.__name__
-        self.__save_data_path = f'data/cache/{self.__video_name}_{player_list_class_name}_{calib_inter_class_name}.pik'
+        self.__save_data_path = f'data/cache/{self.video_name}_{player_list_class_name}_{calib_inter_class_name}.pik'
         self.bootstrap()
 
     def frame_loading(self):

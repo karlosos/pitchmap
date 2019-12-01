@@ -1,5 +1,6 @@
 from pitchmap.frame import mask
 from pitchmap.homography import camera_movement_analyser
+from pitchmap.cache_loader import camera_movement
 
 from abc import ABC, abstractmethod
 import imutils
@@ -43,9 +44,13 @@ class CalibrationInteractorAutomatic(CalibrationInteractor):
         self.__frame_loader = frame_loader
 
         self.__camera_movement_analyser = camera_movement_analyser.CameraMovementAnalyser(self.__frame_loader)
+        camera_loader = camera_movement.CameraMovementLoader(self.__camera_movement_analyser,
+                                                             self.__pitch_map.video_name)
+        self.__camera_movement_analyser.loader = camera_loader
+
         self.__characteristic_frames_numbers = None
         self.__characteristic_frames_iterator = None
-        arg_min_x, arg_max_x, min_x, max_x = self.__camera_movement_analyser.calculate_characteristic_points()
+        arg_min_x, arg_max_x, min_x, max_x = self.__camera_movement_analyser.get_characteristic_points()
         self.__characteristic_frames_numbers = (arg_min_x, arg_max_x)
         self.__characteristic_frames_iterator = iter(self.__characteristic_frames_numbers)
 
@@ -112,7 +117,7 @@ class CalibrationInteractorAutomatic(CalibrationInteractor):
         self.__calibrator.toggle_enabled()
 
     def get_homography(self, frame_number):
-        camera_angle = self.__camera_movement_analyser.x_cumsum[frame_number - 1]
+        camera_angle = self.__camera_movement_analyser.x_cum_sum[frame_number - 1]
         min_x = self.__camera_movement_analyser.x_min
         print(
             f"frame: {frame_number} camera_angle: {camera_angle}, obliczony index:{camera_angle - min_x}, {math.floor(camera_angle - min_x)}, min_x = {min_x}")
@@ -202,11 +207,15 @@ class CalibrationInteractorMiddlePoint(CalibrationInteractor):
         self.__frame_loader = frame_loader
 
         self.__camera_movement_analyser = camera_movement_analyser.CameraMovementAnalyser(self.__frame_loader)
+        camera_loader = camera_movement.CameraMovementLoader(self.__camera_movement_analyser,
+                                                             self.__pitch_map.video_name)
+        self.__camera_movement_analyser.loader = camera_loader
+
         self.__characteristic_frames_numbers = None
         self.__characteristic_frames_iterator = None
-        arg_min_x, arg_max_x, min_x, max_x = self.__camera_movement_analyser.calculate_characteristic_points()
+        arg_min_x, arg_max_x, min_x, max_x = self.__camera_movement_analyser.get_characteristic_points()
         mean_x = max_x - (max_x - min_x)/2
-        mean_x, arg_mean_x = self.find_nearest(self.__camera_movement_analyser.x_cumsum, mean_x)
+        mean_x, arg_mean_x = self.find_nearest(self.__camera_movement_analyser.x_cum_sum, mean_x)
         self.__mean_x = mean_x
 
         self.__characteristic_frames_numbers = (arg_min_x, arg_mean_x, arg_max_x)
@@ -287,7 +296,7 @@ class CalibrationInteractorMiddlePoint(CalibrationInteractor):
         self.__calibrator.toggle_enabled()
 
     def get_homography(self, frame_number):
-        camera_angle = self.__camera_movement_analyser.x_cumsum[frame_number - 1]
+        camera_angle = self.__camera_movement_analyser.x_cum_sum[frame_number - 1]
         min_x = self.__camera_movement_analyser.x_min
         print(
             f"frame: {frame_number} camera_angle: {camera_angle}, obliczony index:{camera_angle - min_x}, {math.floor(camera_angle - min_x)}, min_x = {min_x}")

@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import imutils
+
 from pitchmap.frame import mask
 import matplotlib.pyplot as plt
 
@@ -10,13 +11,26 @@ class CameraMovementAnalyser:
         self.__fl = fl
         self.__frame_width = 100
 
-        self.x_cumsum = None
+        self.x_cum_sum = None
         self.x_min = None
         self.x_max = None
         self.arg_x_min = None
         self.arg_x_max = None
 
-    def calculate_characteristic_points(self):
+        self.loader = None
+
+    def get_characteristic_points(self):
+        is_loaded = False
+        if self.loader is not None:
+            is_loaded = self.loader.load()
+        if not is_loaded:
+            self.analyse_camera_movement()
+            if self.loader is not None:
+                self.loader.save()
+
+        return self.arg_x_min, self.arg_x_max, self.x_max, self.x_min
+
+    def analyse_camera_movement(self):
         self.__fl.set_current_frame_position(0)
         frame1 = self.__fl.load_frame()
         frame1 = imutils.resize(frame1, width=self.__frame_width)
@@ -61,33 +75,25 @@ class CameraMovementAnalyser:
         cv2.destroyWindow(window_name)
         self.plot(movement_vectors)
 
-        x_cumsum = np.cumsum(np.array(movement_vectors)[:, 0])
-        max_x = np.amax(x_cumsum)
-        min_x = np.amin(x_cumsum)
-        length_x = np.abs(max_x - min_x)
-        x_cumsum = x_cumsum * (180/length_x)
-        self.x_cumsum = x_cumsum
+        x_cum_sum = np.cumsum(np.array(movement_vectors)[:, 0])
+        self.x_cum_sum = self.normalize_cum_sum(x_cum_sum)
 
-        y_cumsum = np.cumsum(np.array(movement_vectors)[:, 1])
-        argmax_x = np.argmax(x_cumsum)
-        self.arg_x_max = argmax_x
-        argmin_x = np.argmin(x_cumsum)
-        self.arg_x_min = argmin_x
-        max_x = np.amax(x_cumsum)
-        self.x_max = max_x
-        min_x = np.amin(x_cumsum)
-        self.x_min = min_x
-
-        argmax_y = np.argmax(y_cumsum)
-        argmin_y = np.argmin(y_cumsum)
-        print(f"Max: {argmax_x}, Min: {argmin_x}")
-
-        # bounding_frames = self.__fl.get_frames((argmin_x, argmax_x))
-        # for idx, frame in enumerate(bounding_frames):
-        #     cv2.imwrite(f"frame{idx}.png", frame)
-
+        self.calculate_characteristic_points()
         self.__fl.set_current_frame_position(0)
-        return argmin_x, argmax_x, max_x, min_x
+
+    def calculate_characteristic_points(self):
+        self.arg_x_max = np.argmax(self.x_cum_sum)
+        self.arg_x_min = np.argmin(self.x_cum_sum)
+        self.x_max = np.amax(self.x_cum_sum)
+        self.x_min = np.amin(self.x_cum_sum)
+
+    @staticmethod
+    def normalize_cum_sum(x_cum_sum):
+        max_x = np.amax(x_cum_sum)
+        min_x = np.amin(x_cum_sum)
+        length_x = np.abs(max_x - min_x)
+        x_cum_sum = x_cum_sum * (180 / length_x)
+        return x_cum_sum
 
     @staticmethod
     def plot(movement_vectors):
@@ -99,9 +105,9 @@ class CameraMovementAnalyser:
         ax.legend()
         ax2 = plt.subplot(2, 1, 2)
         ax2.set_ylabel("wychylenie kamery \n względem początku")
-        x_cumsum = np.cumsum(np.array(movement_vectors)[:, 0])
-        y_cumsum = np.cumsum(np.array(movement_vectors)[:, 1])
-        ax2.plot(x_cumsum, label="horizontal [x]")
-        ax2.plot(y_cumsum, label="vertical [y]")
+        x_cum_sum = np.cumsum(np.array(movement_vectors)[:, 0])
+        y_cum_sum = np.cumsum(np.array(movement_vectors)[:, 1])
+        ax2.plot(x_cum_sum, label="horizontal [x]")
+        ax2.plot(y_cum_sum, label="vertical [y]")
         ax2.legend()
         plt.show()
