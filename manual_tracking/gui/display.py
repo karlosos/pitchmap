@@ -53,6 +53,10 @@ class PyGameDisplay:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
+                elif event.key == pygame.K_RIGHT:
+                    self.__main_object.load_next_frame()
+                elif event.key == pygame.K_LEFT:
+                    self.__main_object.load_previous_frame()
 
         return running
 

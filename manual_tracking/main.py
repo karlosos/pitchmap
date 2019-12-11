@@ -14,7 +14,7 @@ class ManualTracker:
                                                main_object=self, frame_count=self.fl.get_frames_count())
         self.out_frame = None
 
-    def frame_loading(self):
+    def load_next_frame(self):
         frame = self.fl.load_frame()
         try:
             frame = imutils.resize(frame, width=600)
@@ -22,8 +22,13 @@ class ManualTracker:
             return
         self.out_frame = frame
 
+    def load_previous_frame(self):
+        frame_number = self.fl.get_current_frame_position()
+        self.fl.set_current_frame_position(frame_number-2)
+        self.load_next_frame()
+
     def loop(self):
-        self.frame_loading()
+        self.load_next_frame()
         while True:
             is_exit = not self.__display.input_events()
             if is_exit:
