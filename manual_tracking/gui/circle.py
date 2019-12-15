@@ -50,3 +50,25 @@ class PlayerCircle(Circle):
         pygame.draw.circle(win, self.color, [self.start_x + self.x, self.start_y + self.y], self.radius, self.thickness)
         txt_surface = self.font.render(str(self.player.id), True, self.color)
         win.blit(txt_surface, (self.start_x + self.x + 5, self.start_y + self.y + 5))
+
+
+class LastPlayerCircle(Circle):
+    def __init__(self, player, radius, start_x=740, start_y=210):
+        team_color = [(0, 120, 0), (120, 0, 0), (0, 0, 120)]
+        x = player.position[0]
+        y = player.position[1]
+        color = team_color[player.color]
+        super().__init__(x, y, radius, color, start_x, start_y)
+        self.player = player
+        self.font = pygame.font.SysFont("Times New Roman", 18)
+
+    def reset_highlight(self):
+        self.thickness = 2
+
+    def highlight(self):
+        self.thickness = self.radius
+
+    def draw(self, win):
+        pygame.draw.circle(win, self.color, [self.start_x + self.x, self.start_y + self.y], self.radius, self.thickness)
+        txt_surface = self.font.render(str(self.player.id), True, self.color)
+        win.blit(txt_surface, (self.start_x + self.x + 5, self.start_y + self.y + 5))

@@ -6,6 +6,7 @@ import copy
 from .pitch_view import PitchView
 from .model_view import ModelView
 from .circle import PlayerCircle
+from .circle import LastPlayerCircle
 from .input_box import InputBox
 from .button import Button
 
@@ -117,6 +118,14 @@ class PyGameDisplay:
     def show_model(self, players, last_frame_players):
         self.clear_model()
         self.circles = []
+
+        old_circles = []
+        for player in last_frame_players:
+            circle = LastPlayerCircle(player, radius=5)
+            old_circles.append(circle)
+        for circle in old_circles:
+            circle.draw(self.__display_surface)
+
         circles = self.circles
         for player in players:
             circle = PlayerCircle(player, radius=5)
@@ -128,13 +137,6 @@ class PyGameDisplay:
             else:
                 circle.reset_highlight()
             circle.draw(self.__display_surface)
-
-        # for player in players:
-        #     index = player.id
-        #     x, y = player.position
-        #     cv2.circle(self.__pitch_model, (x, y), 3, (0, 255, 0), 5)
-        #     cv2.putText(self.__pitch_model, str(index), (x + 3, y + 3), 
-        #                 cv2.FONT_HERSHEY_PLAIN, 2, (0, 255, 0), 3)
 
     def clear_model(self):
         self.__pitch_model = copy.copy(self.__clear_pitch_model)
