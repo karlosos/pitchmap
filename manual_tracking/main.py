@@ -1,6 +1,7 @@
 from manual_tracking.frame import loader
 from manual_tracking.gui import display
 import manual_tracking.players as players
+import manual_tracking.calibrator as calibrator
 
 import imutils
 
@@ -15,7 +16,10 @@ class ManualTracker:
                                                main_object=self, frame_count=self.fl.get_frames_count())
         self.__players_list = players.PlayersList(self.fl.get_frames_count())
         self.out_frame = None
+        self.transformed_frame = None
         self.current_player = None
+        self.calibrator = calibrator.Calibrator()
+        self.homographies = {}
 
     def add_player(self, position):
         player = self.__players_list.create_player(position, self.fl.get_current_frame_position())
@@ -27,6 +31,15 @@ class ManualTracker:
 
     def change_player_color(self, color):
         self.current_player.color = color
+
+    def calibration(self):
+        state = self.calibrator.toggle_enabled()
+        return state
+
+    def find_homography(self):
+        transformed_frame, H = self.calibrator.find_homography(self.out_frame)
+        self.transformed_frame = transformed_frame
+        self.homographies[self.fl.get_current_frame_position()] = H
 
     def delete_player(self):
         frame_id = self.current_player.frame_number
@@ -40,6 +53,15 @@ class ManualTracker:
         except AttributeError:
             return
         self.out_frame = frame
+        self.transform_frame()
+
+    def transform_frame(self):
+        frame_number = self.fl.get_current_frame_position()
+        H = self.homographies.get(frame_number, None)
+        if H is not None:
+            self.transformed_frame = self.calibrator.transform_frame(self.out_frame, H)
+        else:
+            self.transformed_frame = self.out_frame
 
     def load_previous_frame(self):
         frame_number = self.fl.get_current_frame_position()
@@ -54,7 +76,7 @@ class ManualTracker:
                 break
 
             frame_number = self.fl.get_current_frame_position()
-            self.__display.show(self.out_frame, frame_number)
+            self.__display.show(self.out_frame, self.transformed_frame, frame_number)
             last_frame_players = []
             if frame_number > 0:
                 last_frame_players = self.__players_list.players[frame_number-1]

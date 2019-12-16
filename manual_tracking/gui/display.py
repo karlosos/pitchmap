@@ -7,6 +7,7 @@ from .pitch_view import PitchView
 from .model_view import ModelView
 from .circle import PlayerCircle
 from .circle import LastPlayerCircle
+from .circle import CalibrationCircle
 from .input_box import InputBox
 from .button import Button
 
@@ -25,6 +26,7 @@ class PyGameDisplay:
         self.__frame_count = frame_count
         self.__current_frame_id = 0
         self.circles = []
+        self.calibration_circles = []
 
         pygame.init()
         pygame.display.init()
@@ -42,8 +44,12 @@ class PyGameDisplay:
 
         self.__button_update = Button(x=800, y=100, width=50, height=32, text="Update")
         self.__button_delete = Button(x=800, y=150, width=50, height=32, text="Delete")
+        self.__button_calibration = Button(x=900, y=100, width=75, height=32, text="Calibrate")
+        self.__button_transformation = Button(x=900, y=150, width=75, height=32, text="Transform")
 
-    def show(self, frame, frame_number):
+        self.calibration_state = False
+
+    def show(self, frame, frame_transformed, frame_number):
         self.__current_frame_id = frame_number
         # background
         self.__display_surface.fill((255, 255, 255))
@@ -52,17 +58,23 @@ class PyGameDisplay:
         self.__pitch_view.draw(self.__display_surface, frame)
 
         # show transformed view
-        self.__transform_view.draw(self.__display_surface, frame)
+        self.__transform_view.draw(self.__display_surface, frame_transformed)
 
         # show model
         self.__model_view.draw(self.__display_surface, self.__pitch_model)
 
+        # buttons
         self.__button_update.draw(self.__display_surface)
         self.__button_delete.draw(self.__display_surface)
+        self.__button_calibration.draw(self.__display_surface)
+        self.__button_transformation.draw(self.__display_surface)
 
         # show input boxes
         for box in self.__input_boxes:
             box.draw(self.__display_surface)
+
+        for circle in self.calibration_circles:
+            circle.draw(self.__display_surface)
 
     def input_events(self):
         running = True
@@ -79,29 +91,55 @@ class PyGameDisplay:
 
             pos = pygame.mouse.get_pos()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                circle_clicked_flag = False
-                for circle in self.circles:
-                    if circle.is_over(pos):
-                        self.__main_object.current_player = circle.player
-                        circle_clicked_flag = True
-                        self.update_inputs(circle.player)
-                if not circle_clicked_flag and self.__model_view.is_over(pos):
-                    pos = self.__model_view.get_relative_pos(pos)
-                    self.add_player(pos)
+                if self.calibration_state:
+                    if self.__pitch_view.is_over(pos):
+                        relative_pos = self.__pitch_view.get_relative_pos(pos)
+                        self.add_point_main_window(pos, relative_pos)
+                    elif self.__model_view.is_over(pos):
+                        relative_pos = self.__model_view.get_relative_pos(pos)
+                        self.add_point_model_window(pos, relative_pos)
+                else:
+                    self.player_circle_event(pos)
+
                 if self.__button_update.is_over(pos):
                     player_id = int(self.__input_box_player_id.text)
                     player_color = int(self.__input_box_player_color.text)
                     self.__main_object.change_player_id(player_id)
                     self.__main_object.change_player_color(player_color)
-                if self.__button_delete.is_over(pos):
+                elif self.__button_delete.is_over(pos):
                     self.__main_object.delete_player()
+                elif self.__button_calibration.is_over(pos):
+                    self.calibration_state = self.__main_object.calibration()
+                elif self.__button_transformation.is_over(pos):
+                    self.__main_object.find_homography()
+            elif event.type == pygame.MOUSEMOTION:
+                self.__button_update.update_hover(pos)
+                self.__button_delete.update_hover(pos)
+                self.__button_calibration.update_hover(pos)
+                self.__button_transformation.update_hover(pos)
 
             for input_box in self.__input_boxes:
                 input_box.handle_event(event)
 
         return running
 
+    def player_circle_event(self, pos):
+        circle_clicked_flag = False
+        for circle in self.circles:
+            if circle.is_over(pos):
+                self.__main_object.current_player = circle.player
+                circle_clicked_flag = True
+                self.update_inputs(circle.player)
+        if not circle_clicked_flag and self.__model_view.is_over(pos):
+            pos = self.__model_view.get_relative_pos(pos)
+            self.add_player(pos)
+
     def update(self):
+        self.__button_update.update()
+        self.__button_delete.update()
+        self.__button_calibration.update(self.calibration_state)
+        self.__button_transformation.update()
+
         for box in self.__input_boxes:
             box.update()
 
@@ -149,3 +187,16 @@ class PyGameDisplay:
 
     def close_windows(self):
         pygame.display.quit()
+
+    def add_point_main_window(self, pos, relative_pos):
+        if self.__main_object.calibrator.enabled:
+            index = self.__main_object.calibrator.add_point_main_window(relative_pos)
+            if index:
+                circle = CalibrationCircle(index, pos)
+                self.calibration_circles.append(circle)
+
+    def add_point_model_window(self, pos, relative_pos):
+        index = self.__main_object.calibrator.add_point_model_window(relative_pos)
+        if index:
+            circle = CalibrationCircle(index, pos)
+            self.calibration_circles.append(circle)

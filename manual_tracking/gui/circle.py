@@ -72,3 +72,24 @@ class LastPlayerCircle(Circle):
         pygame.draw.circle(win, self.color, [self.start_x + self.x, self.start_y + self.y], self.radius, self.thickness)
         txt_surface = self.font.render(str(self.player.id), True, self.color)
         win.blit(txt_surface, (self.start_x + self.x + 5, self.start_y + self.y + 5))
+
+
+class CalibrationCircle(Circle):
+    def __init__(self, index, pos, radius=5):
+        color = (183, 31, 54)
+        x = pos[0]
+        y = pos[1]
+        super().__init__(x, y, radius, color, 0, 0)
+        self.id = index
+        self.font = pygame.font.SysFont("Times New Roman", 18)
+
+    def reset_highlight(self):
+        self.thickness = 2
+
+    def highlight(self):
+        self.thickness = self.radius
+
+    def draw(self, win):
+        pygame.draw.circle(win, self.color, [self.start_x + self.x, self.start_y + self.y], self.radius, self.thickness)
+        txt_surface = self.font.render(str(self.id), True, self.color)
+        win.blit(txt_surface, (self.start_x + self.x + 5, self.start_y + self.y + 5))
