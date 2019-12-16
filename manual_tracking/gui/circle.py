@@ -105,6 +105,12 @@ class CalibrationCircle(Circle):
         win.blit(txt_surface, (self.start_x + self.x + 5, self.start_y + self.y + 5))
 
     def move(self):
+        x_diff = self.x - pygame.mouse.get_pos()[0]
+        y_diff = self.y - pygame.mouse.get_pos()[1]
+        print(self.point)
+        self.point[self.point_index] = (self.point[self.point_index][0] + x_diff,
+                                        self.point[self.point_index][1] + y_diff)
+        print(self.point)
         self.x = pygame.mouse.get_pos()[0]
         self.y = pygame.mouse.get_pos()[1]
 
