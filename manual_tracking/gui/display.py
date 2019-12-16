@@ -19,9 +19,9 @@ class PyGameDisplay:
         self.__window_name = main_window_name
         self.__model_window_name = model_window_name
 
-        self.__pitch_model = cv2.imread('data/pitch_model.jpg')
-        self.__clear_pitch_model = imutils.resize(self.__pitch_model, width=600)
-        self.__pitch_model = copy.copy(self.__clear_pitch_model)
+        self.pitch_model = cv2.imread('data/pitch_model_2.jpg')
+        self.__clear_pitch_model = imutils.resize(self.pitch_model, width=600)
+        self.pitch_model = copy.copy(self.__clear_pitch_model)
 
         self.__frame_count = frame_count
         self.__current_frame_id = 0
@@ -61,7 +61,7 @@ class PyGameDisplay:
         self.__transform_view.draw(self.__display_surface, frame_transformed)
 
         # show model
-        self.__model_view.draw(self.__display_surface, self.__pitch_model)
+        self.__model_view.draw(self.__display_surface, self.pitch_model)
 
         # buttons
         self.__button_update.draw(self.__display_surface)
@@ -189,7 +189,7 @@ class PyGameDisplay:
             circle.draw(self.__display_surface)
 
     def clear_model(self):
-        self.__pitch_model = copy.copy(self.__clear_pitch_model)
+        self.pitch_model = copy.copy(self.__clear_pitch_model)
 
     def create_model_window(self):
         pass

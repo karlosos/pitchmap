@@ -48,7 +48,7 @@ class Calibrator:
             return True
         return False
 
-    def find_homography(self, frame):
+    def find_homography(self, frame, pitch_model):
         transformed_frame = None
 
         if self.enabled and \
@@ -56,7 +56,7 @@ class Calibrator:
             original_points, model_points = zip(*self.points.values())
             original_points = np.float32(original_points)
             model_points = np.float32(model_points)
-            rows, columns, channels = frame.shape
+            rows, columns, channels = pitch_model.shape
 
             H, _ = cv2.findHomography(original_points, model_points)
             transformed_frame = cv2.warpPerspective(frame, H, (columns, rows))
@@ -66,7 +66,7 @@ class Calibrator:
         return transformed_frame, H
 
     @staticmethod
-    def transform_frame(frame, H):
-        rows, columns, channels = frame.shape
+    def transform_frame(frame, H, pitch_model):
+        rows, columns, channels = pitch_model.shape
         transformed_frame = cv2.warpPerspective(frame, H, (columns, rows))
         return transformed_frame

@@ -4,7 +4,7 @@ import manual_tracking.players as players
 import manual_tracking.calibrator as calibrator
 
 import imutils
-
+import cv2
 
 class ManualTracker:
     def __init__(self):
@@ -37,8 +37,10 @@ class ManualTracker:
         return state
 
     def find_homography(self):
-        transformed_frame, H = self.calibrator.find_homography(self.out_frame)
+        transformed_frame, H = self.calibrator.find_homography(self.out_frame, self.__display.pitch_model)
         self.transformed_frame = transformed_frame
+        pitch_model = self.__display.pitch_model
+        self.transformed_frame = cv2.addWeighted(self.transformed_frame, 0.7, pitch_model, 0.3, 0.0)
         self.homographies[self.fl.get_current_frame_position()] = H
 
     def delete_player(self):
@@ -59,7 +61,9 @@ class ManualTracker:
         frame_number = self.fl.get_current_frame_position()
         H = self.homographies.get(frame_number, None)
         if H is not None:
-            self.transformed_frame = self.calibrator.transform_frame(self.out_frame, H)
+            self.transformed_frame = self.calibrator.transform_frame(self.out_frame, H, self.__display.pitch_model)
+            pitch_model = self.__display.pitch_model
+            self.transformed_frame = cv2.addWeighted(self.transformed_frame, 0.5, pitch_model, 0.5, 0.0)
         else:
             self.transformed_frame = self.out_frame
 
