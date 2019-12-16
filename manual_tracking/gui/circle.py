@@ -75,13 +75,23 @@ class LastPlayerCircle(Circle):
 
 
 class CalibrationCircle(Circle):
-    def __init__(self, index, pos, radius=5):
+    def __init__(self, index, pos, point, point_index, radius=5):
+        """
+        :param index: index of characteristic point
+        :param pos: position of characterstic point, absolute position in windows surface
+        :param point: reference to point object stored in calibration
+        :param point_index: index of which point it is. 0 is point on pitch, 1 is point on model
+        :param radius: raius of circle
+        """
         color = (183, 31, 54)
         x = pos[0]
         y = pos[1]
         super().__init__(x, y, radius, color, 0, 0)
         self.id = index
         self.font = pygame.font.SysFont("Times New Roman", 18)
+        self.point = point
+        self.point_index = point_index
+        self.hit = False
 
     def reset_highlight(self):
         self.thickness = 2
@@ -93,3 +103,10 @@ class CalibrationCircle(Circle):
         pygame.draw.circle(win, self.color, [self.start_x + self.x, self.start_y + self.y], self.radius, self.thickness)
         txt_surface = self.font.render(str(self.id), True, self.color)
         win.blit(txt_surface, (self.start_x + self.x + 5, self.start_y + self.y + 5))
+
+    def move(self):
+        self.x = pygame.mouse.get_pos()[0]
+        self.y = pygame.mouse.get_pos()[1]
+
+        print(f"position: {self.x} {self.y}")
+

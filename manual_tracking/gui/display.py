@@ -92,12 +92,13 @@ class PyGameDisplay:
             pos = pygame.mouse.get_pos()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if self.calibration_state:
-                    if self.__pitch_view.is_over(pos):
-                        relative_pos = self.__pitch_view.get_relative_pos(pos)
-                        self.add_point_main_window(pos, relative_pos)
-                    elif self.__model_view.is_over(pos):
-                        relative_pos = self.__model_view.get_relative_pos(pos)
-                        self.add_point_model_window(pos, relative_pos)
+                    if event.button == 1:
+                        if self.__pitch_view.is_over(pos):
+                            relative_pos = self.__pitch_view.get_relative_pos(pos)
+                            self.add_point_main_window(pos, relative_pos)
+                        elif self.__model_view.is_over(pos):
+                            relative_pos = self.__model_view.get_relative_pos(pos)
+                            self.add_point_model_window(pos, relative_pos)
                 else:
                     self.player_circle_event(pos)
 
@@ -112,6 +113,12 @@ class PyGameDisplay:
                     self.calibration_state = self.__main_object.calibration()
                 elif self.__button_transformation.is_over(pos):
                     self.__main_object.find_homography()
+                for circle in self.calibration_circles:
+                    if circle.is_over(pos) and event.button == 3:
+                        circle.hit = True
+            elif event.type == pygame.MOUSEBUTTONUP:
+                for circle in self.calibration_circles:
+                    circle.hit = False
             elif event.type == pygame.MOUSEMOTION:
                 self.__button_update.update_hover(pos)
                 self.__button_delete.update_hover(pos)
@@ -120,6 +127,10 @@ class PyGameDisplay:
 
             for input_box in self.__input_boxes:
                 input_box.handle_event(event)
+
+            for circle in self.calibration_circles:
+                if circle.hit:
+                    circle.move()
 
         return running
 
@@ -190,13 +201,13 @@ class PyGameDisplay:
 
     def add_point_main_window(self, pos, relative_pos):
         if self.__main_object.calibrator.enabled:
-            index = self.__main_object.calibrator.add_point_main_window(relative_pos)
+            index, point = self.__main_object.calibrator.add_point_main_window(relative_pos)
             if index:
-                circle = CalibrationCircle(index, pos)
+                circle = CalibrationCircle(index=index, pos=pos, point=point, point_index=0)
                 self.calibration_circles.append(circle)
 
     def add_point_model_window(self, pos, relative_pos):
-        index = self.__main_object.calibrator.add_point_model_window(relative_pos)
+        index, point = self.__main_object.calibrator.add_point_model_window(relative_pos)
         if index:
-            circle = CalibrationCircle(index, pos)
+            circle = CalibrationCircle(index=index, pos=pos, point=point, point_index=1)
             self.calibration_circles.append(circle)

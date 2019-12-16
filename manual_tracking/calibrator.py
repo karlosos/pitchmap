@@ -28,18 +28,19 @@ class Calibrator:
         if self.current_point is None:
             self.current_point = pos
             index = len(self.points) + 1
-            return index
+            self.points[index] = [pos, None]
+            return index, self.points[index]
         else:
-            return False
+            return False, False
 
     def add_point_model_window(self, pos):
         if self.current_point is not None:
-            index = len(self.points) + 1
-            self.points[index] = (self.current_point, pos)
+            index = len(self.points)
+            self.points[index][1] = pos
             self.current_point = None
-            return index
+            return index, self.points[index]
         else:
-            return False
+            return False, False
 
     def get_points_count(self):
         return len(self.points)
