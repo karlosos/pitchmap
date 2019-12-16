@@ -73,8 +73,9 @@ class PyGameDisplay:
         for box in self.__input_boxes:
             box.draw(self.__display_surface)
 
-        for circle in self.calibration_circles:
-            circle.draw(self.__display_surface)
+        if self.calibration_state:
+            for circle in self.calibration_circles:
+                circle.draw(self.__display_surface)
 
     def input_events(self):
         running = True

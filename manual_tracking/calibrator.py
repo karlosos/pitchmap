@@ -11,12 +11,10 @@ class Calibrator:
 
         self.current_point = None
 
-        self.H_dictionary = {}
-
     def toggle_enabled(self):
         if not self.enabled:
             self.current_point = None
-            self.points = {}
+            # self.points = {}
 
         self.enabled = not self.enabled
         return self.enabled
