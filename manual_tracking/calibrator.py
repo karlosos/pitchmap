@@ -8,7 +8,7 @@ class Calibrator:
     def __init__(self):
         self.enabled = False
         self.points = {}
-
+        self.index_count = 1
         self.current_point = None
 
     def toggle_enabled(self):
@@ -21,11 +21,13 @@ class Calibrator:
 
     def clear_points(self):
         self.points = {}
+        self.index_count = 1
+        self.current_point = None
 
     def add_point_main_window(self, pos):
         if self.current_point is None:
             self.current_point = pos
-            index = len(self.points) + 1
+            index = self.index_count
             self.points[index] = [pos, None]
             return index, self.points[index]
         else:
@@ -33,7 +35,8 @@ class Calibrator:
 
     def add_point_model_window(self, pos):
         if self.current_point is not None:
-            index = len(self.points)
+            index = self.index_count
+            self.index_count += 1
             self.points[index][1] = pos
             self.current_point = None
             return index, self.points[index]
@@ -70,3 +73,16 @@ class Calibrator:
         rows, columns, channels = pitch_model.shape
         transformed_frame = cv2.warpPerspective(frame, H, (columns, rows))
         return transformed_frame
+
+    def clean_calibration_points(self):
+        print(self.points)
+        keys_to_delete = []
+        for key, value in self.points.items():
+            if value[0] is None or value[1] is None:
+                keys_to_delete.append(key)
+
+        for key in keys_to_delete:
+            del self.points[key]
+
+        print(self.points)
+        self.current_point = None

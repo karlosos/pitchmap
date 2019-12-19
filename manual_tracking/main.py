@@ -43,6 +43,10 @@ class ManualTracker:
         self.transformed_frame = cv2.addWeighted(self.transformed_frame, 0.7, pitch_model, 0.3, 0.0)
         self.homographies[self.fl.get_current_frame_position()] = H
 
+    def reset_calibration_points(self):
+        self.calibrator.clear_points()
+        self.__display.calibration_circles = []
+
     def delete_player(self):
         frame_id = self.current_player.frame_number
         self.__players_list.players[frame_id].remove(self.current_player)

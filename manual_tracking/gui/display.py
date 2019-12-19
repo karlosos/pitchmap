@@ -115,8 +115,11 @@ class PyGameDisplay:
                 elif self.__button_transformation.is_over(pos):
                     self.__main_object.find_homography()
                 for circle in self.calibration_circles:
-                    if circle.is_over(pos) and event.button == 3:
+                    if circle.is_over(pos) and event.button == 3: # right click
                         circle.hit = True
+                    elif circle.is_over(pos) and event.button == 2: # middle click
+                        self.remove_calibration_point(circle)
+
             elif event.type == pygame.MOUSEBUTTONUP:
                 for circle in self.calibration_circles:
                     circle.hit = False
@@ -132,6 +135,7 @@ class PyGameDisplay:
             for circle in self.calibration_circles:
                 if circle.hit:
                     circle.move()
+                    print(self.__main_object.calibrator.points)
 
         return running
 
@@ -212,3 +216,25 @@ class PyGameDisplay:
         if index:
             circle = CalibrationCircle(index=index, pos=pos, point=point, point_index=1)
             self.calibration_circles.append(circle)
+
+    def remove_calibration_point(self, circle):
+        circle.point[circle.point_index] = None
+        self.__main_object.calibrator.clean_calibration_points()
+        self.refresh_points()
+
+    def refresh_points(self):
+        self.calibration_circles = []
+        points = self.__main_object.calibrator.points
+        for key, point in points.items():
+            pitch_view_point = point[0]
+            model_view_point = point[1]
+
+            pitch_view_circle = CalibrationCircle(index=key, pos=pitch_view_point, point=point, point_index=0)
+            pitch_view_circle.x = pitch_view_circle.x + self.__pitch_view.frame_x
+            pitch_view_circle.y = pitch_view_circle.y + self.__pitch_view.frame_y
+            self.calibration_circles.append(pitch_view_circle)
+
+            model_view_circle = CalibrationCircle(index=key, pos=model_view_point, point=point, point_index=0)
+            model_view_circle.x = model_view_circle.x + 740
+            model_view_circle.y = model_view_circle.y + 210
+            self.calibration_circles.append(model_view_circle)
