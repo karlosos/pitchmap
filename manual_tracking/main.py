@@ -2,9 +2,12 @@ from manual_tracking.frame import loader
 from manual_tracking.gui import display
 import manual_tracking.players as players
 import manual_tracking.calibrator as calibrator
+from pitchmap.cache_loader import pickler
+import os
 
 import imutils
 import cv2
+
 
 class ManualTracker:
     def __init__(self):
@@ -20,6 +23,7 @@ class ManualTracker:
         self.current_player = None
         self.calibrator = calibrator.Calibrator()
         self.homographies = {}
+        self.bootstrap()
 
     def add_player(self, position):
         player = self.__players_list.create_player(position, self.fl.get_current_frame_position())
@@ -92,7 +96,25 @@ class ManualTracker:
             self.__display.show_model(current_frame_players, last_frame_players)
             self.__display.update()
 
+    def teardown(self):
+        data_path = f"data/cache/{self.video_name}_manual_tracking.pik"
+        pickler.pickle_data([self.__players_list, self.homographies],
+                            data_path)
+        print(f"Saved data to: {data_path}")
+
+    def bootstrap(self):
+        data_path = f"data/cache/{self.video_name}_manual_tracking.pik"
+        file_exists = os.path.isfile(data_path)
+        if file_exists:
+            players_list, homographies = pickler.unpickle_data(data_path)
+            self.__players_list = players_list
+            self.homographies = homographies
+            print(f"Loaded data from: {data_path}")
+        else:
+            print("No data to load")
+
 
 if __name__ == '__main__':
     mt = ManualTracker()
     mt.loop()
+    mt.teardown()
