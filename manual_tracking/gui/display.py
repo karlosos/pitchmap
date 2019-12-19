@@ -106,6 +106,8 @@ class PyGameDisplay:
                 if self.__button_update.is_over(pos):
                     player_id = int(self.__input_box_player_id.text)
                     player_color = int(self.__input_box_player_color.text)
+                    if player_color > 2:
+                        player_color = 2
                     self.__main_object.change_player_id(player_id)
                     self.__main_object.change_player_color(player_color)
                 elif self.__button_delete.is_over(pos):
@@ -146,9 +148,13 @@ class PyGameDisplay:
                 self.__main_object.current_player = circle.player
                 circle_clicked_flag = True
                 self.update_inputs(circle.player)
-        if not circle_clicked_flag and self.__model_view.is_over(pos):
-            pos = self.__model_view.get_relative_pos(pos)
-            self.add_player(pos)
+        if not circle_clicked_flag:
+            if self.__model_view.is_over(pos):
+                pos = self.__model_view.get_relative_pos(pos)
+                self.add_player(pos)
+            elif self.__transform_view.is_over(pos):
+                pos = self.__transform_view.get_relative_pos(pos)
+                self.add_player(pos)
 
     def update(self):
         self.__button_update.update()
@@ -172,25 +178,25 @@ class PyGameDisplay:
     def show_model(self, players, last_frame_players):
         self.clear_model()
         self.circles = []
+        if not self.calibration_state:
+            old_circles = []
+            for player in last_frame_players:
+                circle = LastPlayerCircle(player, radius=5)
+                old_circles.append(circle)
+            for circle in old_circles:
+                circle.draw(self.__display_surface)
 
-        old_circles = []
-        for player in last_frame_players:
-            circle = LastPlayerCircle(player, radius=5)
-            old_circles.append(circle)
-        for circle in old_circles:
-            circle.draw(self.__display_surface)
+            circles = self.circles
+            for player in players:
+                circle = PlayerCircle(player, radius=5)
+                circles.append(circle)
 
-        circles = self.circles
-        for player in players:
-            circle = PlayerCircle(player, radius=5)
-            circles.append(circle)
-
-        for circle in circles:
-            if circle.player == self.__main_object.current_player:
-                circle.highlight()
-            else:
-                circle.reset_highlight()
-            circle.draw(self.__display_surface)
+            for circle in circles:
+                if circle.player == self.__main_object.current_player:
+                    circle.highlight()
+                else:
+                    circle.reset_highlight()
+                circle.draw(self.__display_surface)
 
     def clear_model(self):
         self.pitch_model = copy.copy(self.__clear_pitch_model)

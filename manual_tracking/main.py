@@ -64,6 +64,7 @@ class ManualTracker:
             return
         self.out_frame = frame
         self.transform_frame()
+        self.__display.refresh_points()
 
     def transform_frame(self):
         frame_number = self.fl.get_current_frame_position()
@@ -98,7 +99,7 @@ class ManualTracker:
 
     def teardown(self):
         data_path = f"data/cache/{self.video_name}_manual_tracking.pik"
-        pickler.pickle_data([self.__players_list, self.homographies],
+        pickler.pickle_data([self.__players_list, self.homographies, self.calibrator],
                             data_path)
         print(f"Saved data to: {data_path}")
 
@@ -106,9 +107,10 @@ class ManualTracker:
         data_path = f"data/cache/{self.video_name}_manual_tracking.pik"
         file_exists = os.path.isfile(data_path)
         if file_exists:
-            players_list, homographies = pickler.unpickle_data(data_path)
+            players_list, homographies, calib = pickler.unpickle_data(data_path)
             self.__players_list = players_list
             self.homographies = homographies
+            self.calibrator = calib
             print(f"Loaded data from: {data_path}")
         else:
             print("No data to load")
