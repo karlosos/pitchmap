@@ -155,6 +155,11 @@ class PyGameDisplay:
             elif self.__transform_view.is_over(pos):
                 pos = self.__transform_view.get_relative_pos(pos)
                 self.add_player(pos)
+            elif self.__pitch_view.is_over(pos):
+                pos = self.__pitch_view.get_relative_pos(pos)
+                pos = self.__main_object.player_pos_translated(pos)
+                if pos is not None:
+                    self.add_player(pos)
 
     def update(self):
         self.__button_update.update()

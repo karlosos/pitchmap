@@ -7,6 +7,7 @@ import os
 
 import imutils
 import cv2
+import numpy as np
 
 
 class ManualTracker:
@@ -115,6 +116,26 @@ class ManualTracker:
         else:
             print("No data to load")
 
+    def player_pos_translated(self, pos):
+        frame_number = self.fl.get_current_frame_position()
+        H = self.homographies.get(frame_number, None)
+
+        if H is not None:
+            pos = self.transform_to_2d(pos, H)
+            return int(pos[0]), int(pos[1])
+        else:
+            return None
+
+    @staticmethod
+    def transform_to_2d(player, H):
+        player = np.float32(player)
+        player = np.array(player)
+        player = np.append(player, 1.)
+
+        player_2d_position = H.dot(player)
+        player_2d_position = player_2d_position / player_2d_position[2]
+
+        return player_2d_position
 
 if __name__ == '__main__':
     mt = ManualTracker()
