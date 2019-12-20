@@ -78,13 +78,12 @@ class PitchMap:
         bounding_boxes = []
 
         if self.detecting_flag:
+            print(f"detecting")
             bounding_boxes_frame, bounding_boxes, labels = self.__tracker.update(grass_mask)
             player_indices = [i for i, x in enumerate(labels) if x != 'person']
             for index in sorted(player_indices, reverse=True):
                 print(index)
                 del bounding_boxes[index]
-
-        self.players_list.clear()
 
         self.draw_bounding_boxes(frame, grass_mask, bounding_boxes)
         # self.out_frame = cv2.addWeighted(grass_mask, 0.8, lines_frame, 1, 0)
@@ -122,14 +121,18 @@ class PitchMap:
         self.teardown()
 
     def teardown(self):
-        pickler.pickle_data([self.players_list.players, self.__calibration_interactor.homographies],
+        homographies = []
+        for i in range(self.fl.get_frames_count()):
+            homographies.append(self.__calibration_interactor.get_homography(i))
+
+        pickler.pickle_data([self.players_list.players, self.__calibration_interactor.homographies, homographies],
                             self.__save_data_path)
         print(f"Saved data to: {self.__save_data_path}")
 
     def bootstrap(self):
         file_exists = os.path.isfile(self.__save_data_path)
         if file_exists:
-            players, h = pickler.unpickle_data(self.__save_data_path)
+            players, h, _ = pickler.unpickle_data(self.__save_data_path)
             self.players_list.players = players
             self.__calibration_interactor.homographies = h
             print(f"Loaded data from: {self.__save_data_path}")
@@ -143,6 +146,8 @@ class PitchMap:
 
     def draw_bounding_boxes(self, frame, grass_mask, bounding_boxes):
         current_frame_number = self.fl.get_current_frame_position()
+        if self.detecting_flag:
+            self.players_list.clear(current_frame_number)
         for idx, box in enumerate(bounding_boxes):
             player_color, (x, y) = self.__team_detector.color_detector.color_detection_for_player(frame, box)
             team_id = self.__team_detector.team_detection_for_player(np.asarray(player_color))[0]

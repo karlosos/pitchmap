@@ -21,7 +21,7 @@ class PlayerList(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def clear(self):
+    def clear(self, frame_number):
         pass
 
     @abstractmethod
@@ -47,7 +47,7 @@ class PlayersListSimple(PlayerList):
         self.colors = []
         self.__frames_length = frames_length
 
-    def clear(self):
+    def clear(self, frame_number):
         self.players = []
         self.colors = []
 
@@ -80,8 +80,8 @@ class PlayersListComplex(PlayerList):
         self.__frames_length = frames_length
         self.players = [{} for _ in range(frames_length + 1)]
 
-    def clear(self):
-        pass
+    def clear(self, frame_number):
+        self.players[frame_number] = {}
 
     def get_players_positions_from_frame(self, frame_number):
         players = self.players[frame_number] if frame_number < self.__frames_length else []

@@ -72,7 +72,7 @@ class ManualTracker:
         if H is not None:
             self.transformed_frame = self.calibrator.transform_frame(self.out_frame, H, self.__display.pitch_model)
             pitch_model = self.__display.pitch_model
-            self.transformed_frame = cv2.addWeighted(self.transformed_frame, 0.5, pitch_model, 0.5, 0.0)
+            self.transformed_frame = cv2.addWeighted(self.transformed_frame, 0.9, pitch_model, 0.1, 0.0)
         else:
             self.transformed_frame = self.out_frame
 

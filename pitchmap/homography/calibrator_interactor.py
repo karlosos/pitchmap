@@ -296,7 +296,11 @@ class CalibrationInteractorMiddlePoint(CalibrationInteractor):
         self.__calibrator.toggle_enabled()
 
     def get_homography(self, frame_number):
-        camera_angle = self.__camera_movement_analyser.x_cum_sum[frame_number - 1]
+        try:
+            camera_angle = self.__camera_movement_analyser.x_cum_sum[frame_number - 1]
+        except IndexError:
+            camera_angle = self.__camera_movement_analyser.x_cum_sum[frame_number - 2]
+
         min_x = self.__camera_movement_analyser.x_min
         print(
             f"frame: {frame_number} camera_angle: {camera_angle}, obliczony index:{camera_angle - min_x}, {math.floor(camera_angle - min_x)}, min_x = {min_x}")

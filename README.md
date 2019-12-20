@@ -50,3 +50,35 @@ Versions:
     - nie można przerywać i resetować transformacji
     - zapisuje pozycje piłkarzy i homografię w plikach
     - zapisuje model detekcji drużyny w pliku
+    
+## Dane wyjściowe
+
+### pitchmap
+
+`baltyk_starogard_1.mp4_PlayersListComplex_CalibrationInteractorMiddlePoint`
+
+Zapisane są:
+
+`[self.players_list.players, self.__calibration_interactor.homographies]`
+
+Gdzie players_list.players to pozycje graczy na klatce wideo a homographies
+to macierze translacji. 
+
+Trzeba będzie rzutować pozycje z wideo na pozycję modelu. 
+
+Użyć `calibrator.transform_to_2d(players, current_frame_homography)`
+
+### manual tracking
+
+Zapisywane w pliku
+
+`data/cache/{self.video_name}_manual_tracking.pik`
+
+Dane:
+
+`[self.__players_list, self.homographies, self.calibrator]`
+
+Czyli mamy obiekt players_list z którego można wyłuskać pozycje graczy 
+(już na modelu boiska). Reszta zmiennych nie będzie potrzebna. 
+Będę mógł też porównać macierze translacji ale bym musiał mieć jakiś sposób
+porównywania macierzy.
