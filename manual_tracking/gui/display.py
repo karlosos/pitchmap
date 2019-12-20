@@ -10,6 +10,7 @@ from .circle import LastPlayerCircle
 from .circle import CalibrationCircle
 from .input_box import InputBox
 from .button import Button
+from .color_selector import ColorSelector
 
 
 class PyGameDisplay:
@@ -39,15 +40,17 @@ class PyGameDisplay:
         self.__model_view = ModelView(x=740, y=210, width=0, height=0)
 
         self.__input_box_player_id = InputBox(740, 100, 50, 32)
-        self.__input_box_player_color = InputBox(740, 150, 50, 32)
+        self.__input_box_player_color = InputBox(0, 0, 50, 32)
+        self.__color_selector = ColorSelector(x=740, y=150)
         self.__input_boxes = [self.__input_box_player_id, self.__input_box_player_color]
 
         self.__button_update = Button(x=800, y=100, width=50, height=32, text="Update")
-        self.__button_delete = Button(x=800, y=150, width=50, height=32, text="Delete")
-        self.__button_calibration = Button(x=900, y=100, width=75, height=32, text="Calibrate")
-        self.__button_transformation = Button(x=900, y=150, width=75, height=32, text="Transform")
+        self.__button_delete = Button(x=860, y=100, width=50, height=32, text="Delete")
+        self.__button_calibration = Button(x=950, y=100, width=75, height=32, text="Calibrate")
+        self.__button_transformation = Button(x=950, y=150, width=75, height=32, text="Transform")
 
         self.calibration_state = False
+        self.current_player = None
 
     def show(self, frame, frame_transformed, frame_number):
         self.__current_frame_id = frame_number
@@ -68,7 +71,10 @@ class PyGameDisplay:
         self.__button_delete.draw(self.__display_surface)
         self.__button_calibration.draw(self.__display_surface)
         self.__button_transformation.draw(self.__display_surface)
-
+        if self.current_player is not None:
+            self.__color_selector.draw(self.__display_surface, self.current_player.color)
+        else:
+            self.__color_selector.draw(self.__display_surface)
         # show input boxes
         for box in self.__input_boxes:
             box.draw(self.__display_surface)
@@ -116,6 +122,9 @@ class PyGameDisplay:
                     self.calibration_state = self.__main_object.calibration()
                 elif self.__button_transformation.is_over(pos):
                     self.__main_object.find_homography()
+                selected_color = self.__color_selector.is_over(pos)
+                if selected_color is not None and self.current_player is not None:
+                    self.current_player.color = selected_color
                 for circle in self.calibration_circles:
                     if circle.is_over(pos) and event.button == 3: # right click
                         circle.hit = True
@@ -179,6 +188,7 @@ class PyGameDisplay:
     def update_inputs(self, player):
         self.__input_box_player_id.text = str(player.id)
         self.__input_box_player_color.text = str(player.color)
+        self.current_player = player
 
     def show_model(self, players, last_frame_players):
         self.clear_model()
