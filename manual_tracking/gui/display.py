@@ -5,6 +5,7 @@ import copy
 
 from .pitch_view import PitchView
 from .model_view import ModelView
+from .circle import Circle
 from .circle import PlayerCircle
 from .circle import LastPlayerCircle
 from .circle import CalibrationCircle
@@ -202,9 +203,18 @@ class PyGameDisplay:
                 circle.draw(self.__display_surface)
 
             circles = self.circles
+            pitch_view_circles = []
             for player in players:
                 circle = PlayerCircle(player, radius=5)
+                player_frame_position = self.__main_object.model_to_pitchview(player.position)
+                circle_pitch_view = Circle(x=player_frame_position[0], y=player_frame_position[1],
+                                           start_x=self.__pitch_view.frame_x, start_y=self.__pitch_view.frame_y,
+                                           radius=2, color=(255, 255, 255))
+                pitch_view_circles.append(circle_pitch_view)
                 circles.append(circle)
+
+            for circle in pitch_view_circles:
+                circle.draw(self.__display_surface)
 
             for circle in circles:
                 if circle.player == self.__main_object.current_player:

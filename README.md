@@ -82,3 +82,31 @@ Czyli mamy obiekt players_list z którego można wyłuskać pozycje graczy
 (już na modelu boiska). Reszta zmiennych nie będzie potrzebna. 
 Będę mógł też porównać macierze translacji ale bym musiał mieć jakiś sposób
 porównywania macierzy.
+
+#### Proces
+
+W pierwszej klatce oznaczyć wszystkich piłkarzy. Wyłączyć program.
+Dodać wczytywanie kolejnej klatki po dodaniu gracza 
+
+```
+    def add_player(self, position):
+        player = self.__players_list.create_player(position, self.fl.get_current_frame_position())
+        self.current_player = player
+        self.load_next_frame() # <--- tutaj
+        return player
+```
+
+Ustawić id gracza którego chcemy dodawać:
+
+```
+    def create_player(self, position, frame_number):
+        default_id = self.default_player_id(position, frame_number)
+        if default_id is None:
+            default_id = self.__id_counter
+            self.__id_counter += 1
+        player_id = default_id
+        
+        player_id = 0 <----- tutaj
+```
+
+Potem należy zakomentować te zmiany i rozpocząć od nowa.

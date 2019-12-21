@@ -15,6 +15,8 @@ class PlayersList:
             self.__id_counter += 1
         player_id = default_id
 
+        # player_id = 60
+
         default_color = self.default_player_color(player_id, frame_number)
         color = int(default_color)
 

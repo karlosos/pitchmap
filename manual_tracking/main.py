@@ -8,7 +8,9 @@ import os
 import imutils
 import cv2
 import numpy as np
+from numpy.linalg import inv
 
+FAST_ADDING = True
 
 class ManualTracker:
     def __init__(self):
@@ -29,6 +31,8 @@ class ManualTracker:
     def add_player(self, position):
         player = self.__players_list.create_player(position, self.fl.get_current_frame_position())
         self.current_player = player
+        if FAST_ADDING:
+            self.load_next_frame()
         return player
 
     def change_player_id(self, player_id):
@@ -66,6 +70,9 @@ class ManualTracker:
         self.out_frame = frame
         self.transform_frame()
         self.__display.refresh_points()
+        frame_number = self.fl.get_current_frame_position()
+        total_frames = self.fl.get_frames_count()
+        print(f"frame number: {frame_number}/{total_frames}")
 
     def transform_frame(self):
         frame_number = self.fl.get_current_frame_position()
@@ -90,6 +97,8 @@ class ManualTracker:
                 break
 
             frame_number = self.fl.get_current_frame_position()
+            if frame_number % 50 == 0 or frame_number == 728:
+                self.teardown()
             self.__display.show(self.out_frame, self.transformed_frame, frame_number)
             last_frame_players = []
             if frame_number > 0:
@@ -137,7 +146,31 @@ class ManualTracker:
 
         return player_2d_position
 
+    def model_to_pitchview(self, pos):
+        frame_number = self.fl.get_current_frame_position()
+        H = self.homographies.get(frame_number, None)
+
+        if H is not None:
+            h = inv(H)
+            pos = self.transform_to_2d(pos, h)
+            return int(pos[0]), int(pos[1])
+        else:
+            return None
+
+    def change_player(self, player_id, new_id=None, new_color=None):
+        for frame in self.__players_list.players:
+            for player in frame:
+                if player.id == player_id:
+                    if new_id is not None:
+                        player.id = new_id
+                    if new_color is not None:
+                        player.color = new_color
+
+
 if __name__ == '__main__':
     mt = ManualTracker()
+    #mt.change_player(player_id=59,  new_color=2)
+    #mt.change_player(player_id=60, new_color=2)
+    mt.fl.set_current_frame_position(0)
     mt.loop()
     mt.teardown()

@@ -96,4 +96,5 @@ class Camparator:
 
 if __name__ == '__main__':
     c = Camparator()
-    c.generate_heat_map(c.players_detected)
+    #c.generate_heat_map(c.players_detected)
+    c.generate_heat_map(c.players_manual)
