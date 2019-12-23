@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
+import imutils
 
 from pitchmap.cache_loader import pickler
 from pitchmap.homography import calibrator
@@ -42,9 +43,10 @@ def get_players_team_ids_from_frame(players, frame_number):
 
 class Camparator:
     def __init__(self):
-        self.file_detected_data = "data/cache/baltyk_starogard_1.mp4_PlayersListComplex_CalibrationInteractorMiddlePoint.pik"
-        self.file_manual_data = "data/cache/baltyk_starogard_1.mp4_manual_tracking.pik"
+        self.file_detected_data = "data/cache/baltyk_kotwica_1.mp4_PlayersListComplex_CalibrationInteractorMiddlePoint.pik"
+        self.file_manual_data = "data/cache/baltyk_kotwica_1.mp4_manual_tracking.pik"
         self.pitch_model = cv2.imread('data/pitch_model.jpg')
+        self.pitch_model = imutils.resize(self.pitch_model, width=600)
 
         players_detected, _, homographies_detected = pickler.unpickle_data(self.file_detected_data)
         players_list_manual, _, _ = pickler.unpickle_data(self.file_manual_data)
@@ -71,6 +73,8 @@ class Camparator:
         pitch_heat_map = np.zeros(pitch_model_size)
         for frame in players:
             for player in frame:
+                if player.id == 21:
+                    print("here we go")
                 self.add_to_heat_map(pitch_heat_map, player.position, size=5, value=10)
                 self.add_to_heat_map(pitch_heat_map, player.position, size=8, value=5)
                 self.add_to_heat_map(pitch_heat_map, player.position, size=15, value=2)
@@ -83,10 +87,10 @@ class Camparator:
         x = int(position[0])
         y = int(position[1])
         size_heat_map = heat_map.shape
-        if x >= size_heat_map[0]:
-            x = size_heat_map[0]-1
-        if y >= size_heat_map[1]:
-            y = size_heat_map[1]-1
+        if x >= size_heat_map[1]:
+            x = size_heat_map[1]-1
+        if y >= size_heat_map[0]:
+            y = size_heat_map[0]-1
 
         yy = np.arange(0, heat_map.shape[0])
         xx = np.arange(0, heat_map.shape[1])
@@ -96,5 +100,5 @@ class Camparator:
 
 if __name__ == '__main__':
     c = Camparator()
-    #c.generate_heat_map(c.players_detected)
-    c.generate_heat_map(c.players_manual)
+    # c.generate_heat_map(c.players_detected[1:2])
+    # c.generate_heat_map(c.players_manual)

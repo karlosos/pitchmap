@@ -7,6 +7,7 @@ class PlayersList:
         self.__id_counter = 0
         self.__frames_length = frames_length
         self.players = [[] for _ in range(frames_length)]
+        self.fixed_player_id = None
 
     def create_player(self, position, frame_number):
         default_id = self.default_player_id(position, frame_number)
@@ -15,7 +16,8 @@ class PlayersList:
             self.__id_counter += 1
         player_id = default_id
 
-        # player_id = 60
+        if self.fixed_player_id is not None:
+            player_id = self.fixed_player_id
 
         default_color = self.default_player_color(player_id, frame_number)
         color = int(default_color)

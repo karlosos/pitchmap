@@ -209,7 +209,7 @@ class PyGameDisplay:
                 player_frame_position = self.__main_object.model_to_pitchview(player.position)
                 circle_pitch_view = Circle(x=player_frame_position[0], y=player_frame_position[1],
                                            start_x=self.__pitch_view.frame_x, start_y=self.__pitch_view.frame_y,
-                                           radius=2, color=(255, 255, 255))
+                                           radius=2, color=(0, 255, 255))
                 pitch_view_circles.append(circle_pitch_view)
                 circles.append(circle)
 

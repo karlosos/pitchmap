@@ -10,17 +10,17 @@ import cv2
 import numpy as np
 from numpy.linalg import inv
 
-FAST_ADDING = True
+FAST_ADDING = False
 
 class ManualTracker:
     def __init__(self):
-        self.video_name = 'baltyk_starogard_1.mp4'
+        self.video_name = 'baltyk_kotwica_1.mp4'
         self.__window_name = f'PitchMap: {self.video_name}'
 
         self.fl = loader.FrameLoader(self.video_name)
         self.__display = display.PyGameDisplay(main_window_name=self.__window_name, model_window_name="2D Pitch Model",
                                                main_object=self, frame_count=self.fl.get_frames_count())
-        self.__players_list = players.PlayersList(self.fl.get_frames_count())
+        self.players_list = players.PlayersList(self.fl.get_frames_count())
         self.out_frame = None
         self.transformed_frame = None
         self.current_player = None
@@ -29,7 +29,7 @@ class ManualTracker:
         self.bootstrap()
 
     def add_player(self, position):
-        player = self.__players_list.create_player(position, self.fl.get_current_frame_position())
+        player = self.players_list.create_player(position, self.fl.get_current_frame_position())
         self.current_player = player
         if FAST_ADDING:
             self.load_next_frame()
@@ -58,7 +58,7 @@ class ManualTracker:
 
     def delete_player(self):
         frame_id = self.current_player.frame_number
-        self.__players_list.players[frame_id].remove(self.current_player)
+        self.players_list.players[frame_id].remove(self.current_player)
         self.current_player = None
 
     def load_next_frame(self):
@@ -97,19 +97,19 @@ class ManualTracker:
                 break
 
             frame_number = self.fl.get_current_frame_position()
-            if frame_number % 50 == 0 or frame_number == 728:
+            if frame_number % 50 == 0 or frame_number == self.fl.get_frames_count():
                 self.teardown()
             self.__display.show(self.out_frame, self.transformed_frame, frame_number)
             last_frame_players = []
             if frame_number > 0:
-                last_frame_players = self.__players_list.players[frame_number-1]
-            current_frame_players = self.__players_list.players[frame_number]
+                last_frame_players = self.players_list.players[frame_number - 1]
+            current_frame_players = self.players_list.players[frame_number]
             self.__display.show_model(current_frame_players, last_frame_players)
             self.__display.update()
 
     def teardown(self):
         data_path = f"data/cache/{self.video_name}_manual_tracking.pik"
-        pickler.pickle_data([self.__players_list, self.homographies, self.calibrator],
+        pickler.pickle_data([self.players_list, self.homographies, self.calibrator],
                             data_path)
         print(f"Saved data to: {data_path}")
 
@@ -118,7 +118,7 @@ class ManualTracker:
         file_exists = os.path.isfile(data_path)
         if file_exists:
             players_list, homographies, calib = pickler.unpickle_data(data_path)
-            self.__players_list = players_list
+            self.players_list = players_list
             self.homographies = homographies
             self.calibrator = calib
             print(f"Loaded data from: {data_path}")
@@ -158,7 +158,7 @@ class ManualTracker:
             return None
 
     def change_player(self, player_id, new_id=None, new_color=None):
-        for frame in self.__players_list.players:
+        for frame in self.players_list.players:
             for player in frame:
                 if player.id == player_id:
                     if new_id is not None:
@@ -170,7 +170,9 @@ class ManualTracker:
 if __name__ == '__main__':
     mt = ManualTracker()
     #mt.change_player(player_id=59,  new_color=2)
-    #mt.change_player(player_id=60, new_color=2)
-    mt.fl.set_current_frame_position(0)
+    #mt.change_player(player_id=84, new_color=2)
+    mt.fl.set_current_frame_position(120)
+    mt.players_list.fixed_player_id = 29
+    FAST_ADDING = True
     mt.loop()
     mt.teardown()
