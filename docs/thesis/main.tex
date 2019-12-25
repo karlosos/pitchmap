@@ -1,0 +1,255 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% The Legrand Orange Book
+% LaTeX Template
+% Version 2.4 (26/09/2018)
+%
+% This template was downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% Original author:
+% Mathias Legrand (legrand.mathias@gmail.com) with modifications by:
+% Vel (vel@latextemplates.com)
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+% Compiling this template:
+% This template uses biber for its bibliography and makeindex for its index.
+% When you first open the template, compile it from the command line with the 
+% commands below to make sure your LaTeX distribution is configured correctly:
+%
+% 1) pdflatex main
+% 2) makeindex main.idx -s StyleInd.ist
+% 3) biber main
+% 4) pdflatex main x 2
+%
+% After this, when you wish to update the bibliography/index use the appropriate
+% command above and make sure to compile with pdflatex several times 
+% afterwards to propagate your changes to the document.
+%
+% This template also uses a number of packages which may need to be
+% updated to the newest versions for the template to compile. It is strongly
+% recommended you update your LaTeX distribution if you have any
+% compilation errors.
+%
+% Important note:
+% Chapter heading images should have a 2:1 width:height ratio,
+% e.g. 920px width and 460px height.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Template was modified and adopted as a new standard
+% for the Department of Computer Science
+% Wespomeranian University of Technology 
+% by
+% Joanna Kolodziejczyk (kolodziejczykj@gmail.com)
+% Version 1.0 (10/01/2019)
+% Modification assigned by %JK
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass[12pt,fleqn,twoside]{book} % Default font size and left-justified equations 
+% JK - font
+
+
+\input{structure.tex} % Insert the commands.tex file which contains the majority of the structure behind the template
+
+\input{definitions.tex}  % JK - additional definitions used mostly as a content of the title page
+% The file MUST be changed by every student/author
+
+%\hypersetup{pdftitle={Title},pdfauthor={Author}} % Uncomment and fill out to include PDF metadata for the author and title of the book
+
+
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+%----------------------------------------------------------------------------------------
+%	TITLE PAGE
+%----------------------------------------------------------------------------------------
+% JK - design and implementation
+%----------------------------------------------------------------------------------------
+
+\begingroup
+\sffamily  %Set sans serif fonts for title page
+\centering %Center all paragraphs
+\thispagestyle{empty} % Suppress headers and footers on the title page
+
+%  University  logotype
+\includegraphics{ZUT-long.pdf}\\[2cm]
+
+% Thesis title inside two horizontal lines
+  \noindent {\HRule }\\[.5cm] % Horizontal line
+  {\color{blueZUT} {\Large\ttitle }}\\[.5cm]% Thesis title
+  {\Large \ttitleEng }\\[.2cm]% Thesis title in English
+  {\HRule} \\[1cm] % Horizontal line
+
+% Thesis type
+{\degreename}\\[2cm] 
+
+% Author part
+{\color{blueZUT} {\Large\authornames}} \\
+{Nr albumu:} {\albumno}\\
+{\field}\\
+{\speciality}\\
+{\studyform}\\[1cm]
+
+% Logo wydziału
+\includegraphics[scale=0.5]{WIZUT.pdf}\\[1cm]
+
+% Supervisor part
+{napisana pod kierunkiem:} \\
+{\textbf\supname}\\
+%{\departmentname}
+
+
+% AUTHOR AND SUPERVISOR parts in  two column designed a s minipages
+%
+%\begin{minipage}{0.45\textwidth}
+%\begin{flushleft}
+%\emph{Autor:}\\
+%{\textbf\authornames} \\
+%{Nr albumu:} {\albumno}\\
+%{\field}\\
+%{\speciality}\\
+%{\studyform}\\
+%\end{flushleft}
+%\end{minipage}
+%\begin{minipage}{0.45\textwidth}
+%\begin{flushright} 
+%\emph{Promotor:} \\
+%{\textbf\supname}\\
+%{\departmentname}
+%\end{flushright}
+%\end{minipage}\\
+
+~\vfill
+Data wydania tematu pracy: \datetitle \\
+Data złożenia pracy: \datesubmit\\
+Miejsce złożenia pracy: \placesubmit\\
+
+\endgroup
+
+%----------------------------------------------------------------------------------------
+% EMPTY PAGE AFTER TITLE
+%----------------------------------------------------------------------------------------
+% JK - design and implementation
+%----------------------------------------------------------------------------------------
+\newpage
+\thispagestyle{empty}
+~\vfill
+
+%----------------------------------------------------------------------------------------
+% STATEMENT PAGE
+%----------------------------------------------------------------------------------------
+% JK - design and implementation
+%----------------------------------------------------------------------------------------
+\newpage
+\thispagestyle{empty}
+
+
+\begin{center}\noindent { \sffamily \large \textbf{OŚWIADCZENIE\\
+AUTORA PRACY DYPLOMOWEJ}}\\[1cm] \end{center}
+
+\noindent Oświadczam, że \degreename {\ }pn.{\ }{\emph \ttitle}{\ }
+napisana pod kierunkiem \supname  {\ }
+jest w całości moim samodzielnym autorskim opracowaniem sporządzonym przy wykorzystaniu wykazanej w pracy literatury przedmiotu i materiałów źródłowych. 
+Złożona w dziekanacie Wydziału Informatyki
+treść  mojej pracy dyplomowej w formie elektronicznej jest zgodna z treścią w formie pisemnej.\\[.2cm]
+
+\noindent Oświadczam ponadto, że złożona w dziekanacie praca dyplomowa ani jej fragmenty nie były wcześniej przedmiotem procedur procesu dyplomowania związanych z uzyskaniem tytułu zawodowego w uczelniach wyższych.\\[2cm]
+
+\noindent \textit{Podpis autora:}\\[2cm] % Printing/edition date
+
+
+\noindent \textit{Szczecin, dnia:} % Printing/edition date
+
+%----------------------------------------------------------------------------------------
+%	ABSTRACT PAGE
+%----------------------------------------------------------------------------------------
+%  JK - design and implementation
+%----------------------------------------------------------------------------------------
+\newpage
+
+\thispagestyle{empty}
+
+\begin{center}\noindent { \sffamily \large \textbf{ STRESZCZENIE}}\\[1cm] \end{center}
+\input{streszczenie}%streszczenie.tex file filled with the polish abstract
+\vfill
+\begin{center}\noindent { \sffamily \large \textbf{ABSTRACT}}\\[1cm] \end{center}
+\input{abstract} %abstract.tex file filled with the english abstract
+ 
+%----------------------------------------------------------------------------------------
+%	TABLE OF CONTENTS
+%----------------------------------------------------------------------------------------
+
+
+
+\pagestyle{empty}  % JK - Disable footer and header in TOC
+\tableofcontents % Print the table of contents itself
+\addtocontents{toc}{\protect\thispagestyle{empty}} % JK - to keep the empty header and footer in TOC
+
+\cleardoublepage % Forces the first chapter to start on an odd page so it's on the right side of the book
+
+\pagestyle{fancy} % Enable headers and footers again
+
+
+%----------------------------------------------------------------------------------------
+%	CHAPTER 1
+%----------------------------------------------------------------------------------------
+
+\include{chapter1}
+
+%----------------------------------------------------------------------------------------
+%	CHAPTER 2
+%----------------------------------------------------------------------------------------
+
+\include{chapter2}
+
+%----------------------------------------------------------------------------------------
+%	CHAPTER 3
+%----------------------------------------------------------------------------------------
+\include{chapter3}
+
+%----------------------------------------------------------------------------------------
+%	BIBLIOGRAPHY
+%----------------------------------------------------------------------------------------
+%  JK - design and implementation
+%----------------------------------------------------------------------------------------
+
+\chapter*{Spis literatury}
+\addcontentsline{toc}{chapter}{\textcolor{blueZUT}{Spis literatury}} % Add a Bibliography heading to the table of contents
+
+
+% Filters for diferent types of bib entries
+
+\defbibfilter{literatura}{
+  type=article or 
+  type=book or
+  type=inproceedings
+}
+
+\defbibfilter{linki}{
+  type=url or
+  type=online 
+}
+
+%------------------------------------------------
+% Two parts of literature - printed and online
+
+\section*{Artykuły i podręczniki}
+\addcontentsline{toc}{section}{Artykuły i podręczniki}
+\printbibliography[heading=bibempty,filter=literatura]
+
+%------------------------------------------------
+
+\section*{Źródła internetowe}
+\addcontentsline{toc}{section}{Źródła internetowe}
+\printbibliography[heading=bibempty,filter=linki]
+
+%----------------------------------------------------------------------------------------
+
+\end{document}

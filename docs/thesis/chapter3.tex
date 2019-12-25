@@ -1,0 +1,39 @@
+\chapter{Wizualizacje}
+
+\section{Tabele w pracy}
+
+
+%\color{blueWI}\rule
+Paragraph
+\begin{table}[h]
+\centering
+\caption{Tabelka z wynikami} % JK- Tabela podpisana z góry
+\begin{tabular}{l l l}
+\toprule
+\textbf{Treatments} & \textbf{Response 1} & \textbf{Response 2}\\
+\midrule
+Treatment 1 & 0.0003262 & 0.562 \\
+Treatment 2 & 0.0015681 & 0.910 \\
+Treatment 3 & 0.0009271 & 0.296 \\
+\bottomrule
+\end{tabular}
+\label{tab:example} % Unique label used for referencing the table in-text
+%\addcontentsline{toc}{table}{Table \ref{tab:example}} % Uncomment to add the table to the table of contents
+\end{table}
+
+Odwołanie do Tabeli z automatycznym numerowaniem: \ref{tab:example}.
+
+%------------------------------------------------
+
+\section{Ilustarcje w pracy}
+
+\begin{figure}[h]
+\centering\includegraphics[scale=0.5]{placeholder.jpg}
+\caption{Pole z miejscem na rysunek}
+\label{fig:placeholder} % Unique label used for referencing the figure in-text
+%\addcontentsline{toc}{figure}{Figure \ref{fig:placeholder}} % Uncomment to add the figure to the table of contents
+\end{figure}
+
+Odwołanie do Rysunku z automatycznym numerowaniem \ref{fig:placeholder}.
+
+\lipsum[1-7] % Dummy text
