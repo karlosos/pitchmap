@@ -35,7 +35,8 @@ class PyGameDisplay:
         self.__model_view_manual = ModelView(x=57, y=410, width=0, height=0)
         self.__model_view_automatic = ModelView(x=700, y=410, width=0, height=0)
 
-        self.current_player = None
+        self.circles_manual = []
+        self.circles_detected = []
 
     def show(self, frame, frame_number):
         self.__current_frame_id = frame_number
@@ -70,21 +71,13 @@ class PyGameDisplay:
         return running
 
     def player_circle_event(self, pos):
-        circle_clicked_flag = False
-        for circle in self.circles:
+        for circle in self.circles_manual:
             if circle.is_over(pos):
-                self.__main_object.current_player = circle.player
-                circle_clicked_flag = True
-                self.update_inputs(circle.player)
-        if not circle_clicked_flag:
-            if self.__model_view_manual.is_over(pos):
-                pos = self.__model_view_manual.get_relative_pos(pos)
-                self.add_player(pos)
-            elif self.__pitch_view_manual.is_over(pos):
-                pos = self.__pitch_view_manual.get_relative_pos(pos)
-                pos = self.__main_object.player_pos_translated(pos)
-                if pos is not None:
-                    self.add_player(pos)
+                self.__main_object.set_selected_player_manual(circle.player)
+
+        for circle in self.circles_detected:
+            if circle.is_over(pos):
+                self.__main_object.set_selected_player_detected(circle.player)
 
     def update(self):
         pygame.display.update()
@@ -93,56 +86,47 @@ class PyGameDisplay:
         player = self.__main_object.add_player(pos)
         self.update_inputs(player)
 
-    def update_inputs(self, player):
-        self.current_player = player
-
-    def show_model(self, players_detected, players_automatic):
+    def show_model(self, players_detected, players_manual):
         self.clear_model()
 
         circles_detected = []
         circles_manual = []
 
-        pitch_view_circles = []
-
         for player in players_detected:
-            circle = PlayerCircle(player, radius=5, start_x=self.__model_view_automatic.x,
+            circle_model = PlayerCircle(player, radius=5, start_x=self.__model_view_automatic.x,
                                   start_y=self.__model_view_automatic.y)
-            player_frame_position = self.__main_object.model_to_pitchview(player.position, is_manual=False)
-            #circle_pitch_view = Circle(x=player_frame_position[0], y=player_frame_position[1],
-            #                           start_x=self.__pitch_view_manual.frame_x, start_y=self.__pitch_view_manual.frame_y,
-            #                           radius=2, color=(0, 255, 255))
-            #pitch_view_circles.append(circle_pitch_view)
-            circle2 = PlayerCircle(player, radius=5, start_x=self.__pitch_view_automatic.frame_x,
+            player_frame_position = self.__main_object.model_to_pitch_view(player.position, is_manual=False)
+            circle_pitch = PlayerCircle(player, radius=5, start_x=self.__pitch_view_automatic.frame_x,
                                   start_y=self.__pitch_view_automatic.frame_y, custom_position=player_frame_position)
-            circles_detected.append(circle)
-            circles_detected.append(circle2)
+            circles_detected.append(circle_model)
+            circles_detected.append(circle_pitch)
 
-        for player in players_automatic:
-            circle = PlayerCircle(player, radius=5, start_x=self.__model_view_manual.x,
+        self.circles_detected = circles_detected
+
+        for player in players_manual:
+            circle_model = PlayerCircle(player, radius=5, start_x=self.__model_view_manual.x,
                                   start_y=self.__model_view_manual.y)
-            circles_manual.append(circle)
-            player_frame_position = self.__main_object.model_to_pitchview(player.position, is_manual=True)
-            circle2 = PlayerCircle(player, radius=5, start_x=self.__pitch_view_manual.frame_x,
+            player_frame_position = self.__main_object.model_to_pitch_view(player.position, is_manual=True)
+            circle_pitch = PlayerCircle(player, radius=5, start_x=self.__pitch_view_manual.frame_x,
                                   start_y=self.__pitch_view_manual.frame_y, custom_position=player_frame_position)
-            circles_detected.append(circle)
-            circles_detected.append(circle2)
+            circles_manual.append(circle_model)
+            circles_manual.append(circle_pitch)
 
-        for circle in pitch_view_circles:
-            circle.draw(self.__display_surface)
+        self.circles_manual = circles_manual
 
-        for circle in circles_detected:
-            if circle.player == self.__main_object.current_player:
-                circle.highlight()
+        for circle_model in circles_detected:
+            if circle_model.player == self.__main_object.get_selected_player_detected():
+                circle_model.highlight()
             else:
-                circle.reset_highlight()
-            circle.draw(self.__display_surface)
+                circle_model.reset_highlight()
+            circle_model.draw(self.__display_surface)
 
-        for circle in circles_manual:
-            if circle.player == self.__main_object.current_player:
-                circle.highlight()
+        for circle_model in circles_manual:
+            if circle_model.player == self.__main_object.get_selected_player_manual():
+                circle_model.highlight()
             else:
-                circle.reset_highlight()
-            circle.draw(self.__display_surface)
+                circle_model.reset_highlight()
+            circle_model.draw(self.__display_surface)
 
     def clear_model(self):
         self.pitch_model = copy.copy(self.__clear_pitch_model)
