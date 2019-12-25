@@ -2,8 +2,10 @@ from manual_tracking.frame import loader
 from players_path_selector.gui import display
 from players_path_selector import data_loader
 from players_path_selector import transformation
+from pitchmap.cache_loader import pickler
 
 import imutils
+import os
 
 
 class PlayersPathSelector:
@@ -22,8 +24,7 @@ class PlayersPathSelector:
         self.data.load_data(self.file_detected_data, self.file_manual_data)
 
         self.selected = {}
-
-        self.bootstrap()
+        self.id = 0
 
     def get_selected_player_manual(self):
         frame_number = self.fl.get_current_frame_position()
@@ -103,10 +104,10 @@ class PlayersPathSelector:
             self.__display.update()
 
     def teardown(self):
-        pass
-
-    def bootstrap(self):
-        pass
+        data_path = f"data/cache/{self.video_name}_path_selector_{self.id}.pik"
+        pickler.pickle_data(self.selected,
+                            data_path)
+        print(f"Saved data to: {data_path}")
 
     def model_to_pitch_view(self, pos, is_manual=True):
         frame_number = self.fl.get_current_frame_position()
@@ -123,6 +124,7 @@ class PlayersPathSelector:
 
 if __name__ == '__main__':
     mt = PlayersPathSelector()
+    mt.id = 0
     FAST_ADDING = True
     mt.loop()
     mt.teardown()

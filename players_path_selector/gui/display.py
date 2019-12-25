@@ -5,8 +5,8 @@ import copy
 
 from .pitch_view import PitchView
 from .model_view import ModelView
-from .circle import Circle
 from .circle import PlayerCircle
+from .button import Button
 
 
 class PyGameDisplay:
@@ -35,6 +35,8 @@ class PyGameDisplay:
         self.__model_view_manual = ModelView(x=57, y=410, width=0, height=0)
         self.__model_view_automatic = ModelView(x=700, y=410, width=0, height=0)
 
+        self.__button_none = Button(920, 380, 150, 50, 'None')
+
         self.circles_manual = []
         self.circles_detected = []
 
@@ -50,6 +52,8 @@ class PyGameDisplay:
         # show model
         self.__model_view_manual.draw(self.__display_surface, self.pitch_model)
         self.__model_view_automatic.draw(self.__display_surface, self.pitch_model)
+
+        self.__button_none.draw(self.__display_surface)
 
     def input_events(self):
         running = True
@@ -67,6 +71,8 @@ class PyGameDisplay:
             pos = pygame.mouse.get_pos()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 self.player_circle_event(pos)
+                if self.__button_none.is_over(pos):
+                    self.__main_object.set_selected_player_detected(None)
 
         return running
 
@@ -78,8 +84,14 @@ class PyGameDisplay:
         for circle in self.circles_detected:
             if circle.is_over(pos):
                 self.__main_object.set_selected_player_detected(circle.player)
+                self.__main_object.load_next_frame()
 
     def update(self):
+        if self.__main_object.get_selected_player_detected() is None:
+            self.__button_none.color = Button.COLOR_ENABLED
+        else:
+            self.__button_none.color = Button.COLOR_STANDARD
+
         pygame.display.update()
 
     def add_player(self, pos):
