@@ -26,29 +26,42 @@ def extract_feature(frame):
     hist_h = hist_h / l
     hist_s = hist_s / l
     combined = hist_h.flatten().tolist() + hist_s.flatten().tolist()
-    return hist_h/l, hist_s/l, combined
+    return hist_h.flatten().tolist(), hist_s.flatten().tolist(), combined
 
 
-frame = cv2.imread('data/poc/1_1.png', cv2.IMREAD_COLOR)
-mask = grass(frame)
-hist_h, hist_s, _ = extract_feature(frame)
+files = ['1_1', '2_3', '2_1', '3_1']
+for file in files:
+    frame = cv2.imread(f'data/poc/{file}.png', cv2.IMREAD_COLOR)
+    mask = grass(frame)
+    hist_h, hist_s, combined = extract_feature(frame)
 
+    plt.style.use('ggplot')
+    fig = plt.figure(1, figsize=(8, 5))
+    gridspec.GridSpec(2, 3)
 
-#plt.imshow(hist, interpolation='nearest')
-fig = plt.figure(1)
-# set up subplot grid
-gridspec.GridSpec(2, 2)
+    ax1 = plt.subplot2grid((2, 3), (0, 0), rowspan=2)
+    cropped = cv2.bitwise_and(frame, frame, mask=mask)
+    ax1.imshow(cv2.cvtColor(cropped, cv2.COLOR_BGR2RGB))
+    ax1.get_xaxis().set_visible(False)
+    ax1.get_yaxis().set_visible(False)
+    ax1.set_title("obraz wejściowy")
 
-plt.subplot2grid((2, 2), (0, 0), rowspan=2)
-cropped = cv2.bitwise_and(frame, frame,
-                                      mask=mask)
-plt.imshow(cv2.cvtColor(cropped, cv2.COLOR_BGR2RGB))
+    ax2 = plt.subplot2grid((2, 3), (0, 1))
+    ax2.bar(np.arange(0, 18), hist_h, width=1)
+    ax2.set_xlabel("numer przedziału")
+    ax2.set_ylabel("częstotliwość")
+    ax2.set_title("histogram barwy - hue")
 
-plt.subplot2grid((2, 2), (0, 1))
+    ax3 = plt.subplot2grid((2, 3), (1, 1))
+    plt.bar(np.arange(0, 10), hist_s, width=1)
+    ax3.set_xlabel("numer przedziału")
+    ax3.set_ylabel("częstotliwość")
+    ax3.set_title("histogram nasycenia - saturation")
 
-plt.plot(hist_h)
+    ax4 = plt.subplot2grid((2, 3), (0, 2), rowspan=2)
+    ax4.plot(combined)
+    ax4.set_title("cecha")
+    fig.tight_layout()
+    plt.savefig(f"{file}.png")
 
-plt.subplot2grid((2, 2), (1, 1))
-plt.plot(hist_s)
-
-plt.show()
+    plt.show()

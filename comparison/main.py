@@ -43,8 +43,11 @@ def get_players_team_ids_from_frame(players, frame_number):
 
 class Camparator:
     def __init__(self):
-        self.file_detected_data = "data/cache/baltyk_kotwica_1.mp4_PlayersListComplex_CalibrationInteractorMiddlePoint.pik"
-        self.file_manual_data = "data/cache/baltyk_kotwica_1.mp4_manual_tracking.pik"
+        #self.file_detected_data = "data/cache/baltyk_kotwica_1.mp4_PlayersListComplex_CalibrationInteractorMiddlePoint.pik"
+        self.file_detected_data = "data/cache/baltyk_starogard_1.mp4_PlayersListComplex_CalibrationInteractorMiddlePoint.pik"
+        #self.file_manual_data = "data/cache/baltyk_kotwica_1.mp4_manual_tracking.pik"
+        self.file_manual_data = "data/cache/baltyk_starogard_1.mp4_manual_tracking.pik"
+
         self.pitch_model = cv2.imread('data/pitch_model.jpg')
         self.pitch_model = imutils.resize(self.pitch_model, width=600)
 
@@ -80,7 +83,8 @@ class Camparator:
                 self.add_to_heat_map(pitch_heat_map, player.position, size=15, value=2)
                 self.add_to_heat_map(pitch_heat_map, player.position, size=20, value=1)
 
-        heatmap.add(self.pitch_model, pitch_heat_map, alpha=0.8, display=True, cmap='jet')
+        heatmap.add(self.pitch_model, pitch_heat_map, alpha=0.8, display=False, cmap='jet')
+        return pitch_heat_map
 
     @staticmethod
     def add_to_heat_map(heat_map, position, size, value):
@@ -100,5 +104,18 @@ class Camparator:
 
 if __name__ == '__main__':
     c = Camparator()
-    # c.generate_heat_map(c.players_detected[1:2])
-    # c.generate_heat_map(c.players_manual)
+    manual_heatmap = c.generate_heat_map(c.players_manual)
+    min = np.min(manual_heatmap)
+    max = np.max(manual_heatmap)
+    manual_heatmap = (manual_heatmap-min)/(max-min)
+    #cv2.imshow("heatmap", manual_heatmap)
+    cv2.imwrite(f'99.png', manual_heatmap*255)
+    for idx, x in enumerate([200, 30, 1]):
+        detected_heatmap = c.generate_heat_map(c.players_detected[:-x])
+        min = np.min(detected_heatmap)
+        max = np.max(detected_heatmap)
+        detected_heatmap = (detected_heatmap - min) / (max - min)
+        cv2.imwrite(f'{idx}.png', detected_heatmap*255)
+        key = cv2.waitKey(1) & 0xFF
+        mse = np.square(np.subtract(detected_heatmap, manual_heatmap)).mean()
+        print(mse)
