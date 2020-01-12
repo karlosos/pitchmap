@@ -3,7 +3,7 @@ import cv2
 
 
 class PitchView:
-    def __init__(self, x=57, y=57, width=600, height=600):
+    def __init__(self, x=57, y=57, width=600, height=400):
         self.x = x
         self.y = y
         self.width = width
@@ -15,7 +15,7 @@ class PitchView:
         self.frame_height = height
 
     def draw(self, win, frame):
-        pygame.draw.rect(win, (64, 64, 64), (self.x, self.y, self.width, self.height), 0)
+        pygame.draw.rect(win, (255, 255, 255), (self.x, self.y, self.width, self.height), 0)
 
         frame_size = frame.shape[1::-1]
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)

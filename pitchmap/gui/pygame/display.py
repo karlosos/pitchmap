@@ -27,15 +27,16 @@ class PyGameDisplay:
         pygame.display.init()
         pygame.display.set_caption(self.__window_name)
 
-        self.__display_surface = pygame.display.set_mode((1380, 720))
+        self.__display_surface = pygame.display.set_mode((1380, 600))
 
         self.__pitch_view = PitchView()
-        self.__model_view = ModelView()
-        self.__buttonCalibration = Button(730, 57, 150, 50, 'Calibration')
-        self.__buttonTransformation = Button(900, 57, 150, 50, 'Transformation')
-        self.__buttonAccept = Button(1070, 57, 150, 50, 'Accept')
-        self.__buttonProjectionToggle = Button(730, 137, 150, 50, 'Toggle Projection')
-        self.__buttonDetectionToggle = Button(900, 137, 150, 50, 'Toggle Detection')
+        self.__model_view = ModelView(x=740, y=57)
+        self.__buttonCalibration = Button(800, 500, 150, 50, 'Calibration')
+        self.__buttonTransformation = Button(970, 500, 150, 50, 'Transformation')
+        self.__buttonAccept = Button(1140, 500, 150, 50, 'Accept')
+
+        self.__buttonProjectionToggle = Button(200, 500, 150, 50, 'Toggle Projection')
+        self.__buttonDetectionToggle = Button(370, 500, 150, 50, 'Toggle Detection')
         self.__buttons = [self.__buttonCalibration, self.__buttonTransformation, self.__buttonAccept,
                           self.__buttonProjectionToggle, self.__buttonDetectionToggle]
         self.__slider = Slider(1, self.__frame_count, 1)

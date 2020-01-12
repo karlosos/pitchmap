@@ -19,7 +19,7 @@ class Slider:
         self.maxi = maxi  # maximum at slider position right
         self.mini = mini  # minimum at slider position left
         self.xpos = 57  # x-location on screen
-        self.ypos = 550
+        self.ypos = 447
 
         self.__height = 30
         self.__width = 600
@@ -28,12 +28,12 @@ class Slider:
         self.hit = False  # the hit attribute indicates slider movement due to mouse interaction
 
         # Static graphics - slider background #
-        self.surf.fill((100, 100, 100))
-        pygame.draw.rect(self.surf, GREY, [0, 0, self.__width, self.__height], 3)
+        self.surf.fill(WHITE)
+        pygame.draw.rect(self.surf, BLACK, [0, 0, self.__width, self.__height], 3)
         white_width = self.__width-20
         white_height = self.__height-30
 
-        pygame.draw.rect(self.surf, WHITE, [10, int((self.__height-white_height)/2), white_width, white_height], 0)
+        pygame.draw.rect(self.surf, BLACK, [10, int((self.__height-white_height)/2), white_width, white_height], 0)
 
         # dynamic graphics - button surface #
         self.button_surf = pygame.surface.Surface((20, 20))

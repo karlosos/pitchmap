@@ -15,7 +15,7 @@ class ModelView:
         self.width = frame_size[0]
         rgb_frame = cv2.cvtColor(model, cv2.COLOR_BGR2RGB)
         pygame_frame = pygame.image.frombuffer(rgb_frame, frame_size, 'RGB')
-        win.blit(pygame_frame, (740, 237))
+        win.blit(pygame_frame, (self.x, self.y))
 
     def is_over(self, pos):
         if self.x < pos[0] < self.x + self.width:
