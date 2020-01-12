@@ -7,6 +7,9 @@ from pitchmap.cache_loader import pickler
 from pitchmap.homography import calibrator
 from pitchmap.players import structure
 from comparison import heatmap
+from skimage.measure import compare_ssim
+from skimage.measure import compare_psnr
+from skimage.measure import compare_mse
 
 def get_players_positions_from_frame(players, frame_number):
     try:
@@ -104,18 +107,48 @@ class Camparator:
 
 if __name__ == '__main__':
     c = Camparator()
-    manual_heatmap = c.generate_heat_map(c.players_manual)
-    min = np.min(manual_heatmap)
-    max = np.max(manual_heatmap)
-    manual_heatmap = (manual_heatmap-min)/(max-min)
-    #cv2.imshow("heatmap", manual_heatmap)
-    cv2.imwrite(f'99.png', manual_heatmap*255)
-    for idx, x in enumerate([200, 30, 1]):
-        detected_heatmap = c.generate_heat_map(c.players_detected[:-x])
-        min = np.min(detected_heatmap)
-        max = np.max(detected_heatmap)
-        detected_heatmap = (detected_heatmap - min) / (max - min)
-        cv2.imwrite(f'{idx}.png', detected_heatmap*255)
-        key = cv2.waitKey(1) & 0xFF
-        mse = np.square(np.subtract(detected_heatmap, manual_heatmap)).mean()
-        print(mse)
+    GENERATING = False
+
+    if GENERATING:
+        heat_maps = []
+        manual_heatmap = c.generate_heat_map(c.players_manual)
+        heat_maps.append(manual_heatmap)
+
+        for idx, x in enumerate([700, 400, 200, 100, 80, 30, 10]):
+            detected_heatmap = c.generate_heat_map(c.players_detected[:-x])
+            heat_maps.append(detected_heatmap)
+
+        pickler.pickle_data(heat_maps, f"data/cache/heatmaps_1.pik")
+    else:
+        heat_maps = pickler.unpickle_data(f"data/cache/heatmaps_1.pik")
+
+    manual_heat_map = heat_maps[0]
+    heat_map_min = np.min(manual_heat_map)
+    heat_map_max = np.max(manual_heat_map)
+    manual_heat_map = (manual_heat_map-heat_map_min)/(heat_map_max-heat_map_min)
+    cv2.imwrite(f'99.png', manual_heat_map * 255)
+
+    psnr = []
+    mse = []
+    ssim = []
+
+    for idx, heat_map in enumerate(heat_maps):
+        heat_map_min = np.min(heat_map)
+        heat_map_max = np.max(heat_map)
+        heat_map = (heat_map - heat_map_min) / (heat_map_max - heat_map_min)
+        cv2.imwrite(f'{idx}.png', heat_map * 255)
+        print(f"mse: {compare_mse(manual_heat_map, heat_map)}")
+        mse.append(compare_mse(manual_heat_map, heat_map))
+        print(f"psnr: {compare_psnr(manual_heat_map, heat_map)}")
+        psnr.append(compare_psnr(manual_heat_map, heat_map))
+        (score, diff) = compare_ssim(manual_heat_map, heat_map, full=True)
+        diff = (diff * 255).astype("uint8")
+        # 6. You can print only the score if you want
+        print("SSIM: {}".format(score))
+        ssim.append(score)
+
+    plt.figure()
+    #plt.plot(psnr)
+    #plt.plot(mse)
+    plt.plot(ssim)
+    plt.show()

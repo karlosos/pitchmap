@@ -19,6 +19,7 @@ class PyGameDisplay:
         self.pitch_model = cv2.imread('data/pitch_model_2.jpg')
         self.__clear_pitch_model = imutils.resize(self.pitch_model, width=600)
         self.pitch_model = copy.copy(self.__clear_pitch_model)
+        print(self.pitch_model.shape)
 
         self.__frame_count = frame_count
         self.__current_frame_id = 0

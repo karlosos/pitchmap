@@ -10,9 +10,9 @@ import os
 
 class PlayersPathSelector:
     def __init__(self):
-        self.video_name = 'baltyk_kotwica_1.mp4'
-        self.file_detected_data = "data/cache/baltyk_kotwica_1.mp4_PlayersListComplex_CalibrationInteractorMiddlePoint.pik"
-        self.file_manual_data = "data/cache/baltyk_kotwica_1.mp4_manual_tracking.pik"
+        self.video_name = 'baltyk_starogard_1.mp4'
+        self.file_detected_data = "data/cache/baltyk_starogard_1.mp4_PlayersListComplex_CalibrationInteractorMiddlePoint.pik"
+        self.file_manual_data = "data/cache/baltyk_starogard_1.mp4_manual_tracking.pik"
         self.__window_name = f'Path selector: {self.video_name}'
 
         self.fl = loader.FrameLoader(self.video_name)
@@ -49,6 +49,7 @@ class PlayersPathSelector:
             self.selected[frame_number] = (player, None)
 
     def set_selected_player_detected(self, player):
+        print(player.position)
         frame_number = self.fl.get_current_frame_position()
         selected_players = self.selected.get(frame_number, None)
         if selected_players is not None:
@@ -124,7 +125,7 @@ class PlayersPathSelector:
 
 if __name__ == '__main__':
     mt = PlayersPathSelector()
-    mt.id = 0
+    mt.id = 2 # file name
     FAST_ADDING = True
     mt.loop()
     mt.teardown()

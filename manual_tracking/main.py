@@ -14,7 +14,7 @@ FAST_ADDING = False
 
 class ManualTracker:
     def __init__(self):
-        self.video_name = 'baltyk_kotwica_1.mp4'
+        self.video_name = 'Dynamic_Barca_Real.mp4'
         self.__window_name = f'PitchMap: {self.video_name}'
 
         self.fl = loader.FrameLoader(self.video_name)
@@ -172,7 +172,7 @@ if __name__ == '__main__':
     #mt.change_player(player_id=59,  new_color=2)
     #mt.change_player(player_id=84, new_color=2)
     mt.fl.set_current_frame_position(120)
-    mt.players_list.fixed_player_id = 29
+    mt.players_list.fixed_player_id = 7
     FAST_ADDING = True
     mt.loop()
     mt.teardown()
