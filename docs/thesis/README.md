@@ -1,2 +1,0 @@
-# ZUT templates
-
