@@ -20,8 +20,8 @@ class Tracker:
             self.tracking(frame)
             # TODO return bounding_boxes_frame, bounding_boxes, labels
         else:
-            bounding_boxes_frame, bounding_boxes, labels = self.__players_detector.detect(frame)
-            return bounding_boxes_frame, bounding_boxes, labels
+            bounding_boxes, labels = self.__players_detector.detect(frame)
+            return frame, bounding_boxes, labels
         self.__frame_number += 1
 
     def tracking(self, frame):
@@ -47,7 +47,7 @@ class Tracker:
         Add points for tracking from detector
         :param frame:
         """
-        bounding_boxes_frame, bounding_boxes, labels = self.__players_detector.detect(frame)
+        bounding_boxes, labels = self.__players_detector.detect(frame)
         self.__trackers = cv2.MultiTracker_create()
         for i, label in enumerate(labels):
             if label == "person":

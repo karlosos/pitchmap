@@ -12,7 +12,7 @@ class TeamDetection:
     def __init__(self, plot=False):
         self.__clf = None
         self.__plot = plot
-        self.color_detector = HistogramExtractEntirePlayer()
+        self.color_detector = HistogramExtractorEntirePlayer()
 
     def cluster_teams(self, selected_frames):
         extracted_player_colors = self.extract_player_colors(selected_frames)
@@ -30,7 +30,7 @@ class TeamDetection:
         for frame in frames:
             frame = imutils.resize(frame, width=600)
             grass_mask = mask.grass(frame)
-            _, bounding_boxes, labels = player_detector.detect(grass_mask)
+            bounding_boxes, labels = player_detector.detect(grass_mask)
             bounding_boxes = self.serialize_bounding_boxes(bounding_boxes)
             for idx, box in enumerate(bounding_boxes):
                 if labels[idx] == 'person':
@@ -54,7 +54,7 @@ class TeamDetection:
         return self.__clf
 
 
-class ColorDetectorEntirePlayer:
+class ColorExtractorEntirePlayer:
     @staticmethod
     def color_detection_for_player(frame, box):
         x = int((box[0] + box[2]) / 2)
@@ -67,7 +67,7 @@ class ColorDetectorEntirePlayer:
         return mean_color, (x, y)
 
 
-class ColorDetectorUpperHalf:
+class ColorExtractorUpperHalf:
     @staticmethod
     def color_detection_for_player(frame, box):
         x = int((box[0] + box[2]) / 2)
@@ -90,7 +90,7 @@ class ColorDetectorUpperHalf:
         return mean_color, (x, y)
 
 
-class ColorDetectorLowerHalf:
+class ColorExtractorLowerHalf:
     @staticmethod
     def color_detection_for_player(frame, box):
         x = int((box[0] + box[2]) / 2)
@@ -112,7 +112,7 @@ class ColorDetectorLowerHalf:
         return mean_color, (x, y)
 
 
-class ColorDetectorTwoHalves:
+class ColorExtractorTwoHalves:
     @staticmethod
     def color_detection_for_player(frame, box):
         x = int((box[0] + box[2]) / 2)
@@ -163,7 +163,7 @@ def hsv_histogram(frame):
     return combined
 
 
-class HistogramExtractEntirePlayer:
+class HistogramExtractorEntirePlayer:
     @staticmethod
     def color_detection_for_player(frame, box):
         x = int((box[0] + box[2]) / 2)
@@ -173,7 +173,7 @@ class HistogramExtractEntirePlayer:
         return feature, (x, y)
 
 
-class HistogramExtractUpperHalf:
+class HistogramExtractorUpperHalf:
     @staticmethod
     def color_detection_for_player(frame, box):
         x = int((box[0] + box[2]) / 2)
@@ -184,7 +184,7 @@ class HistogramExtractUpperHalf:
         return feature, (x, y)
 
 
-class HistogramExtractLowerHalf:
+class HistogramExtractorLowerHalf:
     @staticmethod
     def color_detection_for_player(frame, box):
         x = int((box[0] + box[2]) / 2)
@@ -195,7 +195,7 @@ class HistogramExtractLowerHalf:
         return feature, (x, y)
 
 
-class HistogramExtractTwoHalves:
+class HistogramExtractorTwoHalves:
     @staticmethod
     def color_detection_for_player(frame, box):
         x = int((box[0] + box[2]) / 2)
