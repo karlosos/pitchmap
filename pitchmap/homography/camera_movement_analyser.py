@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import imutils
 
-from pitchmap.frame import mask
+from pitchmap.segmentation import mask
 import matplotlib.pyplot as plt
 
 

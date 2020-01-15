@@ -3,7 +3,8 @@ Main file of PitchMap. All process trough loading images from video to displayin
 """
 from pitchmap.detect import team
 from pitchmap.cache_loader import clustering_model, pickler
-from pitchmap.frame import loader, mask
+from pitchmap.frame import loader
+from pitchmap.segmentation import mask
 from pitchmap.players import structure
 from pitchmap.gui.high import tracker
 from pitchmap.homography import calibrator, calibrator_interactor

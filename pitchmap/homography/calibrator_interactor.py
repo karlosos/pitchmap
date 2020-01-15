@@ -1,4 +1,4 @@
-from pitchmap.frame import mask
+from pitchmap.segmentation import mask
 from pitchmap.homography import camera_movement_analyser
 from pitchmap.cache_loader import camera_movement
 

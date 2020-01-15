@@ -1,4 +1,4 @@
-from pitchmap.frame import mask
+from pitchmap.segmentation import mask
 from pitchmap.detect import players, team_plot
 
 from sklearn.cluster import AgglomerativeClustering
