@@ -30,7 +30,7 @@ class TeamDetection:
         for frame in frames:
             frame = imutils.resize(frame, width=600)
             grass_mask = mask.grass(frame)
-            bounding_boxes, labels = player_detector.detect(grass_mask)
+            _, bounding_boxes, labels = player_detector.detect(grass_mask)
             bounding_boxes = self.serialize_bounding_boxes(bounding_boxes)
             for idx, box in enumerate(bounding_boxes):
                 if labels[idx] == 'person':

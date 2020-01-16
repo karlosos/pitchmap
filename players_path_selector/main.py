@@ -49,7 +49,6 @@ class PlayersPathSelector:
             self.selected[frame_number] = (player, None)
 
     def set_selected_player_detected(self, player):
-        print(player.position)
         frame_number = self.fl.get_current_frame_position()
         selected_players = self.selected.get(frame_number, None)
         if selected_players is not None:
@@ -65,11 +64,16 @@ class PlayersPathSelector:
         if selected_players is not None:
             return
 
-        if selected_players_last_frame is not None:
+        if selected_players_last_frame is not None and selected_players_last_frame[0]:
             player_last_frame_manual_id = selected_players_last_frame[0].id
             for player in self.data.players_manual[frame_number]:
                 if player.id == player_last_frame_manual_id:
                     self.selected[frame_number] = (player, None)
+            if selected_players_last_frame[1]:
+                player_last_frame_detected_id = selected_players_last_frame[1].id
+                for player in self.data.players_detected[frame_number]:
+                    if player.id == player_last_frame_detected_id:
+                        self.selected[frame_number] = (self.selected[frame_number][0], player)
 
     def load_next_frame(self):
         frame = self.fl.load_frame()
@@ -125,7 +129,7 @@ class PlayersPathSelector:
 
 if __name__ == '__main__':
     mt = PlayersPathSelector()
-    mt.id = 2 # file name
+    mt.id = 3 # file name
     FAST_ADDING = True
     mt.loop()
     mt.teardown()

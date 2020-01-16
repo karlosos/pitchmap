@@ -20,7 +20,7 @@ class Tracker:
             self.tracking(frame)
             # TODO return bounding_boxes_frame, bounding_boxes, labels
         else:
-            bounding_boxes, labels = self.__players_detector.detect(frame)
+            frame, bounding_boxes, labels = self.__players_detector.detect(frame)
             return frame, bounding_boxes, labels
         self.__frame_number += 1
 

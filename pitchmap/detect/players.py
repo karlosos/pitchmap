@@ -1,9 +1,12 @@
 import cvlib as cv
 from cvlib.object_detection import draw_bbox
+import cv2
 
 
 class PlayerDetector:
     @staticmethod
     def detect(frame):
         bbox, label, conf = cv.detect_common_objects(frame)
-        return bbox, label
+        # out = draw_bbox(frame, bbox, label, conf)
+        # cv2.imwrite("data/images/detection_stage.png", out)
+        return frame, bbox, label

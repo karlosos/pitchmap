@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 from matplotlib import pyplot as plt
 import matplotlib.gridspec as gridspec
+from sklearn.preprocessing import normalize
 
 
 def grass(frame):
@@ -24,7 +25,9 @@ def extract_feature(frame):
     hist_s = cv2.calcHist([frame_hsv], channels=[1], mask=mask, histSize=[10], ranges=[0, 256])
     l = np.sum(hist_h)
     hist_h = hist_h / l
+    print(f"1: {np.sum(hist_h)} f2: {np.sum(normalize(hist_h))}")
     hist_s = hist_s / l
+    print(f"1: {np.sum(hist_s)} f2: {np.sum(normalize(hist_s))}")
     combined = hist_h.flatten().tolist() + hist_s.flatten().tolist()
     return hist_h.flatten().tolist(), hist_s.flatten().tolist(), combined
 
@@ -50,13 +53,13 @@ for file in files:
     ax2.bar(np.arange(0, 18), hist_h, width=1)
     ax2.set_xlabel("numer przedziału")
     ax2.set_ylabel("częstotliwość")
-    ax2.set_title("histogram barwy - hue")
+    ax2.set_title("histogram barwy")
 
     ax3 = plt.subplot2grid((2, 3), (1, 1))
     plt.bar(np.arange(0, 10), hist_s, width=1)
     ax3.set_xlabel("numer przedziału")
     ax3.set_ylabel("częstotliwość")
-    ax3.set_title("histogram nasycenia - saturation")
+    ax3.set_title("histogram nasycenia")
 
     ax4 = plt.subplot2grid((2, 3), (0, 2), rowspan=2)
     ax4.plot(combined)

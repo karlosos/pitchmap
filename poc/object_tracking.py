@@ -41,7 +41,7 @@ OPENCV_OBJECT_TRACKERS = {
 }
 
 trackers = cv2.MultiTracker_create()
-vs = cv2.VideoCapture("data/baltyk_kotwica_1.mp4")
+vs = cv2.VideoCapture("data/baltyk_starogard_1.mp4")
 
 sleep_time = 0
 
