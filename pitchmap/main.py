@@ -2,11 +2,11 @@
 Main file of PitchMap. All process trough loading images from video to displaying 2D map.
 """
 from pitchmap.detect import team
-from pitchmap.cache_loader import clustering_model, pickler
+from pitchmap.cache_loader import clustering_model, pickler, players_detector
 from pitchmap.frame import loader
 from pitchmap.segmentation import mask
 from pitchmap.players import structure
-from pitchmap.gui.high import tracker
+from pitchmap.detect import players
 from pitchmap.homography import calibrator, calibrator_interactor
 from pitchmap import gui
 
@@ -31,7 +31,7 @@ class PitchMap:
         calib_interactor = calibrator_interactor.CalibrationInteractorMiddlePoint
         # calib_interactor = calibrator_interactor.CalibrationInteractorSimple
 
-        self.video_name = 'baltyk_starogard_1.mp4'
+        self.video_name = 'Barca_Real_continous.mp4'
         self.__window_name = f'PitchMap: {self.video_name}'
 
         self.fl = loader.FrameLoader(self.video_name)
@@ -48,7 +48,9 @@ class PitchMap:
         clf_model_loader.generate_clustering_model()
 
         # Players tracking initialization
-        self.__tracker = tracker.Tracker(tracking_method)
+        frames_length = self.fl.get_frames_count()
+        self.players_detector = players.PlayerDetector()
+        self.players_detector.loader = players_detector.PlayersDetectorLoader(frames_length, self.video_name)
 
         self.__interpolation_mode = False
 
@@ -80,7 +82,8 @@ class PitchMap:
 
         if self.detecting_flag:
             print(f"detecting")
-            bounding_boxes_frame, bounding_boxes, labels = self.__tracker.update(grass_mask)
+            frame_number = self.fl.get_current_frame_position()
+            bounding_boxes_frame, bounding_boxes, labels = self.players_detector.detect(grass_mask, frame_number)
             player_indices = [i for i, x in enumerate(labels) if x != 'person']
             for index in sorted(player_indices, reverse=True):
                 print(index)
@@ -129,6 +132,7 @@ class PitchMap:
         pickler.pickle_data([self.players_list.players, self.__calibration_interactor.homographies, homographies],
                             self.__save_data_path)
         print(f"Saved data to: {self.__save_data_path}")
+        self.players_detector.loader.save_data()
 
     def bootstrap(self):
         file_exists = os.path.isfile(self.__save_data_path)
