@@ -13,7 +13,6 @@ def grass(frame, for_player=False):
     :return: frame with black areas where there's no grass
     """
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    # cv2.imwrite('data/images/pitch_segmentation/frame.png', frame)
 
     # define range of blue color in HSV
     lower_green = np.array([35, 50, 50])

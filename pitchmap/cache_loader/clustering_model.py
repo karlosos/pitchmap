@@ -16,7 +16,7 @@ class ClusteringModelLoader:
         file_exists = os.path.isfile(team_detection_file_name)
 
         if file_exists:
-            print("loading")
+            print(f"loading from {team_detection_file_name}")
             clf = pickler.unpickle_data(team_detection_file_name)
             self.__team_detector.set_clf(clf)
         else:

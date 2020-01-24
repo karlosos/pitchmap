@@ -193,5 +193,8 @@ class PlayerComplex:
         #print(f"Player: {self.id} last colors: {last_colors} for frame {self.__frame_number}")
         last_colors = np.array(last_colors)
         last_colors = last_colors[last_colors != -1]
-        real_color = np.bincount(last_colors).argmax()
+        try:
+            real_color = np.bincount(last_colors).argmax()
+        except:
+            real_color = self.color
         return real_color

@@ -12,7 +12,7 @@ class TeamDetection:
     def __init__(self, plot=False):
         self.__clf = None
         self.__plot = plot
-        self.color_detector = HistogramExtractorEntirePlayer()
+        self.color_detector = ColorExtractorLowerHalf
 
     def cluster_teams(self, selected_frames):
         extracted_player_colors = self.extract_player_colors(selected_frames)
@@ -141,26 +141,31 @@ class ColorExtractorTwoHalves:
 
 
 def hsv_histogram(frame):
-    print(f"hsv hist: {frame.shape}")
-    grass_mask = cv2.bitwise_not(mask.grass(frame, True))
-    player_crop = cv2.bitwise_and(frame, frame,
-                                  mask=grass_mask)
+    try:
+        grass_mask = cv2.bitwise_not(mask.grass(frame, True))
+        player_crop = cv2.bitwise_and(frame, frame,
+                                      mask=grass_mask)
 
-    frame_hsv = cv2.cvtColor(player_crop, cv2.COLOR_BGR2HSV)
-    hist_h = cv2.calcHist([frame_hsv], channels=[0], mask=grass_mask, histSize=[18], ranges=[0, 180])
-    hist_s = cv2.calcHist([frame_hsv], channels=[1], mask=grass_mask, histSize=[10], ranges=[0, 256])
-    l = np.sum(hist_h)
-    if l == 0:
+        frame_hsv = cv2.cvtColor(player_crop, cv2.COLOR_BGR2HSV)
+        hist_h = cv2.calcHist([frame_hsv], channels=[0], mask=grass_mask, histSize=[18], ranges=[0, 180])
+        hist_s = cv2.calcHist([frame_hsv], channels=[1], mask=grass_mask, histSize=[10], ranges=[0, 256])
+        l = np.sum(hist_h)
+        if l == 0:
+            hist_h = np.zeros(18)
+            hist_s = np.zeros(10)
+        else:
+            hist_h = hist_h / l
+            hist_s = hist_s / l
+        combined = hist_h.flatten().tolist() + hist_s.flatten().tolist()
+
+        return combined
+    except:
         hist_h = np.zeros(18)
         hist_s = np.zeros(10)
-    else:
-        hist_h = hist_h / l
-        hist_s = hist_s / l
-    combined = hist_h.flatten().tolist() + hist_s.flatten().tolist()
-    print(combined)
-    print(len(combined))
+        combined = hist_h.flatten().tolist() + hist_s.flatten().tolist()
+        return combined
 
-    return combined
+
 
 
 class HistogramExtractorEntirePlayer:
@@ -201,7 +206,6 @@ class HistogramExtractorTwoHalves:
         x = int((box[0] + box[2]) / 2)
         y = box[3]
         half_y = int((box[3]-box[1])/2)
-        print(f"color det hist: {frame.shape}")
         player_crop_upper = frame[box[1] + half_y:box[3], box[0]:box[2], :]
         player_crop_lower = frame[box[1] + half_y:box[3], box[0]:box[2], :]
         feature_upper = hsv_histogram(player_crop_upper)

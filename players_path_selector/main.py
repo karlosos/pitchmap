@@ -11,8 +11,12 @@ import os
 class PlayersPathSelector:
     def __init__(self):
         self.video_name = 'baltyk_starogard_1.mp4'
-        self.file_detected_data = "data/cache/baltyk_starogard_1.mp4_PlayersListComplex_CalibrationInteractorMiddlePoint.pik"
+        #self.file_detected_data = "data/cache/Barca_Real_continous.mp4_PlayersListComplex_CalibrationInteractorSimple.pik"
+        #self.file_manual_data = "data/cache/Barca_Real_continous.mp4_manual_tracking.pik"
+
         self.file_manual_data = "data/cache/baltyk_starogard_1.mp4_manual_tracking.pik"
+        #self.file_manual_data = "data/cache/classification/baltyk_starogard_1_entire.pik"
+        self.file_detected_data = "data/cache/classification/baltyk_starogard_1_histogram.pik"
         self.__window_name = f'Path selector: {self.video_name}'
 
         self.fl = loader.FrameLoader(self.video_name)
@@ -129,7 +133,7 @@ class PlayersPathSelector:
 
 if __name__ == '__main__':
     mt = PlayersPathSelector()
-    mt.id = 3 # file name
+    mt.id = "testing"  # file name
     FAST_ADDING = True
     mt.loop()
     mt.teardown()
