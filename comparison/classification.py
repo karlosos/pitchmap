@@ -47,22 +47,29 @@ def get_players_team_ids_from_frame(players, frame_number):
 class Camparator:
     def __init__(self):
         #self.file_detected_data = "data/cache/baltyk_kotwica_1.mp4_PlayersListComplex_CalibrationInteractorMiddlePoint.pik"
-        self.file_detected_data_middle = "data/cache/Barca_Real_continous.mp4_PlayersListComplex_CalibrationInteractorMiddlePoint.pik"
-        self.file_detected_data_automatic = "data/cache/Barca_Real_continous.mp4_PlayersListComplex_CalibrationInteractorAutomatic.pik"
-        self.file_detected_data_simple = "data/cache/Barca_Real_continous.mp4_PlayersListComplex_CalibrationInteractorSimple.pik"
-        self.file_manual_data = "data/cache/Barca_Real_continous.mp4_manual_tracking.pik"
+        self.file_detected_data_upper = "data/cache/classification/baltyk_starogard_1_upper.pik"
+        self.file_detected_data_lower = "data/cache/classification/baltyk_starogard_1_lower.pik"
+        self.file_detected_data_entire = "data/cache/classification/baltyk_starogard_1_entire.pik"
+        self.file_detected_data_two_halves = "data/cache/classification/baltyk_starogard_1_two_halves.pik"
+        self.file_detected_data_histogram = "data/cache/classification/baltyk_starogard_1_histogram.pik"
+        self.file_manual_data = "data/cache/baltyk_starogard_1.mp4_manual_tracking.pik"
 
         self.pitch_model = cv2.imread('data/pitch_model.jpg')
         self.pitch_model = imutils.resize(self.pitch_model, width=600)
 
-        players_detected_middle, _, homographies_detected_middle = pickler.unpickle_data(self.file_detected_data_middle)
-        players_detected_automatic, _, homographies_detected_automatic = pickler.unpickle_data(self.file_detected_data_automatic)
-        players_detected_simple, _, homographies_detected_simple = pickler.unpickle_data(self.file_detected_data_simple)
+        players_detected_upper, _, homographies_detected_upper = pickler.unpickle_data(self.file_detected_data_upper)
+        players_detected_lower, _, homographies_detected_lower = pickler.unpickle_data(self.file_detected_data_lower)
+        players_detected_entire, _, homographies_detected_entire = pickler.unpickle_data(self.file_detected_data_entire)
+        players_detected_two_halves, _, homographies_detected_two_halves = pickler.unpickle_data(self.file_detected_data_two_halves)
+        players_detected_histogram, _, homographies_detected_histogram = pickler.unpickle_data(self.file_detected_data_histogram)
         players_list_manual, _, _ = pickler.unpickle_data(self.file_manual_data)
 
-        self.players_detected_middle = self.transform_players(players_detected_middle, homographies_detected_middle)
-        self.players_detected_automatic = self.transform_players(players_detected_automatic, homographies_detected_automatic)
-        self.players_detected_simple = self.transform_players(players_detected_simple, homographies_detected_simple)
+        self.players_detected_upper = self.transform_players(players_detected_upper, homographies_detected_upper)
+        self.players_detected_lower = self.transform_players(players_detected_lower, homographies_detected_lower)
+        self.players_detected_entire = self.transform_players(players_detected_entire, homographies_detected_entire)
+        self.players_detected_two_halves = self.transform_players(players_detected_two_halves, homographies_detected_two_halves)
+        self.players_detected_histogram = self.transform_players(players_detected_histogram, homographies_detected_histogram)
+
         self.players_manual = players_list_manual.players
 
     def transform_players(self, players_detected, homographies_detected):
@@ -86,15 +93,16 @@ class Camparator:
 
         return players_detected_transformed
 
-    def generate_heat_map(self, players):
+    def generate_heat_map(self, players, id):
         pitch_model_size = (421, 600)
         pitch_heat_map = np.zeros(pitch_model_size)
         for frame in players:
             for player in frame:
-                self.add_to_heat_map(pitch_heat_map, player.position, size=5, value=10)
-                self.add_to_heat_map(pitch_heat_map, player.position, size=8, value=5)
-                self.add_to_heat_map(pitch_heat_map, player.position, size=15, value=2)
-                self.add_to_heat_map(pitch_heat_map, player.position, size=20, value=1)
+                if player.color == id:
+                    self.add_to_heat_map(pitch_heat_map, player.position, size=5, value=10)
+                    self.add_to_heat_map(pitch_heat_map, player.position, size=8, value=5)
+                    self.add_to_heat_map(pitch_heat_map, player.position, size=15, value=2)
+                    self.add_to_heat_map(pitch_heat_map, player.position, size=20, value=1)
 
         heatmap.add(self.pitch_model, pitch_heat_map, alpha=0.8, display=False, cmap='jet')
         return pitch_heat_map
@@ -121,17 +129,28 @@ if __name__ == '__main__':
 
     if GENERATING:
         heat_maps = []
-        manual_heatmap = c.generate_heat_map(c.players_manual[23:129])
+        manual_heatmap = c.generate_heat_map(c.players_manual, 2)
         heat_maps.append(manual_heatmap)
-        detected_middle_heatmap = c.generate_heat_map(c.players_detected_middle[23:129])
-        heat_maps.append(detected_middle_heatmap)
-        detected_automatic_heatmap = c.generate_heat_map(c.players_detected_automatic[23:129])
-        heat_maps.append(detected_automatic_heatmap)
-        detected_simple_heatmap = c.generate_heat_map(c.players_detected_simple[23:129])
-        heat_maps.append(detected_simple_heatmap)
-        pickler.pickle_data(heat_maps, f"data/cache/heatmaps_barca_real.pik")
+
+        detected_upper = c.generate_heat_map(c.players_detected_upper, 0)
+        heat_maps.append(detected_upper)
+
+        detected = c.generate_heat_map(c.players_detected_lower, 0)
+        heat_maps.append(detected)
+
+        detected = c.generate_heat_map(c.players_detected_entire, 1)
+        heat_maps.append(detected)
+
+        detected = c.generate_heat_map(c.players_detected_two_halves, 0)
+        heat_maps.append(detected)
+
+        detected = c.generate_heat_map(c.players_detected_histogram, 0)
+        heat_maps.append(detected)
+
+
+        pickler.pickle_data(heat_maps, f"data/cache/heatmaps_starogard_colors.pik")
     else:
-        heat_maps = pickler.unpickle_data(f"data/cache/heatmaps_barca_real.pik")
+        heat_maps = pickler.unpickle_data(f"data/cache/heatmaps_starogard_colors.pik")
 
     manual_heat_map = heat_maps[0]
     heat_map_min = np.min(manual_heat_map)

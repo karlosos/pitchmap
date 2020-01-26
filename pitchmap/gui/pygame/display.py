@@ -82,6 +82,8 @@ class PyGameDisplay:
                     self.__detection_state = self.__pitchmap.toggle_detecting()
                 elif event.key == pygame.K_p:
                     self.__projection_state = self.__pitchmap.toggle_transforming()
+                elif event.key == pygame.K_u:
+                    self.__pitchmap.toggle_pause()
 
             pos = pygame.mouse.get_pos()
             if event.type == pygame.MOUSEBUTTONDOWN:

@@ -11,6 +11,7 @@ class PlayerDetector:
         if frame_number is None:
             bbox, label, conf = cv.detect_common_objects(frame)
             return frame, bbox, label
+
         if self.loader is not None:
             if self.loader.get_detections(frame_number) is None:
                 bbox, label, conf = cv.detect_common_objects(frame)

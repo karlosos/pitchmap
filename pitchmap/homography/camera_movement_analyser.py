@@ -101,7 +101,7 @@ class CameraMovementAnalyser:
         ax = plt.subplot(2, 1, 1)
         ax.plot(np.array(movement_vectors)[:, 0], label="horizontal [x]")
         ax.plot(np.array(movement_vectors)[:, 1], label="vertical [y]")
-        ax.set_ylabel("kierunek \n ruchu kamery")
+        ax.set_ylabel("zwrot \n ruchu kamery")
         ax.legend()
         ax2 = plt.subplot(2, 1, 2)
         ax2.set_ylabel("wychylenie kamery \n względem początku")

@@ -24,10 +24,8 @@ class PlayersDetectorLoader:
 
     def get_detections(self, frame_number):
         if self.frames[int(frame_number)]:
-            print("returned frames")
             return self.frames[int(frame_number)]
         else:
-            print("could not return")
             return None
 
     def set_detections(self, detections, frame_number):

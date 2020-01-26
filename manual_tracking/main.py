@@ -171,8 +171,8 @@ if __name__ == '__main__':
     mt = ManualTracker()
     #mt.change_player(player_id=35,  new_color=0)
     #mt.change_player(player_id=41, new_color=2)
-    mt.fl.set_current_frame_position(207)
-    mt.players_list.fixed_player_id = 43
-    FAST_ADDING = True
+    mt.fl.set_current_frame_position(0)
+    # mt.players_list.fixed_player_id = 43
+    # FAST_ADDING = True
     mt.loop()
     mt.teardown()

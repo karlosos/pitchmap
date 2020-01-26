@@ -31,7 +31,7 @@ class PitchMap:
         calib_interactor = calibrator_interactor.CalibrationInteractorMiddlePoint
         # calib_interactor = calibrator_interactor.CalibrationInteractorSimple
 
-        self.video_name = 'Barca_Real_continous.mp4'
+        self.video_name = 'baltyk_starogard_1.mp4'
         self.__window_name = f'PitchMap: {self.video_name}'
 
         self.fl = loader.FrameLoader(self.video_name)
@@ -67,8 +67,12 @@ class PitchMap:
         self.__save_data_path = f'data/cache/{self.video_name}_{player_list_class_name}_{calib_inter_class_name}.pik'
         self.bootstrap()
 
+        self.pause = False
+
     def frame_loading(self):
         frame = self.fl.load_frame()
+        frame_number = self.fl.get_current_frame_position()
+        print(f"Frame: {frame_number}")
         try:
             frame = imutils.resize(frame, width=600)
         except AttributeError:
@@ -81,13 +85,14 @@ class PitchMap:
         bounding_boxes = []
 
         if self.detecting_flag:
-            print(f"detecting")
-            frame_number = self.fl.get_current_frame_position()
             bounding_boxes_frame, bounding_boxes, labels = self.players_detector.detect(grass_mask, frame_number)
-            player_indices = [i for i, x in enumerate(labels) if x != 'person']
+            player_indices = [i for i, x in enumerate(labels) if x == 'person']
+            players_bounding_boxes = []
+            bounding_boxes_length = len(bounding_boxes)
             for index in sorted(player_indices, reverse=True):
-                print(index)
-                del bounding_boxes[index]
+                if index < bounding_boxes_length:
+                    players_bounding_boxes.append(bounding_boxes[index])
+            bounding_boxes = players_bounding_boxes
 
         self.draw_bounding_boxes(frame, grass_mask, bounding_boxes)
         # self.out_frame = cv2.addWeighted(grass_mask, 0.8, lines_frame, 1, 0)
@@ -100,23 +105,24 @@ class PitchMap:
         self.frame_loading()
         previous = time.perf_counter()
         while True:
-            frame_number = self.fl.get_current_frame_position()
-            current = time.perf_counter()
             # user input
             is_exit = not self.__display.input_events()
             if is_exit:
                 break
+            if not self.pause:
+                frame_number = self.fl.get_current_frame_position()
+                current = time.perf_counter()
 
-            # update
-            if not self.calibrator.enabled:
-                if self.__detection_thread is None or not self.__detection_thread.is_alive():
-                    if current - previous > 0.04:
-                        self.__detection_thread = threading.Thread(target=self.frame_loading)
-                        self.__detection_thread.start()
-                        previous = current
+                # update
+                if not self.calibrator.enabled:
+                    if self.__detection_thread is None or not self.__detection_thread.is_alive():
+                        if current - previous > 0.04:
+                            self.__detection_thread = threading.Thread(target=self.frame_loading)
+                            self.__detection_thread.start()
+                            previous = current
 
-            players_2d_positions, colors = self.get_players_positions_on_model(frame_number)
-            self.__display.show_model(players_2d_positions, colors)
+                players_2d_positions, colors = self.get_players_positions_on_model(frame_number)
+                self.__display.show_model(players_2d_positions, colors)
             self.__display.show(self.out_frame, frame_number)
             self.__display.update()
 
@@ -130,7 +136,7 @@ class PitchMap:
             homographies.append(self.__calibration_interactor.get_homography(i))
 
         pickler.pickle_data([self.players_list.players, self.__calibration_interactor.homographies, homographies],
-                            self.__save_data_path)
+                            self.__save_data_path + "two_halves")
         print(f"Saved data to: {self.__save_data_path}")
         self.players_detector.loader.save_data()
 
@@ -218,6 +224,9 @@ class PitchMap:
             players_2d_positions = self.calibrator.transform_to_2d(players, current_frame_homography)
 
         return players_2d_positions, colors
+
+    def toggle_pause(self):
+        self.pause = not self.pause
 
 
 if __name__ == '__main__':

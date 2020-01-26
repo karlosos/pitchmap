@@ -124,10 +124,11 @@ class CalibrationInteractorAutomatic(CalibrationInteractor):
         h = self.homographies[:, :, math.floor(camera_angle - min_x)]
         return h
 
-    def is_homography_exist(self, frame):
+    def is_homography_exist(self, frame_number):
         s = self.homographies.shape
         try:
             _ = s[2]
+            x = self.__camera_movement_analyser.x_cum_sum[frame_number - 1]
             return True
         except IndexError:
             return False
@@ -302,8 +303,8 @@ class CalibrationInteractorMiddlePoint(CalibrationInteractor):
             camera_angle = self.__camera_movement_analyser.x_cum_sum[frame_number - 2]
 
         min_x = self.__camera_movement_analyser.x_min
-        print(
-            f"frame: {frame_number} camera_angle: {camera_angle}, obliczony index:{camera_angle - min_x}, {math.floor(camera_angle - min_x)}, min_x = {min_x}")
+        # print(
+        #     f"frame: {frame_number} camera_angle: {camera_angle}, obliczony index:{camera_angle - min_x}, {math.floor(camera_angle - min_x)}, min_x = {min_x}")
         h = self.homographies[:, :, math.floor(camera_angle - min_x)]
         return h
 
