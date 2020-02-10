@@ -82,7 +82,7 @@ def select_manual(frame):
     boxes = cv2.selectROIs("Frame", frame, fromCenter=False, showCrosshair=True)
     add_t1 = time.perf_counter()
     for box in boxes:
-        tracker = OPENCV_OBJECT_TRACKERS['boosting']()
+        tracker = OPENCV_OBJECT_TRACKERS['csrt']()
         trackers.add(tracker, frame, tuple(box))
     add_t2 = time.perf_counter()
     print(f"add trackers: {add_t2 - add_t1}, avg: {(add_t2 - add_t1)/len(boxes)}")
