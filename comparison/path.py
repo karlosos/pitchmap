@@ -17,14 +17,9 @@ def remove_blank_spaces(x):
             indexes.append(i)
             x_new.append(position)
 
-    # spline
-    s = interpolate.InterpolatedUnivariateSpline(indexes, x_new)
     indexes_all = np.array([i for i in range(len(x))])
-    x_interpolated = s(indexes_all)
-    # return x_interpolated
 
-    # linear
-    f2 = interpolate.interp1d(indexes, x_new)
+    f2 = interpolate.interp1d(indexes, x_new, fill_value='extrapolate')
     return f2(indexes_all)
 
 
@@ -33,7 +28,7 @@ def moving_average(list, N):
     return mean
 
 
-def scatter_plot(frames, show_pitch=False):
+def scatter_plot(frames, show_pitch=False, smooth=False):
     x = []
     y = []
     x2 = []
@@ -53,21 +48,21 @@ def scatter_plot(frames, show_pitch=False):
     if show_pitch:
         ax.imshow(pitch_model)
 
-    # Filtracja
-    x = moving_average(x, 10)
-    y = moving_average(y, 10)
-    x2 = moving_average(x2, 10)
-    y2 = moving_average(y2, 10)
+    if smooth:
+        x = moving_average(x, 10)
+        y = moving_average(y, 10)
+        x2 = moving_average(x2, 10)
+        y2 = moving_average(y2, 10)
 
-    ax.scatter(x, y, marker='s', label="manual", s=1)
-    ax.scatter(x2, y2, marker='^', label="automatic", s=0.5)
+    ax.scatter(x, y, marker='s', label="wzorcowe", s=1)
+    ax.scatter(x2, y2, marker='^', label="automatyczne", s=0.5)
     # ax.set_xlim([200, 300])
     # ax.set_ylim([250, 400])
     plt.legend()
-    plt.show()
     print(frames)
 
-def positions_plot(frames):
+
+def positions_plot(frames, smooth=False):
     plt.style.use('ggplot')
     x = []
     y = []
@@ -112,33 +107,47 @@ def positions_plot(frames):
     pitch_model = cv2.imread('data/pitch_model.jpg')
     pitch_model = imutils.resize(pitch_model, width=600)
 
-    x = remove_blank_spaces(x)
-    x2 = remove_blank_spaces(x2)
-    y = remove_blank_spaces(y)
-    y2 = remove_blank_spaces(y2)
+    if smooth:
+        x = remove_blank_spaces(x)
+        x2 = remove_blank_spaces(x2)
+        y = remove_blank_spaces(y)
+        y2 = remove_blank_spaces(y2)
 
-    x = moving_average(x, 15)
-    y = moving_average(y, 15)
-    x2 = moving_average(x2, 15)
-    y2 = moving_average(y2, 15)
+        x = moving_average(x, 15)
+        y = moving_average(y, 15)
+        x2 = moving_average(x2, 15)
+        y2 = moving_average(y2, 15)
 
-    ax.plot(x, label="manual")
-    ax.plot(x2, label="automatic")
+    ax.plot(x, label="wzorcowe")
+    ax.plot(x2, label="automatyczne")
     ax.set_xlabel("Numer klatki")
     ax.set_ylabel("Pozycja x zawodnika")
     ax.legend()
 
-    ax2.plot(y, label="manual")
-    ax2.plot(y2, label="automatic")
+    ax2.plot(y, label="wzorcowe")
+    ax2.plot(y2, label="automatyczne")
     ax2.set_xlabel("Numer klatki")
     ax2.set_ylabel("Pozycja y zawodnika")
-    # ax.set_xlim([200, 300])
-    # ax.set_ylim([250, 400])
     ax2.legend()
     plt.tight_layout()
-    plt.show()
     print(frames)
 
-frames = pickler.unpickle_data("data/cache/baltyk_starogard_1.mp4_path_selector_middle.pik")
-scatter_plot(frames, show_pitch=True)
-positions_plot(frames)
+
+if __name__ == '__main__':
+    folder = "starogard"
+    calibration = "simple"
+    # file = f"Barca_Real_continous.mp4_path_selector_{calibration}.pik"
+    # file = f"baltyk_kotwica_1.mp4_path_selector_{calibration}.pik"
+    file = f"baltyk_starogard_1.mp4_path_selector_{calibration}.pik"
+
+    data_file_name = "data/cache/" + file
+
+    frames = pickler.unpickle_data(data_file_name)
+    scatter_plot(frames, show_pitch=True, smooth=False)
+    plt.savefig(f"data/images/{folder}/{calibration}.eps")
+    scatter_plot(frames, show_pitch=True, smooth=True)
+    plt.savefig(f"data/images/{folder}/{calibration}_smooth.eps")
+    positions_plot(frames, smooth=False)
+    plt.savefig(f"data/images/{folder}/{calibration}_positions.eps")
+    positions_plot(frames, smooth=True)
+    plt.savefig(f"data/images/{folder}/{calibration}_positions_smooth.eps")
