@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://i.imgur.com/yyO9y7W.png" alt="pitch_map_logo" />
+</p>
+
 # PitchMap
 
 Oprogramowanie do śledzenia ruchu piłkarzy na boisku na podstawie obserwacji przez ruchomą kamerę.
