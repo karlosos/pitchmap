@@ -29,7 +29,8 @@ class PitchMap:
         player_list = structure.PlayersListComplex
         # player_list = player.PlayersListSimple
         # calib_interactor = calibrator_interactor.CalibrationInteractorMiddlePoint
-        calib_interactor = calibrator_interactor.CalibrationInteractorAutomatic
+        # calib_interactor = calibrator_interactor.CalibrationInteractorAutomatic
+        calib_interactor = calibrator_interactor.CalibrationInteractorKeypoints
         # calib_interactor = calibrator_interactor.CalibrationInteractorSimple
 
         self.video_name = 'baltyk_starogard_1.mp4'
@@ -37,8 +38,8 @@ class PitchMap:
 
         self.fl = loader.FrameLoader(self.video_name)
         self.calibrator = calibrator.ManualCalibrator()
-        self.__display = display(main_window_name=self.__window_name, model_window_name="2D Pitch Model",
-                                 pitchmap=self, frame_count=self.fl.get_frames_count())
+        self.display = display(main_window_name=self.__window_name, model_window_name="2D Pitch Model",
+                               pitchmap=self, frame_count=self.fl.get_frames_count())
         self.players_list = player_list(frames_length=self.fl.get_frames_count())
         self.out_frame = None
 
@@ -107,7 +108,7 @@ class PitchMap:
         previous = time.perf_counter()
         while True:
             # user input
-            is_exit = not self.__display.input_events()
+            is_exit = not self.display.input_events()
             if is_exit:
                 break
             if not self.pause:
@@ -123,11 +124,11 @@ class PitchMap:
                             previous = current
 
                 players_2d_positions, colors = self.get_players_positions_on_model(frame_number)
-                self.__display.show_model(players_2d_positions, colors)
-            self.__display.show(self.out_frame, frame_number)
-            self.__display.update()
+                self.display.show_model(players_2d_positions, colors)
+            self.display.show(self.out_frame, frame_number)
+            self.display.update()
 
-        self.__display.close_windows()
+        self.display.close_windows()
         self.fl.release()
         self.teardown()
 
@@ -190,15 +191,15 @@ class PitchMap:
         self.fl.set_current_frame_position(99)
 
     def add_players_to_model(self, players_2d_positions, colors):
-        self.__display.add_players_to_model(players_2d_positions, colors)
+        self.display.add_players_to_model(players_2d_positions, colors)
 
     def set_transforming_flag(self, state=False):
         self.transforming_flag = state
 
     def create_model_window(self):
-        self.__display.create_model_window()
-        self.__display.clear_model()
-        self.__display.show_model()
+        self.display.create_model_window()
+        self.display.clear_model()
+        self.display.show_model()
 
     def load_frame(self):
         self.__detection_thread = threading.Thread(target=self.frame_loading)
