@@ -28,14 +28,15 @@ class PitchMap:
         display = gui.pygame.Display
         player_list = structure.PlayersListComplex
         # player_list = player.PlayersListSimple
-        calib_interactor = calibrator_interactor.CalibrationInteractorMiddlePoint
+        # calib_interactor = calibrator_interactor.CalibrationInteractorMiddlePoint
+        calib_interactor = calibrator_interactor.CalibrationInteractorAutomatic
         # calib_interactor = calibrator_interactor.CalibrationInteractorSimple
 
         self.video_name = 'baltyk_starogard_1.mp4'
         self.__window_name = f'PitchMap: {self.video_name}'
 
         self.fl = loader.FrameLoader(self.video_name)
-        self.calibrator = calibrator.Calibrator()
+        self.calibrator = calibrator.ManualCalibrator()
         self.__display = display(main_window_name=self.__window_name, model_window_name="2D Pitch Model",
                                  pitchmap=self, frame_count=self.fl.get_frames_count())
         self.players_list = player_list(frames_length=self.fl.get_frames_count())

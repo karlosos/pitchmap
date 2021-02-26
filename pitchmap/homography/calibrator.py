@@ -1,10 +1,78 @@
+"""
+This module is for collecting calibration points (characteristic objects) and performing transformation
+between two planars.
+"""
+from abc import ABC, abstractmethod
+
 import numpy as np
 import cv2
 from pitchmap.homography import matrix_interp
 import math
 
 
-class Calibrator:
+class Calibrator(ABC):
+    @abstractmethod
+    def toggle_enabled(self):
+        pass
+
+    @abstractmethod
+    def clear_points(self):
+        pass
+
+    @abstractmethod
+    def add_point_main_window(self, pos):
+        pass
+
+    @abstractmethod
+    def add_point_model_window(self, pos):
+        pass
+
+    @abstractmethod
+    def get_points_count(self):
+        pass
+
+    @abstractmethod
+    def can_perform_calibrate(self):
+        pass
+
+    @abstractmethod
+    def calibrate(self, frame, players, players_colors):
+        pass
+
+    @staticmethod
+    def transform_to_2d(players, H):
+        players = np.float32(players)
+        players_2d_positions = []
+
+        for player in players:
+            player = np.array(player)
+            player = np.append(player, 1.)
+            # https://www.learnopencv.com/homography-examples-using-opencv-python-c/
+            # calculating new positions
+            player_2d_position = H.dot(player)
+            player_2d_position = player_2d_position / player_2d_position[2]
+            players_2d_positions.append(player_2d_position)
+
+        return players_2d_positions
+
+    @abstractmethod
+    def start_calibration(self, H, frame_index):
+        pass
+
+    @abstractmethod
+    def end_calibration(self, H_m, m):
+        pass
+
+    @abstractmethod
+    def interpolate(self, steps, start_H, stop_H):
+        pass
+
+    @abstractmethod
+    def clear_interpolation(self):
+        pass
+
+
+class ManualCalibrator(Calibrator):
     def __init__(self):
         self.enabled = False
         self.points = {}
@@ -42,6 +110,7 @@ class Calibrator:
         if self.current_point is not None:
             index = len(self.points) + 1
             self.points[index] = (self.current_point, pos)
+            print(pos)
             #print(self.points)
             self.current_point = None
             return index
@@ -83,22 +152,6 @@ class Calibrator:
                 players_2d_positions.append(player_2d_position)
 
         return players_2d_positions, transformed_frame, H
-
-    @staticmethod
-    def transform_to_2d(players, H):
-        players = np.float32(players)
-        players_2d_positions = []
-
-        for player in players:
-            player = np.array(player)
-            player = np.append(player, 1.)
-            # https://www.learnopencv.com/homography-examples-using-opencv-python-c/
-            # calculating new positions
-            player_2d_position = H.dot(player)
-            player_2d_position = player_2d_position / player_2d_position[2]
-            players_2d_positions.append(player_2d_position)
-
-        return players_2d_positions
 
     def start_calibration(self, H, frame_index):
         self.start_calibration_H = H

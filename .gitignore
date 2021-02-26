@@ -128,3 +128,4 @@ dmypy.json
 # Pyre type checker
 .pyre/
 .vscode/
+models/FPN_efficientnetb3_0.0001_8_427.h5

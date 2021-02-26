@@ -74,7 +74,7 @@ class Camparator:
             if homography is None:
                 players_detected_transformed.append([])
             else:
-                players_2d_positions = calibrator.Calibrator.transform_to_2d(players_positions, homography)
+                players_2d_positions = calibrator.ManualCalibrator.transform_to_2d(players_positions, homography)
                 players_colors = get_players_team_ids_from_frame(players_detected, i)
 
                 players_in_frame = []
