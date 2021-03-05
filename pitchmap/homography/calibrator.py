@@ -135,6 +135,8 @@ class ManualCalibrator(Calibrator):
             original_points = np.float32(original_points)
             model_points = np.float32(model_points)
             rows, columns, channels = frame.shape
+            columns = 600
+            rows = 421
 
             H, _ = cv2.findHomography(original_points, model_points)
             transformed_frame = cv2.warpPerspective(frame, H, (columns, rows))

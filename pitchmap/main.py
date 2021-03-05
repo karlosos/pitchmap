@@ -138,7 +138,7 @@ class PitchMap:
             homographies.append(self.__calibration_interactor.get_homography(i))
 
         pickler.pickle_data([self.players_list.players, self.__calibration_interactor.homographies, homographies],
-                            self.__save_data_path + "two_halves")
+                            self.__save_data_path)
         print(f"Saved data to: {self.__save_data_path}")
         self.players_detector.loader.save_data()
 
@@ -174,6 +174,9 @@ class PitchMap:
 
     def transform_frame(self, frame, frame_idx):
         rows, columns, channels = frame.shape
+        columns = 600
+        rows = 421
+
         h = self.__calibration_interactor.get_homography(frame_idx)
         transformed_frame = cv2.warpPerspective(frame, h, (columns, rows))
         return transformed_frame

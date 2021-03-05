@@ -19,7 +19,7 @@ class Slider:
         self.maxi = maxi  # maximum at slider position right
         self.mini = mini  # minimum at slider position left
         self.xpos = 57  # x-location on screen
-        self.ypos = 447
+        self.ypos = 457
 
         self.__height = 30
         self.__width = 600

@@ -418,6 +418,7 @@ class CalibrationInteractorKeypoints(CalibrationInteractor):
         pass
 
     def interpolate(self):
+        # TODO: edit for more calibration frames
         characteristic_homographies = self.__homographies_for_characteristic_frames
 
         steps = np.abs(self.__camera_movement_analyser.x_max - self.__camera_movement_analyser.x_min)

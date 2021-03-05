@@ -7,9 +7,9 @@ from pitchmap.cache_loader import pickler
 from pitchmap.homography import calibrator
 from pitchmap.players import structure
 from comparison import heatmap
-from skimage.measure import compare_ssim
-from skimage.measure import compare_psnr
-from skimage.measure import compare_mse
+from skimage.metrics import structural_similarity as compare_ssim
+from skimage.metrics import peak_signal_noise_ratio as compare_psnr
+from skimage.metrics import mean_squared_error as compare_mse
 
 def get_players_positions_from_frame(players, frame_number):
     try:
@@ -46,11 +46,13 @@ def get_players_team_ids_from_frame(players, frame_number):
 
 class Camparator:
     def __init__(self):
+        self.input_file = "baltyk_starogard_1.mp4"
         #self.file_detected_data = "data/cache/baltyk_kotwica_1.mp4_PlayersListComplex_CalibrationInteractorMiddlePoint.pik"
-        self.file_detected_data_middle = "data/cache/Barca_Real_continous.mp4_PlayersListComplex_CalibrationInteractorMiddlePoint.pik"
-        self.file_detected_data_automatic = "data/cache/Barca_Real_continous.mp4_PlayersListComplex_CalibrationInteractorAutomatic.pik"
-        self.file_detected_data_simple = "data/cache/Barca_Real_continous.mp4_PlayersListComplex_CalibrationInteractorSimple.pik"
-        self.file_manual_data = "data/cache/Barca_Real_continous.mp4_manual_tracking.pik"
+        self.file_detected_data_middle = f"data/cache/{self.input_file}_PlayersListComplex_CalibrationInteractorMiddlePoint.pik"
+        self.file_detected_data_automatic = f"data/cache/{self.input_file}_PlayersListComplex_CalibrationInteractorAutomatic.pik"
+        self.file_detected_data_simple = f"data/cache/{self.input_file}_PlayersListComplex_CalibrationInteractorSimple.pik"
+        self.file_detected_data_keypoints = f"data/cache/{self.input_file}_PlayersListComplex_CalibrationInteractorKeypoints.pik"
+        self.file_manual_data = f"data/cache/{self.input_file}_manual_tracking.pik"
 
         self.pitch_model = cv2.imread('data/pitch_model.jpg')
         self.pitch_model = imutils.resize(self.pitch_model, width=600)
@@ -58,11 +60,13 @@ class Camparator:
         players_detected_middle, _, homographies_detected_middle = pickler.unpickle_data(self.file_detected_data_middle)
         players_detected_automatic, _, homographies_detected_automatic = pickler.unpickle_data(self.file_detected_data_automatic)
         players_detected_simple, _, homographies_detected_simple = pickler.unpickle_data(self.file_detected_data_simple)
+        players_detected_keypoints, _, homographies_detected_keypoints = pickler.unpickle_data(self.file_detected_data_keypoints)
         players_list_manual, _, _ = pickler.unpickle_data(self.file_manual_data)
 
         self.players_detected_middle = self.transform_players(players_detected_middle, homographies_detected_middle)
         self.players_detected_automatic = self.transform_players(players_detected_automatic, homographies_detected_automatic)
         self.players_detected_simple = self.transform_players(players_detected_simple, homographies_detected_simple)
+        self.players_detected_keypoints = self.transform_players(players_detected_keypoints, homographies_detected_keypoints)
         self.players_manual = players_list_manual.players
 
     def transform_players(self, players_detected, homographies_detected):
@@ -121,17 +125,19 @@ if __name__ == '__main__':
 
     if GENERATING:
         heat_maps = []
-        manual_heatmap = c.generate_heat_map(c.players_manual[23:129])
+        manual_heatmap = c.generate_heat_map(c.players_manual[:])
         heat_maps.append(manual_heatmap)
-        detected_middle_heatmap = c.generate_heat_map(c.players_detected_middle[23:129])
+        detected_middle_heatmap = c.generate_heat_map(c.players_detected_middle[:])
         heat_maps.append(detected_middle_heatmap)
-        detected_automatic_heatmap = c.generate_heat_map(c.players_detected_automatic[23:129])
+        detected_automatic_heatmap = c.generate_heat_map(c.players_detected_automatic[:])
         heat_maps.append(detected_automatic_heatmap)
-        detected_simple_heatmap = c.generate_heat_map(c.players_detected_simple[23:129])
+        detected_simple_heatmap = c.generate_heat_map(c.players_detected_simple[:])
         heat_maps.append(detected_simple_heatmap)
-        pickler.pickle_data(heat_maps, f"data/cache/heatmaps_barca_real.pik")
+        detected_keypoints_heatmap = c.generate_heat_map(c.players_detected_keypoints[:])
+        heat_maps.append(detected_keypoints_heatmap)
+        pickler.pickle_data(heat_maps, f"data/cache/heatmaps_{c.input_file}.pik")
     else:
-        heat_maps = pickler.unpickle_data(f"data/cache/heatmaps_barca_real.pik")
+        heat_maps = pickler.unpickle_data(f"data/cache/heatmaps_{c.input_file}.pik")
 
     manual_heat_map = heat_maps[0]
     heat_map_min = np.min(manual_heat_map)
