@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 import imutils
+from sklearn.metrics import mean_squared_error
 
 from pitchmap.cache_loader import pickler
 
@@ -43,6 +44,8 @@ def main():
     # Loading files
     input_file = "baltyk_starogard_1.mp4"
     file_detected_data_keypoints = f"data/cache/{input_file}_PlayersListComplex_CalibrationInteractorKeypoints.pik"
+    file_detected_data_keypoints = f"data/cache/{input_file}_PlayersListComplex_CalibrationInteractorAutomatic.pik"
+    # file_detected_data_keypoints = f"data/cache/{input_file}_PlayersListComplex_CalibrationInteractorMiddlePoint.pik"
     file_manual_data = f"data/cache/{input_file}_manual_tracking.pik"
 
     pitch_model = cv2.imread('data/pitch_model_mask.jpg')
@@ -52,7 +55,7 @@ def main():
     _, _, homographies_detected_keypoints = pickler.unpickle_data(
         file_detected_data_keypoints)
     _, homographies, _ = pickler.unpickle_data(file_manual_data)
-    iou_scores = []
+    mse_scores = []
 
     # Video capture
     cap = cv2.VideoCapture(f'data/{input_file}')
@@ -93,18 +96,24 @@ def main():
         for (x, y, _) in pred_points:
             cv2.circle(warp_pred, (int(x), int(y)), 2, (255, 0, 0), -1)
 
+        # Calculate MSE
+        mse = mean_squared_error(points, np.array(pred_points)[:, :2])
+        print("MSE:", mse)
+        mse_scores.append(mse)
+
+
         # Visualisation
-        cv2.imshow('orig', frame)
-        cv2.imshow('warp', warp)
-        cv2.imshow('warp_pred', warp_pred)
+        # cv2.imshow('orig', frame)
+        # cv2.imshow('warp', warp)
+        # cv2.imshow('warp_pred', warp_pred)
         # cv2.imshow('model_warp', model_warp)
         # cv2.imshow('model_warp_pred', model_warp_pred)
-        #
-        k = cv2.waitKey(0)
-        if k == 27:
-            break
 
-    print("Average IOU for video sequence:", np.mean(iou_scores))
+        # k = cv2.waitKey(0)
+        # if k == 27:
+        #     break
+
+    print("Average MSE for video sequence:", np.mean(mse_scores))
 
 
 if __name__ == "__main__":
