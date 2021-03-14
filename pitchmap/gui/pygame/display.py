@@ -34,11 +34,12 @@ class PyGameDisplay:
         self.__buttonCalibration = Button(800, 500, 150, 50, 'Calibration')
         self.__buttonTransformation = Button(970, 500, 150, 50, 'Transformation')
         self.__buttonAccept = Button(1140, 500, 150, 50, 'Accept')
+        self.__buttonCancel = Button(1310, 500, 60, 50, 'X')
 
         self.__buttonProjectionToggle = Button(200, 500, 150, 50, 'Toggle Projection')
         self.__buttonDetectionToggle = Button(370, 500, 150, 50, 'Toggle Detection')
         self.__buttons = [self.__buttonCalibration, self.__buttonTransformation, self.__buttonAccept,
-                          self.__buttonProjectionToggle, self.__buttonDetectionToggle]
+                          self.__buttonProjectionToggle, self.__buttonDetectionToggle, self.__buttonCancel]
         self.__slider = Slider(1, self.__frame_count, 1)
 
         self.__calibration_state = False
@@ -78,6 +79,8 @@ class PyGameDisplay:
                     self.__pitchmap.perform_transform()
                 elif event.key == pygame.K_a:
                     self.__pitchmap.accept_transform()
+                elif event.key == pygame.K_c:
+                    self.__pitchmap.cancel_transform()
                 elif event.key == pygame.K_d:
                     self.__detection_state = self.__pitchmap.toggle_detecting()
                 elif event.key == pygame.K_p:
@@ -93,6 +96,8 @@ class PyGameDisplay:
                     self.__pitchmap.perform_transform()
                 elif self.__buttonAccept.is_over(pos):
                     self.__pitchmap.accept_transform()
+                elif self.__buttonCancel.is_over(pos):
+                    self.__pitchmap.cancel_transform()
                 elif self.__buttonDetectionToggle.is_over(pos):
                     self.__detection_state = self.__pitchmap.toggle_detecting()
                 elif self.__buttonProjectionToggle.is_over(pos):
@@ -120,6 +125,7 @@ class PyGameDisplay:
         self.__buttonCalibration.update(self.__calibration_state)
         self.__buttonTransformation.update()
         self.__buttonAccept.update()
+        self.__buttonCancel.update()
         self.__buttonDetectionToggle.update(self.__detection_state)
         self.__buttonProjectionToggle.update(self.__projection_state)
 

@@ -191,6 +191,12 @@ class PitchMap:
     def accept_transform(self):
         self.__calibration_interactor.accept_transform()
 
+    def cancel_transform(self):
+        """
+        Works only for CalibrationInteractorKeypointsComplex
+        """
+        self.__calibration_interactor.cancel_transform()
+
     def input_test(self):
         self.fl.set_current_frame_position(99)
 

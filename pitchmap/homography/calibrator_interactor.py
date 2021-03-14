@@ -9,6 +9,7 @@ import imutils
 import numpy as np
 import math
 import cv2
+from scipy.signal import find_peaks
 
 
 class CalibrationInteractor(ABC):
@@ -460,9 +461,10 @@ class CalibrationInteractorKeypointsComplex(CalibrationInteractor):
 
         self.__characteristic_frames_numbers = None
         self.__characteristic_frames_iterator = None
-        # TODO: find more characteristic frame number
-        arg_min_x, arg_max_x, min_x, max_x = self.__camera_movement_analyser.get_characteristic_points()
-        self.__characteristic_frames_numbers = (arg_min_x, arg_max_x)
+        self.__camera_movement_analyser.get_characteristic_points()  # this only load data for camera analyser
+        camera_angles = self.__camera_movement_analyser.x_cum_sum
+        characteristic_frames = self.find_characteristic_frames(camera_angles)
+        self.__characteristic_frames_numbers = characteristic_frames
         self.__characteristic_frames_iterator = iter(self.__characteristic_frames_numbers)
 
         self.__current_calibration_frame_idx = None
@@ -480,6 +482,11 @@ class CalibrationInteractorKeypointsComplex(CalibrationInteractor):
 
         self.__kp_model.load_weights("./models/FPN_efficientnetb3_0.0001_8_427.h5")
 
+    def find_characteristic_frames(self, camera_angles):
+        min_peaks, _ = find_peaks(-camera_angles, width=3)
+        max_peaks, _ = find_peaks(camera_angles, width=3)
+        characteristic_frames = np.concatenate(([0], min_peaks, max_peaks, [len(camera_angles) - 1]))
+        return np.sort(characteristic_frames)
 
     def start_calibration(self):
         self.__calibrator.clear_points()
@@ -505,6 +512,7 @@ class CalibrationInteractorKeypointsComplex(CalibrationInteractor):
 
             pr_mask = self.__kp_model(image)
             src_points, dst_points = _points_from_mask(pr_mask[0])
+            # TODO: jeżeli mniej niż 4 punkty to przerwij
 
             # Rescaling because model works on 320x320 input
             height, width, _ = image.shape
@@ -531,9 +539,17 @@ class CalibrationInteractorKeypointsComplex(CalibrationInteractor):
             self.__pitch_map.out_frame = transformed_frame
             self.__pitch_map.add_players_to_model(players_2d_positions, colors)
             self.__current_homography = H
+        else:
+            self.__current_homography = None
 
     def accept_transform(self):
         self.__homographies_for_characteristic_frames.append(self.__current_homography)
+        if not self.start_calibration():
+            self.interpolate()
+
+    def cancel_transform(self):
+        self.__homographies_for_characteristic_frames.append(None)  # self.__current_homography should be None too,
+        # but for a "safety" reason I wanted to be explicit
         if not self.start_calibration():
             self.interpolate()
 
@@ -545,9 +561,11 @@ class CalibrationInteractorKeypointsComplex(CalibrationInteractor):
         pass
 
     def interpolate(self):
-        # TODO: edit interpolation for more calibration frames
         characteristic_homographies = self.__homographies_for_characteristic_frames
+        print(self.__characteristic_frames_numbers, len(self.__characteristic_frames_numbers))
+        print(characteristic_homographies, len(characteristic_homographies))
 
+        # TODO: edit interpolation for more calibration frames
         steps = np.abs(self.__camera_movement_analyser.x_max - self.__camera_movement_analyser.x_min)
         self.homographies = self.__calibrator.interpolate(steps, characteristic_homographies[0],
                                                           characteristic_homographies[1])
