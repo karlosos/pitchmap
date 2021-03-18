@@ -563,7 +563,7 @@ class CalibrationInteractorKeypointsComplex(CalibrationInteractor):
 
     def interpolate(self):
         characteristic_homographies = self.__homographies_for_characteristic_frames
-        camera_angle = self.__camera_movement_analyser.x_cum_sum
+        camera_angles = self.__camera_movement_analyser.x_cum_sum
         print(self.__characteristic_frames_numbers, len(self.__characteristic_frames_numbers))
         print(characteristic_homographies, len(characteristic_homographies))
 
@@ -583,30 +583,58 @@ class CalibrationInteractorKeypointsComplex(CalibrationInteractor):
             f2 = self.__characteristic_frames_numbers[i+1]
 
             if h1 is not None and h2 is not None:
-                angle_1 = camera_angle[f1]
-                angle_2 = camera_angle[f2]
                 try:
-                    if np.max(camera_angle[f1:f2]) <= np.max((angle_1, angle_2)) and np.min(camera_angle[f1:f2]) >= np.min((angle_1, angle_2)):
-                        steps = np.abs(angle_2 - angle_1)
-                        part_homographies = self.__calibrator.interpolate(steps, h1, h2)
-                        for j in range(f2-f1):
-                            homography_index = np.abs(math.floor(camera_angle[f1 + j]) - math.floor(camera_angle[f1]))
-                            h = part_homographies[:, :, homography_index]
-                            self.homographies[f1+j] = h
-                        self.homographies[f1] = h1
-                        self.homographies[f2] = h2
-                        print(f"Performed complex interpolation from {f1} to {f2}")
-                    else:
-                        print(f"Failed to perform complex interpolation from {f1} to {f2}")
-                        print(f"Max/min angle is not at first/last frame")
+                    self.interpolate_between_frames(camera_angles, f1, f2, h1, h2)
                 except Exception as e:
                     print(f"Error while performing complex interpolation from {f1} to {f2}")
                     print(e)
             else:
-                print(f"h1 is None for complex interpolation {f1} to {f2}")
+                print(f"h1/h2 is None for complex interpolation {f1} to {f2}")
+                if h1 is None:
+                    h1 = self.get_homography(f1+1)
+                if h2 is None:
+                    h2 = self.get_homography(f2+1)
+                try:
+                    self.interpolate_between_frames(camera_angles, f1, f2, h1, h2)
+                except Exception as e:
+                    print(f"Error while performing complex interpolation from {f1} to {f2}")
+                    print(e)
 
         self.__pitch_map.set_transforming_flag(True)
         self.__calibrator.toggle_enabled()
+
+    def interpolate_between_frames(self, camera_angles, f1, f2, h1, h2, recursion=False):
+        angle_1 = camera_angles[f1]
+        angle_2 = camera_angles[f2]
+        if np.max(camera_angles[f1:f2]) <= np.max((angle_1, angle_2)) and np.min(camera_angles[f1:f2]) >= np.min(
+                (angle_1, angle_2)):
+            steps = np.abs(angle_2 - angle_1)
+            part_homographies = self.__calibrator.interpolate(steps, h1, h2)
+            for j in range(f2 - f1):
+                homography_index = np.abs(math.floor(camera_angles[f1 + j]) - math.floor(camera_angles[f1]))
+                h = part_homographies[:, :, homography_index]
+                self.homographies[f1 + j] = h
+            self.homographies[f1] = h1
+            self.homographies[f2] = h2
+            print(f"Performed complex interpolation from {f1} to {f2}")
+        else:
+            print(f"Failed to perform complex interpolation from {f1} to {f2}")
+            print(f"Max/min angle is not at first/last frame")
+            if not recursion:
+                print("Fixing ")
+                if np.max(camera_angles[f1:f2]) > np.max((angle_1, angle_2)):
+                    medium_pos = np.argmax(camera_angles[f1:f2])
+                    fm = f1+medium_pos
+                    hm = self.get_homography(fm)
+                    self.interpolate_between_frames(camera_angles, f1, fm, h1, hm, recursion=True)
+                    self.interpolate_between_frames(camera_angles, fm, f2, hm, h2, recursion=True)
+                else:
+                    medium_pos = np.argmin(camera_angles[f1:f2])
+                    fm = f1+medium_pos
+                    hm = self.get_homography(fm)
+                    self.interpolate_between_frames(camera_angles, f1, fm, h1, hm, recursion=True)
+                    self.interpolate_between_frames(camera_angles, fm, f2, hm, h2, recursion=True)
+                print("Fixed")
 
     def get_homography(self, frame_number):
         if self.homographies[frame_number] is not None:
