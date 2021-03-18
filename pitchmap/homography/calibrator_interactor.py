@@ -573,9 +573,10 @@ class CalibrationInteractorKeypointsComplex(CalibrationInteractor):
         homography_max = characteristic_homographies[-1]
         self.homographies_angle = self.__calibrator.interpolate(steps, homography_min,
                                                                 homography_max)
-        self.homographies = [None for i in range(self.__characteristic_frames_numbers[-3])]
+        self.homographies = [None for i in range(self.__characteristic_frames_numbers[-3]+1)]
 
-        for i in range(len(self.__characteristic_frames_numbers)-2):  # for every charactarestic_frame without last two (min, max)
+        # Complex interpolation loop
+        for i in range(len(self.__characteristic_frames_numbers)-3):  # for every characteristic without last two (min, max)
             h1 = characteristic_homographies[i]
             h2 = characteristic_homographies[i+1]
             f1 = self.__characteristic_frames_numbers[i]
@@ -586,37 +587,35 @@ class CalibrationInteractorKeypointsComplex(CalibrationInteractor):
                 angle_2 = camera_angle[f2]
                 try:
                     if np.max(camera_angle[f1:f2]) <= np.max((angle_1, angle_2)) and np.min(camera_angle[f1:f2]) >= np.min((angle_1, angle_2)):
-                        # TODO: prawie dobrze, ale to jest dla klatek interpolacja a nie dla kątów.
-                        #  Należy zrobić podejście tak jak z tym pierwszym.
-                        steps = f2-f1
+                        steps = np.abs(angle_2 - angle_1)
                         part_homographies = self.__calibrator.interpolate(steps, h1, h2)
-                        print(part_homographies.shape)
-                        print(camera_angle[f1:f2].shape)
-                        for j in range(steps):
-                            self.homographies[f1+j] = part_homographies[:, :, j]
+                        for j in range(f2-f1):
+                            homography_index = np.abs(math.floor(camera_angle[f1 + j]) - math.floor(camera_angle[f1]))
+                            h = part_homographies[:, :, homography_index]
+                            self.homographies[f1+j] = h
                         self.homographies[f1] = h1
                         self.homographies[f2] = h2
-                        print(f1, f2, "good interpolation!")
+                        print(f"Performed complex interpolation from {f1} to {f2}")
                     else:
-                        print(f1, f2, "need to find other right point")
+                        print(f"Failed to perform complex interpolation from {f1} to {f2}")
+                        print(f"Max/min angle is not at first/last frame")
                 except Exception as e:
+                    print(f"Error while performing complex interpolation from {f1} to {f2}")
                     print(e)
-                    print("Hmmmmmmmm error")
             else:
-                print("h1 is none")
+                print(f"h1 is None for complex interpolation {f1} to {f2}")
 
         self.__pitch_map.set_transforming_flag(True)
         self.__calibrator.toggle_enabled()
 
     def get_homography(self, frame_number):
-        # TODO: need to change this function as homography will be stored based on frame number (not angle)
         if self.homographies[frame_number] is not None:
-            print(f"frame: {frame_number}: nasza porządna interpolacja")
+            print(f"frame: {frame_number}: based on complex interpolation")
             return self.homographies[frame_number]
         camera_angle = self.__camera_movement_analyser.x_cum_sum[frame_number - 1]
         min_x = self.__camera_movement_analyser.x_min
-        print(
-            f"frame: {frame_number} camera_angle: {camera_angle}, obliczony index:{camera_angle - min_x}, {math.floor(camera_angle - min_x)}, min_x = {min_x}")
+        # print(
+        #     f"frame: {frame_number} camera_angle: {camera_angle}, obliczony index:{camera_angle - min_x}, {math.floor(camera_angle - min_x)}, min_x = {min_x}")
         h = self.homographies_angle[:, :, math.floor(camera_angle - min_x)]
         return h
 

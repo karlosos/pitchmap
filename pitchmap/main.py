@@ -75,7 +75,7 @@ class PitchMap:
     def frame_loading(self):
         frame = self.fl.load_frame()
         frame_number = self.fl.get_current_frame_position()
-        print(f"Frame: {frame_number}")
+        # print(f"Frame: {frame_number}")
         try:
             frame = imutils.resize(frame, width=600)
         except AttributeError:
