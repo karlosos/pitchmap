@@ -138,7 +138,7 @@ class PitchMap:
         for i in range(self.fl.get_frames_count()):
             homographies.append(self.__calibration_interactor.get_homography(i))
 
-        pickler.pickle_data([self.players_list.players, self.__calibration_interactor.homographies, homographies],
+        pickler.pickle_data([self.players_list.players, self.__calibration_interactor.homographies_angle, homographies],
                             self.__save_data_path)
         print(f"Saved data to: {self.__save_data_path}")
         self.players_detector.loader.save_data()
@@ -148,7 +148,7 @@ class PitchMap:
         if file_exists:
             players, h, _ = pickler.unpickle_data(self.__save_data_path)
             self.players_list.players = players
-            self.__calibration_interactor.homographies = h
+            self.__calibration_interactor.homographies_angle = h
             print(f"Loaded data from: {self.__save_data_path}")
         else:
             print("No data to load")

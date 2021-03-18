@@ -461,16 +461,16 @@ class CalibrationInteractorKeypointsComplex(CalibrationInteractor):
 
         self.__characteristic_frames_numbers = None
         self.__characteristic_frames_iterator = None
-        self.__camera_movement_analyser.get_characteristic_points()  # this only load data for camera analyser
+        arg_min_x, arg_max_x, min_x, max_x = self.__camera_movement_analyser.get_characteristic_points()  # this only load data for camera analyser
         camera_angles = self.__camera_movement_analyser.x_cum_sum
         characteristic_frames = self.find_characteristic_frames(camera_angles)
-        self.__characteristic_frames_numbers = characteristic_frames
+        self.__characteristic_frames_numbers = np.concatenate((characteristic_frames, (arg_min_x, arg_max_x)))
         self.__characteristic_frames_iterator = iter(self.__characteristic_frames_numbers)
 
         self.__current_calibration_frame_idx = None
         self.__current_homography = None
         self.__homographies_for_characteristic_frames = []
-        self.homographies = np.array([])
+        self.homographies_angle = np.array([])
 
         self.__started_calibrating_flag = False
 
@@ -485,6 +485,7 @@ class CalibrationInteractorKeypointsComplex(CalibrationInteractor):
     def find_characteristic_frames(self, camera_angles):
         min_peaks, _ = find_peaks(-camera_angles, width=3)
         max_peaks, _ = find_peaks(camera_angles, width=3)
+        # TODO: add min and max for normal interpolation
         characteristic_frames = np.concatenate(([0], min_peaks, max_peaks, [len(camera_angles) - 1]))
         return np.sort(characteristic_frames)
 
@@ -562,26 +563,65 @@ class CalibrationInteractorKeypointsComplex(CalibrationInteractor):
 
     def interpolate(self):
         characteristic_homographies = self.__homographies_for_characteristic_frames
+        camera_angle = self.__camera_movement_analyser.x_cum_sum
         print(self.__characteristic_frames_numbers, len(self.__characteristic_frames_numbers))
         print(characteristic_homographies, len(characteristic_homographies))
 
         # TODO: edit interpolation for more calibration frames
         steps = np.abs(self.__camera_movement_analyser.x_max - self.__camera_movement_analyser.x_min)
-        self.homographies = self.__calibrator.interpolate(steps, characteristic_homographies[0],
-                                                          characteristic_homographies[1])
+        homography_min = characteristic_homographies[-2]
+        homography_max = characteristic_homographies[-1]
+        self.homographies_angle = self.__calibrator.interpolate(steps, homography_min,
+                                                                homography_max)
+        self.homographies = [None for i in range(self.__characteristic_frames_numbers[-3])]
+
+        for i in range(len(self.__characteristic_frames_numbers)-2):  # for every charactarestic_frame without last two (min, max)
+            h1 = characteristic_homographies[i]
+            h2 = characteristic_homographies[i+1]
+            f1 = self.__characteristic_frames_numbers[i]
+            f2 = self.__characteristic_frames_numbers[i+1]
+
+            if h1 is not None and h2 is not None:
+                angle_1 = camera_angle[f1]
+                angle_2 = camera_angle[f2]
+                try:
+                    if np.max(camera_angle[f1:f2]) <= np.max((angle_1, angle_2)) and np.min(camera_angle[f1:f2]) >= np.min((angle_1, angle_2)):
+                        # TODO: prawie dobrze, ale to jest dla klatek interpolacja a nie dla kątów.
+                        #  Należy zrobić podejście tak jak z tym pierwszym.
+                        steps = f2-f1
+                        part_homographies = self.__calibrator.interpolate(steps, h1, h2)
+                        print(part_homographies.shape)
+                        print(camera_angle[f1:f2].shape)
+                        for j in range(steps):
+                            self.homographies[f1+j] = part_homographies[:, :, j]
+                        self.homographies[f1] = h1
+                        self.homographies[f2] = h2
+                        print(f1, f2, "good interpolation!")
+                    else:
+                        print(f1, f2, "need to find other right point")
+                except Exception as e:
+                    print(e)
+                    print("Hmmmmmmmm error")
+            else:
+                print("h1 is none")
+
         self.__pitch_map.set_transforming_flag(True)
         self.__calibrator.toggle_enabled()
 
     def get_homography(self, frame_number):
+        # TODO: need to change this function as homography will be stored based on frame number (not angle)
+        if self.homographies[frame_number] is not None:
+            print(f"frame: {frame_number}: nasza porządna interpolacja")
+            return self.homographies[frame_number]
         camera_angle = self.__camera_movement_analyser.x_cum_sum[frame_number - 1]
         min_x = self.__camera_movement_analyser.x_min
         print(
             f"frame: {frame_number} camera_angle: {camera_angle}, obliczony index:{camera_angle - min_x}, {math.floor(camera_angle - min_x)}, min_x = {min_x}")
-        h = self.homographies[:, :, math.floor(camera_angle - min_x)]
+        h = self.homographies_angle[:, :, math.floor(camera_angle - min_x)]
         return h
 
     def is_homography_exist(self, frame_number):
-        s = self.homographies.shape
+        s = self.homographies_angle.shape
         try:
             _ = s[2]
             x = self.__camera_movement_analyser.x_cum_sum[frame_number - 1]
