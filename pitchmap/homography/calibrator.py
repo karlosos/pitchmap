@@ -47,6 +47,7 @@ class Calibrator(ABC):
         for player in players:
             player = np.array(player)
             player = np.append(player, 1.)
+            print(player)
             # https://www.learnopencv.com/homography-examples-using-opencv-python-c/
             # calculating new positions
             player_2d_position = H.dot(player)
