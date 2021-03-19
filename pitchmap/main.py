@@ -31,7 +31,8 @@ class PitchMap:
         # calib_interactor = calibrator_interactor.CalibrationInteractorMiddlePoint
         # calib_interactor = calibrator_interactor.CalibrationInteractorAutomatic
         # calib_interactor = calibrator_interactor.CalibrationInteractorKeypoints
-        calib_interactor = calibrator_interactor.CalibrationInteractorKeypointsComplex
+        # calib_interactor = calibrator_interactor.CalibrationInteractorKeypointsComplex
+        calib_interactor = calibrator_interactor.CalibrationInteractorKeypointsAdvanced
         # calib_interactor = calibrator_interactor.CalibrationInteractorSimple
 
         self.video_name = 'baltyk_starogard_1.mp4'
