@@ -1,0 +1,15 @@
+cvlib
+jupyterlab
+Keras
+matplotlib
+numpy
+opencv-contrib-python
+opencv-python
+Pillow
+progressbar
+pygame
+scikit-learn
+scipy
+tensorflow
+mxnet
+segmentation_models

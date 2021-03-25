@@ -44,10 +44,20 @@ Na Windowsie komenda ta może wyglądać inaczej. Na Windowsie trzeba włączyć
 Zainstaluj wymagane zależności, które są opisane w `requirements.txt` za pomocą komendy:
 
 ```
-pip install -r requirements
+pip install -r requirements.clean.txt
 ```
 
 Pamiętaj aby wykonać to na aktywowanym wirtualnym środowisku, inaczej zainstaluje ci te wszystkie zależności globalnie.
+
+Na windowsie do instalacji paczki `mxnet` wymagane są "Microsoft C++ Build Tools" (https://visualstudio.microsoft.com/visual-cpp-build-tools/).
+
+Należy ustawić zmienną środowiskową:
+
+```
+$env:SM_FRAMEWORK="tf.keras"
+```
+
+lub za pomocą pycharma.
 
 ### Używanie aplikacji
 
