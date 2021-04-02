@@ -33,10 +33,11 @@ class PitchMap:
         # calib_interactor = calibrator_interactor.CalibrationInteractorKeypoints
         # calib_interactor = calibrator_interactor.CalibrationInteractorKeypointsComplex
         calib_interactor = calibrator_interactor.CalibrationInteractorKeypointsAdvanced
-        # calib_interactor = calibrator_interactor.CalibrationInteractorCollectFrames
         # calib_interactor = calibrator_interactor.CalibrationInteractorSimple
 
-        self.video_name = 'baltyk_starogard_1.mp4'
+        # calib_interactor = calibrator_interactor.CalibrationInteractorCollectFrames
+
+        self.video_name = 'Baltyk_Koszalin_07_09.mp4'
         self.__window_name = f'PitchMap: {self.video_name}'
 
         self.fl = loader.FrameLoader(self.video_name)

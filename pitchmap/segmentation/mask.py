@@ -15,7 +15,11 @@ def grass(frame, for_player=False):
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
     # define range of blue color in HSV
-    lower_green = np.array([35, 50, 50])
+    # lower_green = np.array([35, 50, 50])
+    # upper_green = np.array([75, 255, 255])
+
+    # Baltyk_Koszalin_02
+    lower_green = np.array([35, 0, 0])
     upper_green = np.array([75, 255, 255])
 
     # Threshold the HSV image to get only blue colors

@@ -471,6 +471,7 @@ class CalibrationInteractorKeypointsComplex(CalibrationInteractor):
         self.__current_homography = None
         self.__homographies_for_characteristic_frames = []
         self.homographies_angle = np.array([])
+        self.homographies = None
 
         self.__started_calibrating_flag = False
 
@@ -674,12 +675,14 @@ class CalibrationInteractorKeypointsAdvanced(CalibrationInteractor):
         camera_angles = self.__camera_movement_analyser.x_cum_sum
         characteristic_frames = self.find_characteristic_frames(camera_angles)
         self.__characteristic_frames_numbers = np.concatenate((characteristic_frames, (arg_min_x, arg_max_x)))
+        # self.__characteristic_frames_numbers = np.array([arg_min_x, arg_max_x])  # For testing edge characteristic frames
         self.__characteristic_frames_iterator = iter(self.__characteristic_frames_numbers)
 
         self.__current_calibration_frame_idx = None
         self.__current_homography = None
         self.__homographies_for_characteristic_frames = []
         self.homographies_angle = np.array([])
+        self.homographies = None
 
         self.__started_calibrating_flag = False
 
@@ -735,8 +738,9 @@ class CalibrationInteractorKeypointsAdvanced(CalibrationInteractor):
                 self.__pitch_map.display.add_point_main_window(int(src_point[0]), int(src_point[1]))
                 self.__pitch_map.display.add_point_model_window(int(dst_point[0]), int(dst_point[1]))
 
-            self.__pitch_map.perform_transform()
+            # Automatic acepting/canceling
             if len(self.__calibrator.points) > 4:
+                self.__pitch_map.perform_transform()
                 self.accept_transform()
             else:
                 print("Removed frame:", self.__current_calibration_frame_idx)
