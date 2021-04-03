@@ -14,7 +14,7 @@ FAST_ADDING = False
 
 class ManualTracker:
     def __init__(self):
-        self.video_name = 'Barca_Real_continous.mp4'
+        self.video_name = 'Baltyk_Koszalin_06_07.mp4'
         self.__window_name = f'PitchMap: {self.video_name}'
 
         self.fl = loader.FrameLoader(self.video_name)
