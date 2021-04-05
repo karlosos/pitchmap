@@ -48,7 +48,9 @@ class PyGameDisplay:
         self.__button_update = Button(x=800, y=100, width=50, height=32, text="Update")
         self.__button_delete = Button(x=860, y=100, width=50, height=32, text="Delete")
         self.__button_calibration = Button(x=950, y=100, width=75, height=32, text="Calibrate")
+        self.__button_auto_calibration = Button(x=1040, y=100, width=85, height=32, text="Auto calibrate")
         self.__button_transformation = Button(x=950, y=150, width=75, height=32, text="Transform")
+        self.__button_clean = Button(x=1040, y=150, width=75, height=32, text="Clean")
 
         self.calibration_state = False
         self.current_player = None
@@ -71,7 +73,9 @@ class PyGameDisplay:
         self.__button_update.draw(self.__display_surface)
         self.__button_delete.draw(self.__display_surface)
         self.__button_calibration.draw(self.__display_surface)
+        self.__button_auto_calibration.draw(self.__display_surface)
         self.__button_transformation.draw(self.__display_surface)
+        self.__button_clean.draw(self.__display_surface)
         if self.current_player is not None:
             self.__color_selector.draw(self.__display_surface, self.current_player.color)
         else:
@@ -121,8 +125,12 @@ class PyGameDisplay:
                     self.__main_object.delete_player()
                 elif self.__button_calibration.is_over(pos):
                     self.calibration_state = self.__main_object.calibration()
+                elif self.__button_auto_calibration.is_over(pos):
+                    self.__main_object.automatic_calibration()
                 elif self.__button_transformation.is_over(pos):
                     self.__main_object.find_homography()
+                elif self.__button_clean.is_over(pos):
+                    self.__main_object.reset_calibration_points()
                 selected_color = self.__color_selector.is_over(pos)
                 if selected_color is not None and self.current_player is not None:
                     self.current_player.color = selected_color
@@ -139,7 +147,9 @@ class PyGameDisplay:
                 self.__button_update.update_hover(pos)
                 self.__button_delete.update_hover(pos)
                 self.__button_calibration.update_hover(pos)
+                self.__button_auto_calibration.update_hover(pos)
                 self.__button_transformation.update_hover(pos)
+                self.__button_clean.update_hover(pos)
 
             for input_box in self.__input_boxes:
                 input_box.handle_event(event)
@@ -175,7 +185,9 @@ class PyGameDisplay:
         self.__button_update.update()
         self.__button_delete.update()
         self.__button_calibration.update(self.calibration_state)
+        self.__button_auto_calibration.update()
         self.__button_transformation.update()
+        self.__button_clean.update()
 
         for box in self.__input_boxes:
             box.update()

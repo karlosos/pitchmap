@@ -6,7 +6,8 @@ class PlayersList:
     def __init__(self, frames_length):
         self.__id_counter = 0
         self.__frames_length = frames_length
-        self.players = [[] for _ in range(frames_length)]
+        self.players = [[] for _ in range(frames_length+2)]
+        print(len(self.players))
         self.fixed_player_id = None
 
     def create_player(self, position, frame_number):

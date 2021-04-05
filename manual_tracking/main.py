@@ -3,6 +3,7 @@ from manual_tracking.gui import display
 import manual_tracking.players as players
 import manual_tracking.calibrator as calibrator
 from pitchmap.cache_loader import pickler
+from manual_tracking.automatic_calibrator import AutomaticCalibrator
 import os
 
 import imutils
@@ -11,6 +12,7 @@ import numpy as np
 from numpy.linalg import inv
 
 FAST_ADDING = False
+
 
 class ManualTracker:
     def __init__(self):
@@ -28,6 +30,9 @@ class ManualTracker:
         self.homographies = {}
         self.bootstrap()
 
+        # Pass ManualTracker to calibrator
+        self.automatic_calibrator = AutomaticCalibrator(manual_tracker=self)
+
     def add_player(self, position):
         player = self.players_list.create_player(position, self.fl.get_current_frame_position())
         self.current_player = player
@@ -44,6 +49,9 @@ class ManualTracker:
     def calibration(self):
         state = self.calibrator.toggle_enabled()
         return state
+
+    def automatic_calibration(self):
+        self.automatic_calibrator.calibrate()
 
     def find_homography(self):
         transformed_frame, H = self.calibrator.find_homography(self.out_frame, self.__display.pitch_model)

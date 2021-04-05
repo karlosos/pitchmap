@@ -11,7 +11,9 @@ class FrameLoader:
         self.__cap = cv2.VideoCapture(f'data/{self.__file_name}')
         self.__frame_count = int(self.__cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-    def load_frame(self):
+    def load_frame(self, frame_idx=None):
+        if frame_idx is not None:
+            self.set_current_frame_position(frame_idx)
         ret, frame = self.__cap.read()
         return frame
 
