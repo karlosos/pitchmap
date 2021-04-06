@@ -3,7 +3,7 @@ from manual_tracking.gui import display
 import manual_tracking.players as players
 import manual_tracking.calibrator as calibrator
 from pitchmap.cache_loader import pickler
-from manual_tracking.automatic_calibrator import AutomaticCalibrator
+from manual_tracking.automatic_calibrator_2 import AutomaticCalibrator
 import os
 
 import imutils
