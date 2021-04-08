@@ -38,7 +38,7 @@ class AutomaticCalibrator:
             print("Characteristic frames", self.characteristic_frames_numbers)
 
             # Clean previous homography
-            self.manual_tracker.homographies = {}
+            self.manual_tracker.temp_homographies = {}
 
             # Perform transformation for all characteristic frames
             # and store corresponding homgoraphies
@@ -56,7 +56,7 @@ class AutomaticCalibrator:
             self.manual_tracker.load_next_frame()
         except StopIteration:
             print("Finished automatic homography steps")
-            print(self.manual_tracker.homographies)
+            print(self.manual_tracker.temp_homographies)
             frame_idx = 1
             self.flag = False
             self.interpolate()

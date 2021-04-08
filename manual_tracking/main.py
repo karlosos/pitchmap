@@ -33,6 +33,10 @@ class ManualTracker:
         # Pass ManualTracker to calibrator
         self.automatic_calibrator = AutomaticCalibrator(manual_tracker=self)
 
+        # Teardown flag
+        # prevents teardown in loop
+        self.teardown_flag = False
+
     def add_player(self, position):
         player = self.players_list.create_player(position, self.fl.get_current_frame_position())
         self.current_player = player
@@ -80,6 +84,8 @@ class ManualTracker:
         self.__display.refresh_points()
         frame_number = self.fl.get_current_frame_position()
         total_frames = self.fl.get_frames_count()
+
+        self.teardown_flag = False
         print(f"frame number: {frame_number}/{total_frames}")
 
     def transform_frame(self):
@@ -105,7 +111,8 @@ class ManualTracker:
                 break
 
             frame_number = self.fl.get_current_frame_position()
-            if frame_number % 50 == 0 or frame_number == self.fl.get_frames_count():
+            if (frame_number % 50 == 0 or frame_number == self.fl.get_frames_count()) and not self.teardown_flag:
+                self.teardown_flag = True
                 self.teardown()
             self.__display.show(self.out_frame, self.transformed_frame, frame_number)
             last_frame_players = []
