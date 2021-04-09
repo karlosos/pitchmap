@@ -23,7 +23,7 @@ class AutomaticCalibrator:
         self.flag = False
         self.temp_homographies = {}
 
-        self.frames_spacing = 10
+        self.frames_spacing = 30
 
     def calibrate(self):
         if self.flag == False:
@@ -97,8 +97,9 @@ class AutomaticCalibrator:
             length_before = len(characteristic_frames)
             for characteristic_frame in characteristic_frames:
                 curr_range = self.camera_angles[characteristic_frame - 1:-1]
-                additional_frames.append(characteristic_frame + np.argmax(curr_range))
-                additional_frames.append(characteristic_frame + np.argmin(curr_range))
+                if len(curr_range > 0):
+                    additional_frames.append(characteristic_frame + np.argmax(curr_range))
+                    additional_frames.append(characteristic_frame + np.argmin(curr_range))
             characteristic_frames = characteristic_frames + additional_frames
             characteristic_frames = np.unique(characteristic_frames).tolist()
             length_after = len(characteristic_frames)
@@ -141,6 +142,7 @@ class AutomaticCalibrator:
         min_max_condition = self.check_min_max_condition(angle_1, angle_2, camera_angles, f1, f2)
         if min_max_condition:
             steps = np.abs(angle_2 - angle_1)
+            # TODO: fix interpolation. For some cases interpolation makes rotation and not smooth transition. Why?
             part_homographies = matrix_interp.interpolate_transformation_matrices(0, math.ceil(steps) + 1, h1, h2)
             for j in range(f2 - f1):
                 homography_index = np.abs(math.floor(camera_angles[f1 + j]) - math.floor(camera_angles[f1]))
