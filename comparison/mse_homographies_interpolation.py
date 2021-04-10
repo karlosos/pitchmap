@@ -42,11 +42,13 @@ def transform_points(points, homo, inverse):
 
 def main():
     # Loading files
-    input_file = "baltyk_starogard_1.mp4"
-    file_detected_data_keypoints = f"data/cache/{input_file}_PlayersListComplex_CalibrationInteractorKeypoints.pik"
-    file_detected_data_keypoints = f"data/cache/{input_file}_PlayersListComplex_CalibrationInteractorAutomatic.pik"
+    input_file = "Baltyk_Koszalin_07_09.mp4"
+    # file_detected_data_keypoints = f"data/cache/{input_file}_PlayersListComplex_CalibrationInteractorKeypoints.pik"
+    file_detected_data_keypoints = f"data/cache/{input_file}_PlayersListComplex_CalibrationInteractorKeypointsAdvanced.pik"
+    # file_detected_data_keypoints = f"data/cache/{input_file}_PlayersListComplex_CalibrationInteractorAutomatic.pik"
     # file_detected_data_keypoints = f"data/cache/{input_file}_PlayersListComplex_CalibrationInteractorMiddlePoint.pik"
     file_manual_data = f"data/cache/{input_file}_manual_tracking.pik"
+    file_camera_movement = f"data/cache/{input_file}_CameraMovementAnalyser.pik"
 
     pitch_model = cv2.imread('data/pitch_model_mask.jpg')
     pitch_model = imutils.resize(pitch_model, width=600)
@@ -55,6 +57,7 @@ def main():
     _, _, homographies_detected_keypoints = pickler.unpickle_data(
         file_detected_data_keypoints)
     _, homographies, _ = pickler.unpickle_data(file_manual_data)
+    camera_angles = pickler.unpickle_data(file_camera_movement)
     mse_scores = []
 
     # Video capture
@@ -70,50 +73,58 @@ def main():
         frame_shape = (frame.shape[1], frame.shape[0])
         frame_number = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
         print(frame_number)
-        homo_pred = homographies_detected_keypoints[frame_number-1]
-        homo = homographies[frame_number]
+        try:
+            homo_pred = homographies_detected_keypoints[frame_number-1]
+            homo = homographies[frame_number]
 
-        warp = cv2.warpPerspective(frame, homo, pitch_model_shape)
-        warp_pred = cv2.warpPerspective(frame, homo_pred, pitch_model_shape)
+            warp = cv2.warpPerspective(frame, homo, pitch_model_shape)
+            warp_pred = cv2.warpPerspective(frame, homo_pred, pitch_model_shape)
 
-        model_warp = cv2.warpPerspective(pitch_model, np.linalg.inv(homo), frame_shape)
-        model_warp_pred = cv2.warpPerspective(pitch_model, np.linalg.inv(homo_pred), frame_shape)
+            model_warp = cv2.warpPerspective(pitch_model, np.linalg.inv(homo), frame_shape)
+            model_warp_pred = cv2.warpPerspective(pitch_model, np.linalg.inv(homo_pred), frame_shape)
 
-        points = generate_points_on_image(warp)
-        # Filter points
-        points = [(x, y) for (x, y) in points if not np.array_equal(warp[y, x], [0, 0, 0])]
-        # Draw points
-        for (x, y) in (points):
-            cv2.circle(warp, (x, y), 2, (0, 0, 255), -1)
+            points = generate_points_on_image(warp)
+            # Filter points
+            points = [(x, y) for (x, y) in points if not np.array_equal(warp[y, x], [0, 0, 0])]
+            # Draw points
+            for (x, y) in (points):
+                cv2.circle(warp, (x, y), 2, (0, 0, 255), -1)
 
-        # Transform points to frame (multiplying by inverse homography)
-        frame_points = transform_points(points, homo, inverse=True)
-        # Draw on frame
-        for (x, y, _) in frame_points:
-            cv2.circle(frame, (int(x), int(y)), 2, (255, 0, 0), -1)
+            # Transform points to frame (multiplying by inverse homography)
+            frame_points = transform_points(points, homo, inverse=True)
+            # Draw on frame
+            for (x, y, _) in frame_points:
+                cv2.circle(frame, (int(x), int(y)), 2, (255, 0, 0), -1)
 
-        pred_points = transform_points(frame_points, homo_pred, inverse=False)
-        for (x, y, _) in pred_points:
-            cv2.circle(warp_pred, (int(x), int(y)), 2, (255, 0, 0), -1)
+            pred_points = transform_points(frame_points, homo_pred, inverse=False)
+            for (x, y, _) in pred_points:
+                cv2.circle(warp_pred, (int(x), int(y)), 2, (255, 0, 0), -1)
 
-        # Calculate MSE
-        mse = mean_squared_error(points, np.array(pred_points)[:, :2])
-        print("MSE:", mse)
-        mse_scores.append(mse)
+            # Calculate MSE
+            mse = mean_squared_error(points, np.array(pred_points)[:, :2])
+            print("MSE:", mse)
+            mse_scores.append(mse)
 
 
-        # Visualisation
-        # cv2.imshow('orig', frame)
-        # cv2.imshow('warp', warp)
-        # cv2.imshow('warp_pred', warp_pred)
-        # cv2.imshow('model_warp', model_warp)
-        # cv2.imshow('model_warp_pred', model_warp_pred)
+            # Visualisation
+            # cv2.imshow('orig', frame)
+            # cv2.imshow('warp', warp)
+            # cv2.imshow('warp_pred', warp_pred)
+            # cv2.imshow('model_warp', model_warp)
+            # cv2.imshow('model_warp_pred', model_warp_pred)
 
-        # k = cv2.waitKey(0)
-        # if k == 27:
-        #     break
+            # k = cv2.waitKey(0)
+            # if k == 27:
+            #     break
+        except:
+            print("Could not load homography")
 
     print("Average MSE for video sequence:", np.mean(mse_scores))
+
+    # TODO: wykres gdzie MSE zależy od camera angle
+    plt.plot(camera_angles, label="Camera angles")
+    plt.plot(mse_scores)
+    plt.show()
 
 
 if __name__ == "__main__":
