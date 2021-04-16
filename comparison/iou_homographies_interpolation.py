@@ -15,13 +15,17 @@ def calulate_iou(model_warp, model_warp_pred):
 
 def main():
     # Loading files
-    input_file = "Baltyk_Koszalin_07_09.mp4"
+    input_file = "BAR_SEV_01.mp4"
     file_detected_data_keypoints = f"data/cache/{input_file}_PlayersListComplex_CalibrationInteractorKeypointsAdvanced.pik"
     file_manual_data = f"data/cache/{input_file}_manual_tracking.pik"
 
     pitch_model = cv2.imread('data/pitch_model_mask.jpg')
     pitch_model = imutils.resize(pitch_model, width=600)
     pitch_model_shape = (pitch_model.shape[1], pitch_model.shape[0])
+
+    pitch_model_border = cv2.imread('data/pitch_model_border.png')
+    pitch_model_border = imutils.resize(pitch_model_border, width=600)
+    pitch_model_border = cv2.bitwise_not(pitch_model_border)
 
     _, _, homographies_detected_keypoints = pickler.unpickle_data(
         file_detected_data_keypoints)
@@ -51,21 +55,24 @@ def main():
             model_warp = cv2.warpPerspective(pitch_model, np.linalg.inv(homo), frame_shape)
             model_warp_pred = cv2.warpPerspective(pitch_model, np.linalg.inv(homo_pred), frame_shape)
 
+            model_border_warp = cv2.warpPerspective(pitch_model_border, np.linalg.inv(homo), frame_shape)
+            model_border_warp_pred = cv2.warpPerspective(pitch_model_border, np.linalg.inv(homo_pred), frame_shape)
+
             # Calculate IoU
             iou_score = calulate_iou(model_warp, model_warp_pred)
             iou_scores.append(iou_score)
             print("IoU score: ", iou_score)
 
             # Visualisation
-            # cv2.imshow('orig', frame)
-            # cv2.imshow('warp', warp)
-            # cv2.imshow('warp_pred', warp_pred)
-            # cv2.imshow('model_warp', model_warp)
-            # cv2.imshow('model_warp_pred', model_warp_pred)
-            #
-            # k = cv2.waitKey(0)
-            # if k == 27:
-            #     break
+            cv2.imshow('orig', frame)
+            cv2.imshow('warp', warp)
+            cv2.imshow('warp_pred', warp_pred)
+            cv2.imshow('model_warp', model_warp)
+            cv2.imshow('model_warp_pred', model_warp_pred)
+
+            k = cv2.waitKey(0)
+            if k == 27:
+                break
         except Exception:
             print("Could not load homography")
 
