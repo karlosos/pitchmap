@@ -30,7 +30,7 @@ def iou_for_video(predicted_data, real_data, input_file, visualisation_flag=Fals
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
-            print("Can't retrieve frame")
+            # print("Can't retrieve frame")
             break
 
         frame = imutils.resize(frame, width=600)
@@ -67,7 +67,8 @@ def iou_for_video(predicted_data, real_data, input_file, visualisation_flag=Fals
                 if k == 27:
                     break
         except Exception:
-            print("Could not load homography")
+            # print("Could not load homography")
+            pass
     return iou_scores
 
 

@@ -60,7 +60,7 @@ class AutomaticCalibrator:
             self.manual_tracker.load_next_frame()
         except StopIteration:
             print("Finished automatic homography steps")
-            print(self.manual_tracker.homographies)
+            print(self.manual_tracker.homographies_angle)
             frame_idx = 1
             self.flag = False
             self.interpolate()
@@ -115,7 +115,7 @@ class AutomaticCalibrator:
         # Perform interpolation based on characteristic frames and homographies using
         # infomation about camera movement
         characteristic_frames = self.characteristic_frames_numbers
-        characteristic_homographies = [self.manual_tracker.homographies[i] for i in characteristic_frames]
+        characteristic_homographies = [self.manual_tracker.homographies_angle[i] for i in characteristic_frames]
         print("Interpolation for automatic homography steps")
 
         for i in range(len(characteristic_frames)):
@@ -132,7 +132,7 @@ class AutomaticCalibrator:
                 except Exception as e:
                     print(f"Error while performing complex interpolation from {f1} to {f2}")
                     print(e)
-        self.manual_tracker.homographies = self.temp_homographies
+        self.manual_tracker.homographies_angle = self.temp_homographies
 
     def interpolate_between_frames(self, f1, f2, h1, h2):
         camera_angles = self.camera_angles

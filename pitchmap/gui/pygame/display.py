@@ -16,7 +16,8 @@ class PyGameDisplay:
         self.__window_name = main_window_name
         self.__model_window_name = model_window_name
 
-        self.__pitch_model = cv2.imread('data/pitch_model.jpg')
+        # self.__pitch_model = cv2.imread('data/pitch_model.jpg')
+        self.__pitch_model = cv2.imread('data/pitch_model_4.png')
         self.__clear_pitch_model = imutils.resize(self.__pitch_model, width=600)
         self.__pitch_model = copy.copy(self.__clear_pitch_model)
 

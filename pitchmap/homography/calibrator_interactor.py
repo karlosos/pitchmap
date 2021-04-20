@@ -61,7 +61,7 @@ class CalibrationInteractorAutomatic(CalibrationInteractor):
         self.__current_calibration_frame_idx = None
         self.__current_homography = None
         self.__homographies_for_characteristic_frames = []
-        self.homographies = np.array([])
+        self.homographies_angle = np.array([])
 
         self.__started_calibrating_flag = False
 
@@ -115,8 +115,8 @@ class CalibrationInteractorAutomatic(CalibrationInteractor):
         characteristic_homographies = self.__homographies_for_characteristic_frames
 
         steps = np.abs(self.__camera_movement_analyser.x_max - self.__camera_movement_analyser.x_min)
-        self.homographies = self.__calibrator.interpolate(steps, characteristic_homographies[0],
-                                                          characteristic_homographies[1])
+        self.homographies_angle = self.__calibrator.interpolate(steps, characteristic_homographies[0],
+                                                                characteristic_homographies[1])
         self.__pitch_map.set_transforming_flag(True)
         self.__calibrator.toggle_enabled()
 
@@ -125,11 +125,11 @@ class CalibrationInteractorAutomatic(CalibrationInteractor):
         min_x = self.__camera_movement_analyser.x_min
         print(
             f"frame: {frame_number} camera_angle: {camera_angle}, obliczony index:{camera_angle - min_x}, {math.floor(camera_angle - min_x)}, min_x = {min_x}")
-        h = self.homographies[:, :, math.floor(camera_angle - min_x)]
+        h = self.homographies_angle[:, :, math.floor(camera_angle - min_x)]
         return h
 
     def is_homography_exist(self, frame_number):
-        s = self.homographies.shape
+        s = self.homographies_angle.shape
         try:
             _ = s[2]
             x = self.__camera_movement_analyser.x_cum_sum[frame_number - 1]
@@ -229,7 +229,7 @@ class CalibrationInteractorMiddlePoint(CalibrationInteractor):
         self.__current_calibration_frame_idx = None
         self.__current_homography = None
         self.__homographies_for_characteristic_frames = []
-        self.homographies = np.array([])
+        self.homographies_angle = np.array([])
 
         self.__started_calibrating_flag = False
 
@@ -295,7 +295,7 @@ class CalibrationInteractorMiddlePoint(CalibrationInteractor):
         homographies_middle_right = self.__calibrator.interpolate(steps_middle_right, characteristic_homographies[1],
                                                                   characteristic_homographies[2])
 
-        self.homographies = np.concatenate((homographies_left_middle, homographies_middle_right), axis=2)
+        self.homographies_angle = np.concatenate((homographies_left_middle, homographies_middle_right), axis=2)
 
         self.__pitch_map.set_transforming_flag(True)
         self.__calibrator.toggle_enabled()
@@ -309,11 +309,11 @@ class CalibrationInteractorMiddlePoint(CalibrationInteractor):
         min_x = self.__camera_movement_analyser.x_min
         # print(
         #     f"frame: {frame_number} camera_angle: {camera_angle}, obliczony index:{camera_angle - min_x}, {math.floor(camera_angle - min_x)}, min_x = {min_x}")
-        h = self.homographies[:, :, math.floor(camera_angle - min_x)]
+        h = self.homographies_angle[:, :, math.floor(camera_angle - min_x)]
         return h
 
     def is_homography_exist(self, frame):
-        s = self.homographies.shape
+        s = self.homographies_angle.shape
         try:
             _ = s[2]
             return True
@@ -471,7 +471,7 @@ class CalibrationInteractorKeypointsComplex(CalibrationInteractor):
         self.__current_homography = None
         self.__homographies_for_characteristic_frames = []
         self.homographies_angle = np.array([])
-        self.homographies = None
+        self.homographies = np.array([])
 
         self.__started_calibrating_flag = False
 
