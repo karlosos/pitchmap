@@ -26,8 +26,9 @@ def compare_methods(input_file):
     m_3_mean = np.mean(manual_3points_iou_scores)
     m_3_median = np.median(manual_3points_iou_scores)
     print("Manual 3 points:", m_3_mean, m_3_median)
+    print("Compared frames:", len(keypoints_iou_scores))
 
-    return k_mean, k_median, m_2_mean, m_2_median, m_3_mean, m_3_median
+    return k_mean, k_median, m_2_mean, m_2_median, m_3_mean, m_3_median, len(keypoints_iou_scores)
 
 
 def single_file():
@@ -61,10 +62,10 @@ def batch_files():
         "BAR_SEV_01.mp4",
     ]
 
-    data = {"file": [], "k_mean": [], "k_median": [], "m_2_mean": [], "m_2_median": [], "m_3_mean": [], "m_3_median": []}
+    data = {"file": [], "k_mean": [], "k_median": [], "m_2_mean": [], "m_2_median": [], "m_3_mean": [], "m_3_median": [], "frames": []}
 
     for file in files:
-        k_mean, k_median, m_2_mean, m_2_median, m_3_mean, m_3_median = compare_methods(input_file=file)
+        k_mean, k_median, m_2_mean, m_2_median, m_3_mean, m_3_median, num_frames = compare_methods(input_file=file)
         data["file"].append(file)
         data["k_mean"].append(k_mean)
         data["k_median"].append(k_median)
@@ -72,6 +73,7 @@ def batch_files():
         data["m_2_median"].append(m_2_median)
         data["m_3_mean"].append(m_3_mean)
         data["m_3_median"].append(m_3_median)
+        data["frames"].append(num_frames)
 
     df = pd.DataFrame(data)
     print(df)
@@ -88,6 +90,6 @@ def load_data():
 
 if __name__ == '__main__':
     # single_file()
-    # batch_files()
-    load_data()
+    batch_files()
+    # load_data()
 
