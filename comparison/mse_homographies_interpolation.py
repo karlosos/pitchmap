@@ -16,8 +16,8 @@ def calulate_iou(model_warp, model_warp_pred):
 
 def generate_points_on_image(image):
     # Generate points on warp image
-    x = np.linspace(0, image.shape[1] - 1, 20)
-    y = np.linspace(0, image.shape[0] - 1, 20)
+    x = np.linspace(0, image.shape[1] - 1, 10)
+    y = np.linspace(0, image.shape[0] - 1, 10)
     X, Y = np.meshgrid(x, y)
     points = np.column_stack([X.ravel(), Y.ravel()]).astype(int)
 
@@ -94,7 +94,7 @@ def plot_compare_mse_camera_angle(camera_angles, mse_scores_list, mse_frame_numb
 
 
 def mse_for_video(camera_data, predicted_data, real_data, input_file, visualisation=False):
-    pitch_model = cv2.imread('data/pitch_model_mask.jpg')
+    pitch_model = cv2.imread('data/pitch_model.jpg')
     pitch_model = imutils.resize(pitch_model, width=600)
     pitch_model_shape = (pitch_model.shape[1], pitch_model.shape[0])
     _, _, homographies_detected_keypoints = pickler.unpickle_data(
@@ -127,20 +127,20 @@ def mse_for_video(camera_data, predicted_data, real_data, input_file, visualisat
 
             points = generate_points_on_image(warp)
             # Filter points
-            points = [(x, y) for (x, y) in points if not np.array_equal(warp[y, x], [0, 0, 0])]
+            # points = [(x, y) for (x, y) in points if not np.array_equal(warp[y, x], [0, 0, 0])]
             # Draw points
             for (x, y) in (points):
-                cv2.circle(warp, (x, y), 2, (0, 0, 255), -1)
+                cv2.circle(warp, (x, y), 3, (0, 0, 255), -1)
 
             # Transform points to frame (multiplying by inverse homography)
             frame_points = transform_points(points, homo, inverse=True)
             # Draw on frame
             for (x, y, _) in frame_points:
-                cv2.circle(frame, (int(x), int(y)), 2, (255, 0, 0), -1)
+                cv2.circle(frame, (int(x), int(y)), 3, (0, 0, 255), -1)
 
             pred_points = transform_points(frame_points, homo_pred, inverse=False)
             for (x, y, _) in pred_points:
-                cv2.circle(warp_pred, (int(x), int(y)), 2, (255, 0, 0), -1)
+                cv2.circle(warp_pred, (int(x), int(y)), 3, (0, 0, 255), -1)
 
             # Calculate MSE
             mse = mean_squared_error(points, np.array(pred_points)[:, :2])
@@ -149,11 +149,19 @@ def mse_for_video(camera_data, predicted_data, real_data, input_file, visualisat
 
             # Visualisation
             if visualisation:
+                model = pitch_model.copy()
+                for (x, y) in (points):
+                    cv2.circle(model, (x, y), 3, (0, 0, 255), -1)
+                cv2.imshow('model', model)
+                pred_model = pitch_model.copy()
+                for (x, y, _) in pred_points:
+                    cv2.circle(pred_model, (int(x), int(y)), 3, (0, 0, 255), -1)
                 cv2.imshow('orig', frame)
-                cv2.imshow('warp', warp)
-                cv2.imshow('warp_pred', warp_pred)
-                cv2.imshow('model_warp', model_warp)
-                cv2.imshow('model_warp_pred', model_warp_pred)
+                cv2.imshow('pred_model', pred_model)
+                # cv2.imshow('warp', warp)
+                # cv2.imshow('warp_pred', warp_pred)
+                # cv2.imshow('model_warp', model_warp)
+                # cv2.imshow('model_warp_pred', model_warp_pred)
 
                 k = cv2.waitKey(0)
                 if k == 27:
@@ -168,14 +176,14 @@ def mse_for_video(camera_data, predicted_data, real_data, input_file, visualisat
 
 def main():
     # Loading files
-    input_file = "BAR_SEV_01.mp4"
+    input_file = "Baltyk_Koszalin_05_06.mp4"
     # file_detected_data_keypoints = f"data/cache/{input_file}_PlayersListComplex_CalibrationInteractorKeypoints.pik"
     file_detected_data_keypoints = f"data/cache/{input_file}_PlayersListComplex_CalibrationInteractorKeypointsAdvanced.pik"
     # file_detected_data_keypoints = f"data/cache/{input_file}_PlayersListComplex_CalibrationInteractorAutomatic.pik"
     # file_detected_data_keypoints = f"data/cache/{input_file}_PlayersListComplex_CalibrationInteractorMiddlePoint.pik"
     file_manual_data = f"data/cache/{input_file}_manual_tracking.pik"
     file_camera_movement = f"data/cache/{input_file}_CameraMovementAnalyser.pik"
-    visualisation = False
+    visualisation = True
 
     camera_angles, mse_scores, mse_frame_numbers = mse_for_video(file_camera_movement, file_detected_data_keypoints,
                                                                  file_manual_data,
