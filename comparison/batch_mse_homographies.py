@@ -105,6 +105,6 @@ def load_data():
 
 if __name__ == '__main__':
     # single_file()
-    compare_methods("WDA_Kotwica_01.mp4")
-    # batch_files()
+    # compare_methods("WDA_Kotwica_01.mp4")
+    batch_files()
     # load_data()

@@ -3,15 +3,18 @@ import numpy as np
 import cv2
 import imutils
 from sklearn.metrics import mean_squared_error
+from scipy.spatial import distance
 
 from pitchmap.cache_loader import pickler
 
 
-def calulate_iou(model_warp, model_warp_pred):
-    intersection = np.logical_and(model_warp, model_warp_pred)
-    union = np.logical_or(model_warp, model_warp_pred)
-    iou_score = np.sum(intersection) / np.sum(union)
-    return iou_score
+def distance_metric(points_a, points_b):
+    num_points = points_a.shape[0]
+    distances = []
+    for i in range(num_points):
+        dist = distance.euclidean(points_a[i], points_b[i])
+        distances.append(dist)
+    return np.mean(distances) * 0.2  # mnożenie przez 0.2 aby mieć wynik w metrach. bo 80 pikseli to 16 metrów.
 
 
 def generate_points_on_image(image):
@@ -127,7 +130,8 @@ def mse_for_video(camera_data, predicted_data, real_data, input_file, visualisat
 
             points = generate_points_on_image(warp)
             # Filter points
-            # points = [(x, y) for (x, y) in points if not np.array_equal(warp[y, x], [0, 0, 0])]
+            points = [(x, y) for (x, y) in points if not np.array_equal(warp[y, x], [0, 0, 0])]
+            points = np.array(points)
             # Draw points
             for (x, y) in (points):
                 cv2.circle(warp, (x, y), 3, (0, 0, 255), -1)
@@ -143,7 +147,8 @@ def mse_for_video(camera_data, predicted_data, real_data, input_file, visualisat
                 cv2.circle(warp_pred, (int(x), int(y)), 3, (0, 0, 255), -1)
 
             # Calculate MSE
-            mse = mean_squared_error(points, np.array(pred_points)[:, :2])
+            # mse = mean_squared_error(points, np.array(pred_points)[:, :2])
+            mse = distance_metric(points, np.array(pred_points)[:, :2])
             mse_scores.append(mse)
             frame_numbers.append(frame_number)
 
@@ -166,9 +171,10 @@ def mse_for_video(camera_data, predicted_data, real_data, input_file, visualisat
                 k = cv2.waitKey(0)
                 if k == 27:
                     break
-        except:
-            pass
+        except Exception as e:
+            # print(e)
             # print("Could not load homography")
+            pass
     print("Average MSE for video sequence:", np.mean(mse_scores))
 
     return camera_angles, mse_scores, frame_numbers
