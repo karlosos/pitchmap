@@ -1,4 +1,4 @@
-from mse_homographies_interpolation import mse_for_video, plot_compare_mse_camera_angle
+from mean_distance_homographies_interpolation import mean_distance_for_video, plot_compare_mean_distance_camera_angle
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -12,34 +12,34 @@ def compare_methods(input_file):
     camera_movement_file = f"data/cache/{input_file}_CameraMovementAnalyser.pik"
     manual_data_file = f"data/cache/{input_file}_manual_tracking.pik"
 
-    camera_angles, keypoints_mse_scores, mse_frame_numbers = mse_for_video(camera_movement_file, keypoints_data_file,
-                                                                           manual_data_file, input_file)
-    _, manual_2points_mse_scores, _ = mse_for_video(camera_movement_file, manual_2points_data_file, manual_data_file,
-                                                    input_file)
-    _, manual_3points_mse_scores, _ = mse_for_video(camera_movement_file, manual_3points_data_file, manual_data_file,
-                                                    input_file)
+    camera_angles, keypoints_md_scores, md_frame_numbers = mean_distance_for_video(camera_movement_file, keypoints_data_file,
+                                                                                     manual_data_file, input_file)
+    _, manual_2points_md_scores, _ = mean_distance_for_video(camera_movement_file, manual_2points_data_file, manual_data_file,
+                                                              input_file)
+    _, manual_3points_md_scores, _ = mean_distance_for_video(camera_movement_file, manual_3points_data_file, manual_data_file,
+                                                              input_file)
 
-    plot_compare_mse_camera_angle(camera_angles,
-                                  [keypoints_mse_scores, manual_2points_mse_scores, manual_3points_mse_scores],
-                                  mse_frame_numbers)
-    plt.savefig(f"data/experiments/mse/{input_file}.eps")
+    plot_compare_mean_distance_camera_angle(camera_angles,
+                                            [keypoints_md_scores, manual_2points_md_scores, manual_3points_md_scores],
+                                            md_frame_numbers)
+    plt.savefig(f"data/experiments/mean_distance/{input_file}.eps")
     # plt.show()
 
     print("=============")
     print(input_file)
     print("=============")
-    k_mean = np.mean(keypoints_mse_scores[2:])  # 120: for WDA_Kotwica_01, 2: because first frame has big error
-    k_median = np.median(keypoints_mse_scores[2:])
+    k_mean = np.mean(keypoints_md_scores[2:])  # 120: for WDA_Kotwica_01, 2: because first frame has big error
+    k_median = np.median(keypoints_md_scores[2:])
     print("Keypoints:", k_mean, k_median)
-    m_2_mean = np.mean(manual_2points_mse_scores[2:])
-    m_2_median = np.median(manual_2points_mse_scores[2:])
+    m_2_mean = np.mean(manual_2points_md_scores[2:])
+    m_2_median = np.median(manual_2points_md_scores[2:])
     print("Manual 2 points:", m_2_mean, m_2_median)
-    m_3_mean = np.mean(manual_3points_mse_scores[2:])
-    m_3_median = np.median(manual_3points_mse_scores[2:])
+    m_3_mean = np.mean(manual_3points_md_scores[2:])
+    m_3_median = np.median(manual_3points_md_scores[2:])
     print("Manual 3 points:", m_3_mean, m_3_median)
-    print("Compared frames:", len(keypoints_mse_scores))
+    print("Compared frames:", len(keypoints_md_scores))
 
-    return k_mean, k_median, m_2_mean, m_2_median, m_3_mean, m_3_median, len(keypoints_mse_scores)
+    return k_mean, k_median, m_2_mean, m_2_median, m_3_mean, m_3_median, len(keypoints_md_scores)
 
 
 def single_file():
@@ -49,18 +49,18 @@ def single_file():
     manual_data_file = f"data/cache/{input_file}_manual_tracking.pik"
     camera_movement_file = f"data/cache/{input_file}_CameraMovementAnalyser.pik"
 
-    camera_angles, mse_scores, mse_frame_numbers = mse_for_video(camera_movement_file, predicted_data_file,
-                                                                 manual_data_file, input_file)
+    camera_angles, md_scores, md_frame_numbers = mean_distance_for_video(camera_movement_file, predicted_data_file,
+                                                                           manual_data_file, input_file)
 
     print(predicted_data_file)
-    print("Average IOU for video sequence:", np.mean(mse_scores))
+    print("Average IOU for video sequence:", np.mean(md_scores))
 
-    plot_compare_mse_camera_angle(camera_angles, [mse_scores], mse_frame_numbers)
+    plot_compare_mean_distance_camera_angle(camera_angles, [md_scores], md_frame_numbers)
 
 
 def batch_files():
     """
-    Do masowego sprawdzania mse
+    Do masowego sprawdzania mean distance
     """
     files = [
         "baltyk_koszalin_02.mp4",
@@ -92,14 +92,14 @@ def batch_files():
 
     df = pd.DataFrame(data)
     print(df)
-    df.to_csv("data/experiments/batch_mse_homographies.csv")
+    df.to_csv("data/experiments/batch_mean_distance_homographies.csv")
 
 
 def load_data():
     """
     Do wczytywania wcześniej wyznaczonych danych
     """
-    df = pd.read_csv("data/experiments/batch_mse_homographies.csv")
+    df = pd.read_csv("data/experiments/batch_mean_distance_homographies.csv")
     print(df.describe())
 
 

@@ -43,12 +43,12 @@ def transform_points(points, homo, inverse):
     return warped_positions
 
 
-def plot_mse_camera_angle(camera_angles, mse_scores, mse_frame_numbers=None):
+def plot_mean_distance_camera_angle(camera_angles, mean_distance_scores, mean_distance_frame_numbers=None):
     x = np.arange(len(camera_angles))
-    if mse_frame_numbers is None:
-        x_mse = x
+    if mean_distance_frame_numbers is None:
+        x_md = x
     else:
-        x_mse = np.array(mse_frame_numbers) - 1
+        x_md = np.array(mean_distance_frame_numbers) - 1
 
     fig, ax1 = plt.subplots()
 
@@ -62,41 +62,41 @@ def plot_mse_camera_angle(camera_angles, mse_scores, mse_frame_numbers=None):
 
     color = 'tab:blue'
     ax2.set_ylabel('MSE', color=color)  # we already handled the x-label with ax1
-    ax2.plot(x_mse, mse_scores, color=color)
+    ax2.plot(x_md, mean_distance_scores, color=color)
     ax2.tick_params(axis='y', labelcolor=color)
 
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
     plt.show()
 
 
-def plot_compare_mse_camera_angle(camera_angles, mse_scores_list, mse_frame_numbers=None):
+def plot_compare_mean_distance_camera_angle(camera_angles, mean_distance_scores_list, mean_distance_frame_numbers=None):
     x = np.arange(len(camera_angles))
-    if mse_frame_numbers is None:
-        x_mse = x
+    if mean_distance_frame_numbers is None:
+        x_md = x
     else:
-        x_mse = np.array(mse_frame_numbers) - 1
+        x_md = np.array(mean_distance_frame_numbers) - 1
 
     fig, ax1 = plt.subplots()
 
     color = 'k'
     ax1.set_xlabel('Klatka')
-    ax1.set_ylabel('Kąt kamery', color=color)
+    ax1.set_ylabel('Wychylenie kamery', color=color)
     ax1.plot(x, camera_angles, color=color)
     ax1.tick_params(axis='y', labelcolor=color)
 
     ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
     color = 'tab:blue'
-    ax2.set_ylabel('MSE', color=color)  # we already handled the x-label with ax1
+    ax2.set_ylabel('Średni błąd [m]', color=color)  # we already handled the x-label with ax1
     labels = ["Automatyczne", "Manualne 2 pkt", "Manualne 3 pkt"]
-    for idx, mse_scores in enumerate(mse_scores_list):
-        ax2.plot(x_mse[10:], mse_scores[10:], label=labels[idx])
+    for idx, md_scores in enumerate(mean_distance_scores_list):
+        ax2.plot(x_md[10:], md_scores[10:], label=labels[idx])
     ax2.tick_params(axis='y', labelcolor=color)
 
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
     plt.legend()
 
 
-def mse_for_video(camera_data, predicted_data, real_data, input_file, visualisation=False):
+def mean_distance_for_video(camera_data, predicted_data, real_data, input_file, visualisation=False):
     pitch_model = cv2.imread('data/pitch_model.jpg')
     pitch_model = imutils.resize(pitch_model, width=600)
     pitch_model_shape = (pitch_model.shape[1], pitch_model.shape[0])
@@ -104,7 +104,7 @@ def mse_for_video(camera_data, predicted_data, real_data, input_file, visualisat
         predicted_data)
     _, homographies, _ = pickler.unpickle_data(real_data)
     camera_angles = pickler.unpickle_data(camera_data)
-    mse_scores = []
+    mean_distance_scores = []
     frame_numbers = []
     # Video capture
     cap = cv2.VideoCapture(f'data/{input_file}')
@@ -148,8 +148,8 @@ def mse_for_video(camera_data, predicted_data, real_data, input_file, visualisat
 
             # Calculate MSE
             # mse = mean_squared_error(points, np.array(pred_points)[:, :2])
-            mse = distance_metric(points, np.array(pred_points)[:, :2])
-            mse_scores.append(mse)
+            mean_distance = distance_metric(points, np.array(pred_points)[:, :2])
+            mean_distance_scores.append(mean_distance)
             frame_numbers.append(frame_number)
 
             # Visualisation
@@ -175,9 +175,9 @@ def mse_for_video(camera_data, predicted_data, real_data, input_file, visualisat
             # print(e)
             # print("Could not load homography")
             pass
-    print("Average MSE for video sequence:", np.mean(mse_scores))
+    print("Average MSE for video sequence:", np.mean(mean_distance_scores))
 
-    return camera_angles, mse_scores, frame_numbers
+    return camera_angles, mean_distance_scores, frame_numbers
 
 
 def main():
@@ -189,13 +189,14 @@ def main():
     # file_detected_data_keypoints = f"data/cache/{input_file}_PlayersListComplex_CalibrationInteractorMiddlePoint.pik"
     file_manual_data = f"data/cache/{input_file}_manual_tracking.pik"
     file_camera_movement = f"data/cache/{input_file}_CameraMovementAnalyser.pik"
-    visualisation = True
+    visualisation = False
 
-    camera_angles, mse_scores, mse_frame_numbers = mse_for_video(file_camera_movement, file_detected_data_keypoints,
-                                                                 file_manual_data,
-                                                                 input_file, visualisation)
+    camera_angles, mean_distance_scores,mean_distance_frame_numbers = mean_distance_for_video(file_camera_movement, file_detected_data_keypoints,
+                                                                           file_manual_data,
+                                                                           input_file, visualisation)
 
-    plot_mse_camera_angle(camera_angles, mse_scores, mse_frame_numbers)
+    plot_compare_mean_distance_camera_angle(camera_angles, [mean_distance_scores], mean_distance_frame_numbers)
+    plt.show()
 
 
 if __name__ == "__main__":
