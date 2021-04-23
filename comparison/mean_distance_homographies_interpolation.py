@@ -17,10 +17,21 @@ def distance_metric(points_a, points_b):
     return np.mean(distances) * 0.2  # mnożenie przez 0.2 aby mieć wynik w metrach. bo 80 pikseli to 16 metrów.
 
 
+def update_mean_distance_map(mean_distance_map, real_points, predicted_points):
+    num_points = real_points.shape[0]
+    for i in range(num_points):
+        (x, y) = real_points[i]
+        dist = distance.euclidean(real_points[i], predicted_points[i])
+        mean_distance_map[(x, y)] += np.array([dist * 0.2, 1])  # dodanie do słownika odległości w metrach i licznika
+    return mean_distance_map
+
+
 def generate_points_on_image(image):
     # Generate points on warp image
-    x = np.linspace(0, image.shape[1] - 1, 10)
-    y = np.linspace(0, image.shape[0] - 1, 10)
+    # x = np.linspace(0, image.shape[1] - 1, 10)
+    # y = np.linspace(0, image.shape[0] - 1, 10)
+    x = np.arange(0, image.shape[1] - 1, 10)
+    y = np.arange(0, image.shape[0] - 1, 10)
     X, Y = np.meshgrid(x, y)
     points = np.column_stack([X.ravel(), Y.ravel()]).astype(int)
 
@@ -109,6 +120,8 @@ def mean_distance_for_video(camera_data, predicted_data, real_data, input_file, 
     # Video capture
     cap = cv2.VideoCapture(f'data/{input_file}')
     print(f"Loaded video {input_file} with {cap.get(cv2.CAP_PROP_FRAME_COUNT)} frames")
+
+    mean_distance_map = None
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
@@ -129,6 +142,8 @@ def mean_distance_for_video(camera_data, predicted_data, real_data, input_file, 
             model_warp_pred = cv2.warpPerspective(pitch_model, np.linalg.inv(homo_pred), frame_shape)
 
             points = generate_points_on_image(warp)
+            if mean_distance_map is None:
+                mean_distance_map = {(x, y): np.array([0.0, 0.0]) for (x, y) in points}
             # Filter points
             points = [(x, y) for (x, y) in points if not np.array_equal(warp[y, x], [0, 0, 0])]
             points = np.array(points)
@@ -145,6 +160,9 @@ def mean_distance_for_video(camera_data, predicted_data, real_data, input_file, 
             pred_points = transform_points(frame_points, homo_pred, inverse=False)
             for (x, y, _) in pred_points:
                 cv2.circle(warp_pred, (int(x), int(y)), 3, (0, 0, 255), -1)
+
+            # Prepare pitch map with errors
+            mean_distance_map = update_mean_distance_map(mean_distance_map, points, np.array(pred_points)[:, :2])
 
             # Calculate MSE
             # mse = mean_squared_error(points, np.array(pred_points)[:, :2])
@@ -172,17 +190,29 @@ def mean_distance_for_video(camera_data, predicted_data, real_data, input_file, 
                 if k == 27:
                     break
         except Exception as e:
-            # print(e)
+            print(e)
             # print("Could not load homography")
             pass
     print("Average MSE for video sequence:", np.mean(mean_distance_scores))
 
+    mean_distance_map = {pos: dst/cnt for (pos, (dst, cnt)) in mean_distance_map.items()}
+    print(mean_distance_map)
+
+    # Generating image with map
+    grid_x, grid_y = np.mgrid[0:pitch_model.shape[1]-1, 0:pitch_model.shape[0]-1]
+    points = np.array(list(mean_distance_map.keys()))
+    values = np.array(list(mean_distance_map.values()))
+    from scipy.interpolate import griddata
+    grid = griddata(points, values, (grid_x, grid_y), method='linear')
+    plt.imshow(pitch_model)
+    plt.imshow(grid.T, extent=(0, pitch_model.shape[1]-1, 0, pitch_model.shape[0]-1), origin='upper', alpha=.9)
+    plt.show()
     return camera_angles, mean_distance_scores, frame_numbers
 
 
 def main():
     # Loading files
-    input_file = "Baltyk_Koszalin_05_06.mp4"
+    input_file = "Baltyk_Koszalin_02.mp4"
     # file_detected_data_keypoints = f"data/cache/{input_file}_PlayersListComplex_CalibrationInteractorKeypoints.pik"
     file_detected_data_keypoints = f"data/cache/{input_file}_PlayersListComplex_CalibrationInteractorKeypointsAdvanced.pik"
     # file_detected_data_keypoints = f"data/cache/{input_file}_PlayersListComplex_CalibrationInteractorAutomatic.pik"
