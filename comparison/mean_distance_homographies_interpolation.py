@@ -4,6 +4,8 @@ import cv2
 import imutils
 from sklearn.metrics import mean_squared_error
 from scipy.spatial import distance
+from scipy.interpolate import griddata
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from pitchmap.cache_loader import pickler
 
@@ -26,12 +28,13 @@ def update_mean_distance_map(mean_distance_map, real_points, predicted_points):
     return mean_distance_map
 
 
-def generate_points_on_image(image):
+def generate_points_on_image(image, spacing=None):
     # Generate points on warp image
-    # x = np.linspace(0, image.shape[1] - 1, 10)
-    # y = np.linspace(0, image.shape[0] - 1, 10)
-    x = np.arange(0, image.shape[1] - 1, 10)
-    y = np.arange(0, image.shape[0] - 1, 10)
+    x = np.linspace(0, image.shape[1] - 1, 10)
+    y = np.linspace(0, image.shape[0] - 1, 10)
+    if spacing is not None:
+        x = np.linspace(0, image.shape[1] - 1, spacing)
+        y = np.linspace(0, image.shape[0] - 1, spacing)
     X, Y = np.meshgrid(x, y)
     points = np.column_stack([X.ravel(), Y.ravel()]).astype(int)
 
@@ -52,32 +55,6 @@ def transform_points(points, homo, inverse):
         circle_warped = circle_warped / circle_warped[2]
         warped_positions.append(circle_warped)
     return warped_positions
-
-
-def plot_mean_distance_camera_angle(camera_angles, mean_distance_scores, mean_distance_frame_numbers=None):
-    x = np.arange(len(camera_angles))
-    if mean_distance_frame_numbers is None:
-        x_md = x
-    else:
-        x_md = np.array(mean_distance_frame_numbers) - 1
-
-    fig, ax1 = plt.subplots()
-
-    color = 'tab:red'
-    ax1.set_xlabel('Klatka')
-    ax1.set_ylabel('Kąt kamery', color=color)
-    ax1.plot(x, camera_angles, color=color)
-    ax1.tick_params(axis='y', labelcolor=color)
-
-    ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
-
-    color = 'tab:blue'
-    ax2.set_ylabel('MSE', color=color)  # we already handled the x-label with ax1
-    ax2.plot(x_md, mean_distance_scores, color=color)
-    ax2.tick_params(axis='y', labelcolor=color)
-
-    fig.tight_layout()  # otherwise the right y-label is slightly clipped
-    plt.show()
 
 
 def plot_compare_mean_distance_camera_angle(camera_angles, mean_distance_scores_list, mean_distance_frame_numbers=None):
@@ -121,7 +98,6 @@ def mean_distance_for_video(camera_data, predicted_data, real_data, input_file, 
     cap = cv2.VideoCapture(f'data/{input_file}')
     print(f"Loaded video {input_file} with {cap.get(cv2.CAP_PROP_FRAME_COUNT)} frames")
 
-    mean_distance_map = None
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
@@ -142,8 +118,6 @@ def mean_distance_for_video(camera_data, predicted_data, real_data, input_file, 
             model_warp_pred = cv2.warpPerspective(pitch_model, np.linalg.inv(homo_pred), frame_shape)
 
             points = generate_points_on_image(warp)
-            if mean_distance_map is None:
-                mean_distance_map = {(x, y): np.array([0.0, 0.0]) for (x, y) in points}
             # Filter points
             points = [(x, y) for (x, y) in points if not np.array_equal(warp[y, x], [0, 0, 0])]
             points = np.array(points)
@@ -160,9 +134,6 @@ def mean_distance_for_video(camera_data, predicted_data, real_data, input_file, 
             pred_points = transform_points(frame_points, homo_pred, inverse=False)
             for (x, y, _) in pred_points:
                 cv2.circle(warp_pred, (int(x), int(y)), 3, (0, 0, 255), -1)
-
-            # Prepare pitch map with errors
-            mean_distance_map = update_mean_distance_map(mean_distance_map, points, np.array(pred_points)[:, :2])
 
             # Calculate MSE
             # mse = mean_squared_error(points, np.array(pred_points)[:, :2])
@@ -195,22 +166,83 @@ def mean_distance_for_video(camera_data, predicted_data, real_data, input_file, 
             pass
     print("Average MSE for video sequence:", np.mean(mean_distance_scores))
 
-    mean_distance_map = {pos: dst/cnt for (pos, (dst, cnt)) in mean_distance_map.items()}
+    mean_distance_map = {pos: dst / cnt for (pos, (dst, cnt)) in mean_distance_map.items()}
     print(mean_distance_map)
-
-    # Generating image with map
-    grid_x, grid_y = np.mgrid[0:pitch_model.shape[1]-1, 0:pitch_model.shape[0]-1]
-    points = np.array(list(mean_distance_map.keys()))
-    values = np.array(list(mean_distance_map.values()))
-    from scipy.interpolate import griddata
-    grid = griddata(points, values, (grid_x, grid_y), method='linear')
-    plt.imshow(pitch_model)
-    plt.imshow(grid.T, extent=(0, pitch_model.shape[1]-1, 0, pitch_model.shape[0]-1), origin='upper', alpha=.9)
-    plt.show()
     return camera_angles, mean_distance_scores, frame_numbers
 
 
-def main():
+def map_for_input_video(predicted_data, real_data, input_file):
+    pitch_model = load_pitch_model()
+    pitch_model_shape = (pitch_model.shape[1], pitch_model.shape[0])
+    _, _, homographies_detected_keypoints = pickler.unpickle_data(
+        predicted_data)
+    _, homographies, _ = pickler.unpickle_data(real_data)
+    # Video capture
+    cap = cv2.VideoCapture(f'data/{input_file}')
+    print(f"Loaded video {input_file} with {cap.get(cv2.CAP_PROP_FRAME_COUNT)} frames")
+
+    mean_distance_map = None
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            print("Can't retrieve frame")
+            break
+
+        frame = imutils.resize(frame, width=600)
+        frame_number = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
+        try:
+            homo_pred = homographies_detected_keypoints[frame_number - 1]
+            homo = homographies[frame_number]
+            warp = cv2.warpPerspective(frame, homo, pitch_model_shape)
+            points = generate_points_on_image(warp, spacing=100)
+            if mean_distance_map is None:
+                mean_distance_map = {(x, y): np.array([0.0, 0.0]) for (x, y) in points}
+            # Filter points
+            points = [(x, y) for (x, y) in points if not np.array_equal(warp[y, x], [0, 0, 0])]
+            points = np.array(points)
+            # Transform points to frame (multiplying by inverse homography)
+            frame_points = transform_points(points, homo, inverse=True)
+            pred_points = transform_points(frame_points, homo_pred, inverse=False)
+            # Prepare pitch map with errors
+            mean_distance_map = update_mean_distance_map(mean_distance_map, points, np.array(pred_points)[:, :2])
+        except Exception as e:
+            # print(e)
+            pass
+    return mean_distance_map
+
+
+def load_pitch_model():
+    pitch_model = cv2.imread('data/pitch_model.jpg')
+    pitch_model = imutils.resize(pitch_model, width=600)
+    return pitch_model
+
+
+def generate_map_image(mean_distance_map, title=None):
+    pitch_model = load_pitch_model()
+    # Normalising map
+    mean_distance_map = {pos: dst / cnt for (pos, (dst, cnt)) in mean_distance_map.items()}
+    # Generating image with map
+    grid_x, grid_y = np.mgrid[0:pitch_model.shape[1] - 1, 0:pitch_model.shape[0] - 1]
+    points = np.array(list(mean_distance_map.keys()))
+    values = np.array(list(mean_distance_map.values()))
+    grid = griddata(points, values, (grid_x, grid_y), method='linear')
+    fig, ax = plt.subplots(1)
+    ax.imshow(pitch_model)
+    pitch_im = ax.imshow(grid.T, extent=(0, pitch_model.shape[1] - 1, 0, pitch_model.shape[0] - 1), origin='upper', alpha=.9)
+    pitch_im.set_clim(0, 10)
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.1)
+    # cax = fig.add_axes([ax.get_position().x1 + 0.01, ax.get_position().y0, 0.02, ax.get_position().height])
+    ax.axis('off')
+    cbar = fig.colorbar(pitch_im, cax=cax)
+    cbar.minorticks_on()
+    if title is not None:
+        ax.set_title(title)
+    fig.tight_layout()
+
+
+
+def main_metric():
     # Loading files
     input_file = "Baltyk_Koszalin_02.mp4"
     # file_detected_data_keypoints = f"data/cache/{input_file}_PlayersListComplex_CalibrationInteractorKeypoints.pik"
@@ -221,13 +253,30 @@ def main():
     file_camera_movement = f"data/cache/{input_file}_CameraMovementAnalyser.pik"
     visualisation = False
 
-    camera_angles, mean_distance_scores,mean_distance_frame_numbers = mean_distance_for_video(file_camera_movement, file_detected_data_keypoints,
-                                                                           file_manual_data,
-                                                                           input_file, visualisation)
+    camera_angles, mean_distance_scores, mean_distance_frame_numbers = mean_distance_for_video(file_camera_movement,
+                                                                                               file_detected_data_keypoints,
+                                                                                               file_manual_data,
+                                                                                               input_file,
+                                                                                               visualisation)
 
     plot_compare_mean_distance_camera_angle(camera_angles, [mean_distance_scores], mean_distance_frame_numbers)
     plt.show()
 
 
+def main_map():
+    # Loading files
+    input_file = "Baltyk_Koszalin_02.mp4"
+    # file_detected_data_keypoints = f"data/cache/{input_file}_PlayersListComplex_CalibrationInteractorKeypoints.pik"
+    file_detected_data_keypoints = f"data/cache/{input_file}_PlayersListComplex_CalibrationInteractorKeypointsAdvanced.pik"
+    # file_detected_data_keypoints = f"data/cache/{input_file}_PlayersListComplex_CalibrationInteractorAutomatic.pik"
+    # file_detected_data_keypoints = f"data/cache/{input_file}_PlayersListComplex_CalibrationInteractorMiddlePoint.pik"
+    file_manual_data = f"data/cache/{input_file}_manual_tracking.pik"
+
+    mean_distance_map = map_for_input_video(file_detected_data_keypoints, file_manual_data, input_file)
+    generate_map_image(mean_distance_map)
+    plt.show()
+
+
 if __name__ == "__main__":
-    main()
+    # main_metric()
+    main_map()
