@@ -129,12 +129,6 @@ dmypy.json
 .pyre/
 .vscode/
 models/FPN_efficientnetb3_0.0001_8_427.h5
-0.png
-1.png
-2.png
-3.png
-4.png
-99.png
 data/BAR_SEV_01.mp4
 data/BAR_SEV_02.mp4
 data/Baltyk_Koszalin_02.mp4
@@ -155,3 +149,4 @@ data/WDA_Kotwica_01.mp4
 data/WDA_Lochowa_01.mp4
 data/baltyk_koszalin_1.mp4
 data/experiments/mean_distance
+data/experiments/maps

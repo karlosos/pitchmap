@@ -71,6 +71,8 @@ def plot_compare_mean_distance_camera_angle(camera_angles, mean_distance_scores_
     ax1.set_ylabel('Wychylenie kamery', color=color)
     ax1.plot(x, camera_angles, color=color)
     ax1.tick_params(axis='y', labelcolor=color)
+    ax1.set_xlim(left=30, right=len(camera_angles))
+    # ax1.set_ylim(bottom=np.min(camera_angles))
 
     ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
     color = 'tab:blue'
@@ -166,8 +168,6 @@ def mean_distance_for_video(camera_data, predicted_data, real_data, input_file, 
             pass
     print("Average MSE for video sequence:", np.mean(mean_distance_scores))
 
-    mean_distance_map = {pos: dst / cnt for (pos, (dst, cnt)) in mean_distance_map.items()}
-    print(mean_distance_map)
     return camera_angles, mean_distance_scores, frame_numbers
 
 
@@ -194,6 +194,7 @@ def map_for_input_video(predicted_data, real_data, input_file):
             homo_pred = homographies_detected_keypoints[frame_number - 1]
             homo = homographies[frame_number]
             warp = cv2.warpPerspective(frame, homo, pitch_model_shape)
+            # points = generate_points_on_image(warp, spacing=100)
             points = generate_points_on_image(warp, spacing=100)
             if mean_distance_map is None:
                 mean_distance_map = {(x, y): np.array([0.0, 0.0]) for (x, y) in points}

@@ -22,7 +22,7 @@ def compare_methods(input_file):
     plot_compare_mean_distance_camera_angle(camera_angles,
                                             [keypoints_md_scores, manual_2points_md_scores, manual_3points_md_scores],
                                             md_frame_numbers)
-    plt.savefig(f"data/experiments/mean_distance/{input_file}.eps")
+    plt.savefig(f"data/experiments/mean_distance/{input_file}.pdf")
     # plt.show()
 
     print("=============")
