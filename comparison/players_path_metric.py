@@ -24,7 +24,7 @@ def remove_blank_spaces(x):
 
 
 def moving_average(list, N):
-    mean = [np.mean(list[x:x+N]) for x in range(len(list)-N+1)]
+    mean = [np.mean(list[x:x + N]) for x in range(len(list) - N + 1)]
     return mean
 
 
@@ -64,15 +64,17 @@ def calculate_mdh_for_file(data_file):
 if __name__ == '__main__':
     # data_file = "data/cache/Barca_Real_continous.mp4_path_selector_simple.pik"
     # calculate_mdh_for_file(data_file)
-    data_files_ends = ["Barca_Real_continous.mp4_path_selector_middle.pik",
-                       "Barca_Real_continous.mp4_path_selector_automatic.pik",
-                       "Barca_Real_continous.mp4_path_selector_simple.pik",
-                       "baltyk_kotwica_1.mp4_path_selector_middle.pik",
-                       "baltyk_kotwica_1.mp4_path_selector_automatic.pik",
-                       "baltyk_kotwica_1.mp4_path_selector_simple.pik",
-                       "baltyk_starogard_1.mp4_path_selector_middle.pik",
-                       "baltyk_starogard_1.mp4_path_selector_automatic.pik",
-                       "baltyk_starogard_1.mp4_path_selector_simple.pik"]
+    data_files_ends = [
+        "Barca_Real_continous.mp4_path_selector_middle.pik",
+        "Barca_Real_continous.mp4_path_selector_automatic.pik",
+        "Barca_Real_continous.mp4_path_selector_simple.pik",
+        "baltyk_kotwica_1.mp4_path_selector_middle.pik",
+        "baltyk_kotwica_1.mp4_path_selector_automatic.pik",
+        "baltyk_kotwica_1.mp4_path_selector_simple.pik",
+        "baltyk_starogard_1.mp4_path_selector_middle.pik",
+        "baltyk_starogard_1.mp4_path_selector_automatic.pik",
+        "baltyk_starogard_1.mp4_path_selector_simple.pik",
+    ]
 
     data_file_names = ["data/cache/" + file for file in data_files_ends]
     for file_name in data_file_names:
