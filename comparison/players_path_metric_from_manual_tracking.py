@@ -93,8 +93,8 @@ def transform_positions_for_frame(homographies_detected, idx, player_positions_f
     homo_keypoints = safe_list_get(homographies_detected, idx)
     if homo_keypoints is not None:
         positions_detected.append(transform_positions(player_positions_frame, homo_keypoints))
-    else:
-        positions_detected.append(None)
+    # else:
+    #     positions_detected.append(None)
 
 
 def safe_list_get (l, idx, default=None):
@@ -118,9 +118,20 @@ def transform_positions(player, H):
 
 if __name__ == '__main__':
     video_path = [
-        "Baltyk_Koszalin_07_09.mp4",
+        "baltyk_koszalin_02.mp4",
+        "baltyk_koszalin_03_03.mp4",
+        "baltyk_koszalin_04_04.mp4",
+        "baltyk_koszalin_05_06.mp4",
+        "baltyk_koszalin_06_07.mp4",
+        "baltyk_koszalin_07_09.mp4",
+        "baltyk_kotwica_1.mp4",
+        "baltyk_starogard_1.mp4",
+        "WDA_Kotwica_01.mp4",
+        "ENG_POL_01_09.mp4",
+        "BAR_SEV_01.mp4",
     ]
 
     data_file_names = ["data/cache/" + file for file in video_path]
     for file_name in data_file_names:
-        mdh_distance_keypoints, mdh_distance_2points, mdh_distance_3points = calculate_mdh_for_file(file_name)
+        calculate_mdh_for_file(file_name)
+        # mdh_distance_keypoints, mdh_distance_2points, mdh_distance_3points = calculate_mdh_for_file(file_name)

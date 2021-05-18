@@ -16,7 +16,7 @@ FAST_ADDING = False
 
 class ManualTracker:
     def __init__(self):
-        self.video_name = 'Baltyk_Koszalin_07_09.mp4'
+        self.video_name = 'BAR_SEV_01.mp4'
         self.__window_name = f'PitchMap: {self.video_name}'
 
         self.fl = loader.FrameLoader(self.video_name)
@@ -124,6 +124,8 @@ class ManualTracker:
 
     def teardown(self):
         data_path = f"data/cache/{self.video_name}_manual_tracking.pik"
+        # clear players list
+        # self.players_list = players.PlayersList(self.fl.get_frames_count())
         pickler.pickle_data([self.players_list, self.homographies, self.calibrator],
                             data_path)
         print(f"Saved data to: {data_path}")
