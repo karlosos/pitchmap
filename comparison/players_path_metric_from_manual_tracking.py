@@ -5,6 +5,7 @@ Load player positions and preprocess them.
 from pitchmap.cache_loader import pickler
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 from comparison import hausdorff_distance as mdh
 from scipy import interpolate
@@ -40,12 +41,13 @@ def post_processing(data):
     return np.column_stack((new_x, new_y))
 
 
-def calculate_mdh_for_file(data_file):
-    players_manual, homographies_manual, _ = pickler.unpickle_data(data_file + "_manual_tracking.pik")
+def calculate_mdh_for_file(data_file_name, plot=False):
+    data_file_path = "data/cache/" + data_file_name
+    players_manual, homographies_manual, _ = pickler.unpickle_data(data_file_path + "_manual_tracking.pik")
     players_manual = players_manual.players
-    _, _, homographies_keypoints = pickler.unpickle_data(data_file + "_PlayersListComplex_CalibrationInteractorKeypointsAdvanced.pik")
-    _, _, homographies_2points = pickler.unpickle_data(data_file + "_PlayersListComplex_CalibrationInteractorAutomatic.pik")
-    _, _, homographies_3points = pickler.unpickle_data(data_file + "_PlayersListComplex_CalibrationInteractorMiddlePoint.pik")
+    _, _, homographies_keypoints = pickler.unpickle_data(data_file_path + "_PlayersListComplex_CalibrationInteractorKeypointsAdvanced.pik")
+    _, _, homographies_2points = pickler.unpickle_data(data_file_path + "_PlayersListComplex_CalibrationInteractorAutomatic.pik")
+    _, _, homographies_3points = pickler.unpickle_data(data_file_path + "_PlayersListComplex_CalibrationInteractorMiddlePoint.pik")
 
     positions_manual = []
     positions_keypoints = []
@@ -71,8 +73,13 @@ def calculate_mdh_for_file(data_file):
     positions_3points = np.array(positions_3points)
 
     # Plot pitch model with positions
-    pitch_plot([positions_manual, positions_keypoints, positions_2points, positions_3points], show_pitch=True, smooth=True)
-    plt.show()
+    if plot:
+        pitch_plot([positions_manual, positions_keypoints, positions_2points, positions_3points], show_pitch=True, smooth=True)
+        plt.title(data_file_name)
+        plt.tight_layout(pad=0)
+        plt.axis('off')
+        plt.savefig(f"./data/experiments/mdh/{data_file_name}.pdf")
+        # plt.show()
 
     if True:
         positions_manual = post_processing(positions_manual)
@@ -84,7 +91,7 @@ def calculate_mdh_for_file(data_file):
     mdh_distance_2points = mdh.modified_hausdorff_distance(positions_manual, positions_2points)
     mdh_distance_3points = mdh.modified_hausdorff_distance(positions_manual, positions_3points)
 
-    print(data_file, mdh_distance_keypoints, mdh_distance_2points, mdh_distance_3points)
+    print(data_file_name, mdh_distance_keypoints, mdh_distance_2points, mdh_distance_3points)
 
     return mdh_distance_keypoints, mdh_distance_2points, mdh_distance_3points
 
@@ -131,7 +138,17 @@ if __name__ == '__main__':
         "BAR_SEV_01.mp4",
     ]
 
-    data_file_names = ["data/cache/" + file for file in video_path]
+    data_file_names = [file for file in video_path]
+    mdh_data = {"name": [], "keypoints": [], "2_points": [], "3_points": []}
     for file_name in data_file_names:
-        calculate_mdh_for_file(file_name)
-        # mdh_distance_keypoints, mdh_distance_2points, mdh_distance_3points = calculate_mdh_for_file(file_name)
+        mdh_distance_keypoints, mdh_distance_2points, mdh_distance_3points = calculate_mdh_for_file(file_name, plot=True)
+        mdh_data["name"].append(file_name)
+        # To have distances in meters simply multiply them by 0.2, because 80 pixels is 16 meters.
+        mdh_data["keypoints"].append(mdh_distance_keypoints * 0.2)
+        mdh_data["2_points"].append(mdh_distance_2points * 0.2)
+        mdh_data["3_points"].append(mdh_distance_3points * 0.2)
+
+    df = pd.DataFrame(mdh_data)
+    df.to_csv("./data/experiments/mdh/mdh_metric.csv")
+    print(df)
+
