@@ -41,7 +41,7 @@ def post_processing(data):
     return np.column_stack((new_x, new_y))
 
 
-def calculate_mdh_for_file(data_file_name, plot=False):
+def calculate_mdh_for_file(data_file_name, plot=False, calculate_metrics=True):
     data_file_path = "data/cache/" + data_file_name
     players_manual, homographies_manual, _ = pickler.unpickle_data(data_file_path + "_manual_tracking.pik")
     players_manual = players_manual.players
@@ -91,26 +91,29 @@ def calculate_mdh_for_file(data_file_name, plot=False):
         positions_2points = post_processing(positions_2points)
         positions_3points = post_processing(positions_3points)
 
-    mdh_distance_keypoints = mdh.modified_hausdorff_distance(positions_manual, positions_keypoints)
-    mdh_distance_2points = mdh.modified_hausdorff_distance(positions_manual, positions_2points)
-    mdh_distance_3points = mdh.modified_hausdorff_distance(positions_manual, positions_3points)
-    mdh_data = (mdh_distance_keypoints, mdh_distance_2points, mdh_distance_3points)
+    if calculate_metrics:
+        mdh_distance_keypoints = mdh.modified_hausdorff_distance(positions_manual, positions_keypoints)
+        mdh_distance_2points = mdh.modified_hausdorff_distance(positions_manual, positions_2points)
+        mdh_distance_3points = mdh.modified_hausdorff_distance(positions_manual, positions_3points)
+        mdh_data = (mdh_distance_keypoints, mdh_distance_2points, mdh_distance_3points)
 
-    df_keypoints = sm.frechet_dist(positions_keypoints, positions_manual)
-    df_2points = sm.frechet_dist(positions_2points, positions_manual)
-    df_3points = sm.frechet_dist(positions_3points, positions_manual)
-    df_data = (df_keypoints, df_2points, df_3points)
+        df_keypoints = sm.frechet_dist(positions_keypoints, positions_manual)
+        df_2points = sm.frechet_dist(positions_2points, positions_manual)
+        df_3points = sm.frechet_dist(positions_3points, positions_manual)
+        df_data = (df_keypoints, df_2points, df_3points)
 
-    dtw_keypoints, _ = sm.dtw(positions_keypoints, positions_manual)
-    dtw_2points, _ = sm.dtw(positions_2points, positions_manual)
-    dtw_3points, _ = sm.dtw(positions_3points, positions_manual)
-    dtw_data = (dtw_keypoints, dtw_2points, dtw_3points)
+        dtw_keypoints, _ = sm.dtw(positions_keypoints, positions_manual)
+        dtw_2points, _ = sm.dtw(positions_2points, positions_manual)
+        dtw_3points, _ = sm.dtw(positions_3points, positions_manual)
+        dtw_data = (dtw_keypoints, dtw_2points, dtw_3points)
 
-    print(data_file_name, mdh_distance_keypoints, mdh_distance_2points, mdh_distance_3points)
-    print("Frechet", df_data)
-    print("DTW", dtw_data)
+        print(data_file_name, mdh_distance_keypoints, mdh_distance_2points, mdh_distance_3points)
+        print("Frechet", df_data)
+        print("DTW", dtw_data)
 
-    return mdh_data, df_data, dtw_data
+        return mdh_data, df_data, dtw_data
+    else:
+        return [1, 1, 1], [1, 1, 1], [1, 1, 1]
 
 
 def transform_positions_for_frame(homographies_detected, idx, player_positions_frame, positions_detected):
@@ -170,7 +173,7 @@ if __name__ == '__main__':
     }
 
     for file_name in data_file_names:
-        mdh_data, dt_data, dtw_data = calculate_mdh_for_file(file_name, plot=False)
+        mdh_data, dt_data, dtw_data = calculate_mdh_for_file(file_name, plot=True, calculate_metrics=False)
         data["name"].append(file_name)
         # To have distances in meters simply multiply them by 0.2, because 80 pixels is 16 meters.
         data["mdh_keypoints"].append(mdh_data[0] * 0.2)

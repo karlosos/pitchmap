@@ -26,7 +26,7 @@ def moving_average(list, N):
 
 
 def pitch_plot(positions, show_pitch=False, smooth=False):
-    names = ["Wzorcowe", "Keypoints", "2 Points", "3 Points"]
+    names = ["Wzorzec", "Automatyczne", "2 klatki", "3 klatki"]
 
     fig, ax = plt.subplots()
     pitch_model = cv2.imread('data/pitch_model.jpg')
@@ -50,6 +50,9 @@ def pitch_plot(positions, show_pitch=False, smooth=False):
         name = names[idx]
         x = processed_positions[idx][0]
         y = processed_positions[idx][1]
-        ax.scatter(x, y, label=name, s=3.5)
+        if idx == 0:
+            ax.scatter(x, y, label=name, s=3.5, color='black')
+        else:
+            ax.scatter(x, y, label=name, s=3.5)
 
     plt.legend()
