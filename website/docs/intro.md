@@ -23,7 +23,7 @@ Automatic camera calibration module was developed using [Segmentation Models](ht
 If you are interested about sports camera calibration we can recommend [Awesome Sports Camera Calibration](https://github.com/cemunds/awesome-sports-camera-calibration) on GitHub.
 :::
 
-Training data was acquired with [kkoripl/NaryaKeyPointsDatasetCreator](https://github.com/kkoripl/NaryaKeyPointsDatasetCreator). We've collected 427 training images from 7 matches played on 3 stadiums.
+Training data was acquired using [kkoripl/NaryaKeyPointsDatasetCreator](https://github.com/kkoripl/NaryaKeyPointsDatasetCreator). We've collected 427 training images from 7 matches played on 3 stadiums.
 
 :::note
 Described model cannot succesfully detect homography in middle sections of the pitch. This is because of not enough characteristic points in this area. That's why **camera movement analysis** is required for calibrating all frames in input videos.

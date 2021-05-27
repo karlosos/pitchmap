@@ -21,11 +21,11 @@ module.exports = {
           type: 'doc',
           docId: 'intro',
           position: 'left',
-          label: 'Tutorial',
+          label: 'Documentation',
         },
         // {to: '/blog', label: 'Blog', position: 'left'},
         {
-          href: 'https://github.com/karlosos/pitchmap',
+          href: 'https://github.com/karlosos',
           label: 'GitHub',
           position: 'left',
         },

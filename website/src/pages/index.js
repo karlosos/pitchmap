@@ -36,7 +36,7 @@ export default function Home() {
       <HomepageHeader />
       <main>
         <div>
-          <ReactPlayer url='../../static/pitchmap.mp4' loop playing={true} style={{margin: '0 auto'}} width={'720px'} controls />
+          <ReactPlayer url='https://streamable.com/651ylu' loop playing={true} style={{margin: '0 auto'}} width={'720px'} controls />
         </div>
         <HomepageFeatures />
       </main>

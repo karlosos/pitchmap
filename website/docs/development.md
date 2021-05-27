@@ -13,7 +13,7 @@ pip install -r requirements.clean.txt
 ```
 
 :::caution
-`mxnet` on windows requires [Microsoft C++ Build Tools](visualstudio.microsoft.com/visual-cpp-build-tools)
+`mxnet` on windows requires [Microsoft C++ Build Tools](https://www.visualstudio.microsoft.com/visual-cpp-build-tools)
 :::
 
 ## Environment variable
