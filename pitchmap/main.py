@@ -37,7 +37,7 @@ class PitchMap:
 
         # calib_interactor = calibrator_interactor.CalibrationInteractorCollectFrames
 
-        self.video_name = 'Baltyk_Koszalin_02.mp4'
+        self.video_name = 'baltyk_starogard_1.mp4'
         self.__window_name = f'PitchMap: {self.video_name}'
 
         self.fl = loader.FrameLoader(self.video_name)

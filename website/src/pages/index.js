@@ -6,6 +6,8 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import styles from './index.module.css';
 import HomepageFeatures from '../components/HomepageFeatures';
 
+import ReactPlayer from 'react-player'
+
 function HomepageHeader() {
   const {siteConfig} = useDocusaurusContext();
   return (
@@ -33,6 +35,9 @@ export default function Home() {
       description="Description will go into a meta tag in <head />">
       <HomepageHeader />
       <main>
+        <div>
+          <ReactPlayer url='../../static/pitchmap.mp4' loop playing={true} style={{margin: '0 auto'}} width={'720px'} controls />
+        </div>
         <HomepageFeatures />
       </main>
     </Layout>

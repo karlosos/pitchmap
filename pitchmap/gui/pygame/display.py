@@ -16,8 +16,8 @@ class PyGameDisplay:
         self.__window_name = main_window_name
         self.__model_window_name = model_window_name
 
-        # self.__pitch_model = cv2.imread('data/pitch_model.jpg')
-        self.__pitch_model = cv2.imread('data/pitch_model_4.png')
+        self.__pitch_model = cv2.imread('data/pitch_model.jpg')
+        # self.__pitch_model = cv2.imread('data/pitch_model_4.png')
         self.__clear_pitch_model = imutils.resize(self.__pitch_model, width=600)
         self.__pitch_model = copy.copy(self.__clear_pitch_model)
 
@@ -40,7 +40,7 @@ class PyGameDisplay:
         self.__buttonProjectionToggle = Button(200, 500, 150, 50, 'Toggle Projection')
         self.__buttonDetectionToggle = Button(370, 500, 150, 50, 'Toggle Detection')
         self.__buttons = [self.__buttonCalibration, self.__buttonTransformation, self.__buttonAccept,
-                          self.__buttonProjectionToggle, self.__buttonDetectionToggle, self.__buttonCancel]
+                          self.__buttonProjectionToggle, self.__buttonDetectionToggle]  # removed self.__buttonCancel
         self.__slider = Slider(1, self.__frame_count, 1)
 
         self.__calibration_state = False

@@ -4,32 +4,29 @@ import styles from './HomepageFeatures.module.css';
 
 const FeatureList = [
   {
-    title: 'Easy to Use',
-    Svg: require('../../static/img/undraw_docusaurus_mountain.svg').default,
+    title: 'Powered by Python and Deep Learning',
+    Svg: require('../../static/img/undraw_goal_0v5v.svg').default,
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+      Project was implemented with Python using a lot of libraries. Mainly I've used <i>OpenCV</i> and <i>CVLib</i>. The machine learning models were created with <i>Tensorflow</i> and <i>scikit learn</i>.
       </>
     ),
   },
   {
-    title: 'Focus on What Matters',
-    Svg: require('../../static/img/undraw_docusaurus_tree.svg').default,
+    title: 'Not robust',
+    Svg: require('../../static/img/undraw_Throw_away_re_x60k.svg').default,
     description: (
       <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
+        Pitchmap is not robust system. It's only proof of concept project. It is not adapted to real world tracking.
       </>
     ),
   },
   {
-    title: 'Powered by React',
-    Svg: require('../../static/img/undraw_docusaurus_react.svg').default,
+    title: 'Without future',
+    Svg: require('../../static/img/undraw_schedule_pnbk.svg').default,
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+      This project is no longer mantained. I'll probably develop new system solving mistakes from this one.
       </>
     ),
   },

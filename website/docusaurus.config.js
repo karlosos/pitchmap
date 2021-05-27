@@ -1,7 +1,7 @@
 /** @type {import('@docusaurus/types').DocusaurusConfig} */
 module.exports = {
   title: 'PitchMap',
-  tagline: 'Research project of automatic football positions detection system',
+  tagline: 'Research project of automatic footballers\' positions detection system',
   url: 'https://karlosos.github.io',
   baseUrl: '/pitchmap/',
   onBrokenLinks: 'throw',
