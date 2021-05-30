@@ -30,14 +30,12 @@ class PitchMap:
         # player_list = player.PlayersListSimple
         # calib_interactor = calibrator_interactor.CalibrationInteractorMiddlePoint
         # calib_interactor = calibrator_interactor.CalibrationInteractorAutomatic
-        # calib_interactor = calibrator_interactor.CalibrationInteractorKeypoints
-        # calib_interactor = calibrator_interactor.CalibrationInteractorKeypointsComplex
         calib_interactor = calibrator_interactor.CalibrationInteractorKeypointsAdvanced
         # calib_interactor = calibrator_interactor.CalibrationInteractorSimple
 
         # calib_interactor = calibrator_interactor.CalibrationInteractorCollectFrames
 
-        self.video_name = 'baltyk_starogard_1.mp4'
+        self.video_name = 'baltyk_kotwica_1.mp4'
         self.__window_name = f'PitchMap: {self.video_name}'
 
         self.fl = loader.FrameLoader(self.video_name)
@@ -149,9 +147,10 @@ class PitchMap:
     def bootstrap(self):
         file_exists = os.path.isfile(self.__save_data_path)
         if file_exists:
-            players, h, _ = pickler.unpickle_data(self.__save_data_path)
+            players, h, homographies = pickler.unpickle_data(self.__save_data_path)
             self.players_list.players = players
             self.__calibration_interactor.homographies_angle = h
+            self.__calibration_interactor.homographies = homographies
             print(f"Loaded data from: {self.__save_data_path}")
         else:
             print("No data to load")
