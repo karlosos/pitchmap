@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import imutils
+import time
 
 from pitchmap.segmentation import mask
 import matplotlib.pyplot as plt
@@ -31,6 +32,8 @@ class CameraMovementAnalyser:
         return self.arg_x_min, self.arg_x_max, self.x_max, self.x_min
 
     def analyse_camera_movement(self):
+        time_start = time.time()
+
         self.__fl.set_current_frame_position(0)
         frame1 = self.__fl.load_frame()
         frame1 = imutils.resize(frame1, width=self.__frame_width)
@@ -71,6 +74,9 @@ class CameraMovementAnalyser:
             elif k == ord('s'):
                 cv2.imwrite('opticalfb.png', frame2)
                 cv2.imwrite('opticalhsv.png', visualisation_frame_rgb)
+
+        time_stop = time.time()
+        print("OpticalFlow time:", time_stop-time_start)
 
         cv2.destroyWindow(window_name)
         self.plot(movement_vectors)

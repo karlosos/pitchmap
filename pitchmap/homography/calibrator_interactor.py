@@ -9,6 +9,7 @@ import imutils
 import numpy as np
 import math
 import cv2
+import time
 from scipy.signal import find_peaks
 
 
@@ -694,6 +695,10 @@ class CalibrationInteractorKeypointsAdvanced(CalibrationInteractor):
 
         self.__kp_model.load_weights("./models/FPN_efficientnetb3_0.0001_8_427.h5")
 
+        self.time_frames = 0
+        self.n_calibrated_frames = 0
+        self.time_start = None
+
     def find_characteristic_frames(self, camera_angles):
         min_peaks, _ = find_peaks(-camera_angles, width=3)
         max_peaks, _ = find_peaks(camera_angles, width=3)
@@ -702,6 +707,9 @@ class CalibrationInteractorKeypointsAdvanced(CalibrationInteractor):
         return np.sort(characteristic_frames)
 
     def start_calibration(self):
+        if self.time_start is None:
+            self.time_start = time.time()
+
         self.__calibrator.clear_points()
         if self.__current_calibration_frame_idx is None:
             self.__calibrator.toggle_enabled()
@@ -714,6 +722,7 @@ class CalibrationInteractorKeypointsAdvanced(CalibrationInteractor):
                 return False
 
         if self.__current_calibration_frame_idx >= 0:
+            time_start_frame = time.time()
             self.__frame_loader.set_current_frame_position(self.__current_calibration_frame_idx)
             frame = self.__frame_loader.load_frame()
             frame = imutils.resize(frame, width=600)
@@ -737,6 +746,11 @@ class CalibrationInteractorKeypointsAdvanced(CalibrationInteractor):
                 src_point = [src_point[0]/width_ratio, src_point[1]/height_ratio]
                 self.__pitch_map.display.add_point_main_window(int(src_point[0]), int(src_point[1]))
                 self.__pitch_map.display.add_point_model_window(int(dst_point[0]), int(dst_point[1]))
+
+            time_stop_frame = time.time()
+            print(self.__current_calibration_frame_idx, "calibration time", time_stop_frame - time_start_frame)
+            self.time_frames += time_stop_frame - time_start_frame
+            self.n_calibrated_frames += 1
 
             # Automatic acepting/canceling
             if len(self.__calibrator.points) > 4:
@@ -783,6 +797,7 @@ class CalibrationInteractorKeypointsAdvanced(CalibrationInteractor):
         pass
 
     def interpolate(self):
+        self.time_start_interpolation = time.time()
         characteristic_homographies = self.__homographies_for_characteristic_frames
         camera_angles = self.__camera_movement_analyser.x_cum_sum
         print(self.__characteristic_frames_numbers, len(self.__characteristic_frames_numbers))
@@ -818,6 +833,10 @@ class CalibrationInteractorKeypointsAdvanced(CalibrationInteractor):
                     print(f"Error while performing complex interpolation from {f1} to {f2}")
                     print(e)
 
+        self.time_stop = time.time()
+        print("Calibration time:", self.time_stop-self.time_start)
+        print("DNN model time per frame:", self.time_frames/self.n_calibrated_frames)
+        print("Interpolation time:", self.time_stop - self.time_start_interpolation)
         self.__pitch_map.set_transforming_flag(True)
         self.__calibrator.toggle_enabled()
 
@@ -841,14 +860,14 @@ class CalibrationInteractorKeypointsAdvanced(CalibrationInteractor):
 
     def get_homography(self, frame_number):
         if self.homographies[frame_number] is not None:
-            print(f"frame: {frame_number}: based on advanced interpolation")
+            # print(f"frame: {frame_number}: based on advanced interpolation")
             return self.homographies[frame_number]
         camera_angle = self.__camera_movement_analyser.x_cum_sum[frame_number - 1]
         min_x = self.__camera_movement_analyser.x_min
         # print(
         #     f"frame: {frame_number} camera_angle: {camera_angle}, obliczony index:{camera_angle - min_x}, {math.floor(camera_angle - min_x)}, min_x = {min_x}")
         h = self.homographies_angle[:, :, math.floor(camera_angle - min_x)]
-        print(f"frame: {frame_number}: based on angle interpolation")
+        # print(f"frame: {frame_number}: based on angle interpolation")
         return h
 
     def is_homography_exist(self, frame_number):
